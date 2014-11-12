@@ -18,4 +18,11 @@
     <!-- reTicker Background Color -->
     <color name="reticker_background_color">@android:color/system_neutral1_50</color>
 
+    <!-- OnTheSpot: OTS snackbar background color. -->
+    <color name="on_the_spot_background">#FF263238</color>
+    <!-- OnTheSpot: OTS snackbar background shadow color. -->
+    <color name="on_the_spot_shadow">#33000000</color>
+    <!-- OnTheSpot: OTS snackbar action denial button text color. -->
+    <color name="on_the_spot_deny_text">#FF9B9B9B</color>
+
 </resources>
