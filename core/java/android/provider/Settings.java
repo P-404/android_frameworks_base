@@ -4839,6 +4839,12 @@ public final class Settings {
          */
         public static final String PULSE_TRIGGER_REASON = "pulse_trigger_reason";
 
+         /**
+         * Whether to enable screenshot sound
+         * @hide
+         */
+        public static final String SCREENSHOT_SOUND = "screenshot_sound";
+
         /**
          * These are all public system settings
          *
