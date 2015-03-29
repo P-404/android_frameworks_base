@@ -87,5 +87,6 @@ public class SystemSettings {
         Settings.System.AMBIENT_NOTIFICATION_LIGHT_AUTOMATIC,
         Settings.System.NOTIFICATION_LIGHT_PULSE,
         Settings.System.LOCKSCREEN_MEDIA_ART,
+        Settings.System.SCREENSHOT_SOUND,
     };
 }
