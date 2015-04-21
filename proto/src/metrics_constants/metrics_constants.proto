@@ -7429,8 +7429,11 @@ message MetricsEvent {
     // Add new aosp constants above this line.
     // END OF AOSP CONSTANTS
 
-     // Panel for Bluetooth
-    PANEL_BLUETOOTH = 9996;
+    // 404 Constants
+    ERROR = 1800;
+
+    // Panel for Bluetooth
+    PANEL_BLUETOOTH = 1801;
 
   }
 }
