@@ -4495,6 +4495,13 @@ public final class Settings {
          */
 
         /**
+         * Swipe to screenshot gesture
+         * Also known as Three Fingers Screenshot.
+         * @hide
+         */
+        public static final String SWIPE_TO_SCREENSHOT = "swipe_to_screenshot";
+
+        /**
          * Settings to backup. This is here so that it's in the same place as the settings
          * keys and easy to update.
          *
