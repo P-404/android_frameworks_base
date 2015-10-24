@@ -2001,6 +2001,9 @@ public class CentralSurfacesImpl extends CoreStartable implements
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.LOCKSCREEN_MEDIA_BLUR),
                     false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.SHOW_LOCKSCREEN_MEDIA_ART),
+                    false, this, UserHandle.USER_ALL);
         }
 
         @Override
@@ -2008,17 +2011,27 @@ public class CentralSurfacesImpl extends CoreStartable implements
 	      if (uri.equals(Settings.System.getUriFor(
                     Settings.System.LOCKSCREEN_MEDIA_BLUR))) {
                 setLockScreenMediaBlurLevel();
-            }
+            } else if (uri.equals(Settings.System.getUriFor(
+                    Settings.System.SHOW_LOCKSCREEN_MEDIA_ART))) {
+                setLockScreenMediaArt();
+	    }
         }
 
         public void update() {
             setLockScreenMediaBlurLevel();
+            setLockScreenMediaArt();
         }
     }
 
     private void setLockScreenMediaBlurLevel() {
         if (mMediaManager != null) {
             mMediaManager.setLockScreenMediaBlurLevel();
+        }
+    }
+
+    private void setLockScreenMediaArt() {
+        if (mMediaManager != null) {
+            mMediaManager.setLockScreenMediaArt();
         }
     }
 
