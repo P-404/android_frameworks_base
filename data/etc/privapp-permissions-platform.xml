@@ -460,4 +460,9 @@ applications that come with the platform
     <privapp-permissions package="com.android.bips">
         <permission name="android.permission.SUBSTITUTE_SHARE_TARGET_APP_NAME_AND_ICON"/>
     </privapp-permissions>
+
+    <!-- 404 Additions -->
+    <privapp-permissions package="com.google.android.apps.pixelmigrate">
+        <permission name="android.permission.WRITE_SECURE_SETTINGS"/>
+    </privapp-permissions>
 </permissions>
