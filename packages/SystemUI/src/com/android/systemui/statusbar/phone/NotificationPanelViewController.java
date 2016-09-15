@@ -161,6 +161,7 @@ import com.android.systemui.plugins.statusbar.StatusBarStateController;
 import com.android.systemui.plugins.statusbar.StatusBarStateController.StateListener;
 import com.android.systemui.qrcodescanner.controller.QRCodeScannerController;
 import com.android.systemui.screenrecord.RecordingController;
+import com.android.systemui.settings.SettingConfirmationHelper;
 import com.android.systemui.shared.system.QuickStepContract;
 import com.android.systemui.statusbar.CommandQueue;
 import com.android.systemui.statusbar.GestureRecorder;
@@ -178,6 +179,7 @@ import com.android.systemui.statusbar.StatusBarState;
 import com.android.systemui.statusbar.SysuiStatusBarStateController;
 import com.android.systemui.statusbar.VibratorHelper;
 import com.android.systemui.statusbar.events.PrivacyDotViewController;
+import com.android.systemui.statusbar.SettingConfirmationSnackbarViewCreator;
 import com.android.systemui.statusbar.notification.AnimatableProperty;
 import com.android.systemui.statusbar.notification.ConversationNotificationManager;
 import com.android.systemui.statusbar.notification.DynamicPrivacyController;
@@ -1875,7 +1877,7 @@ public class NotificationPanelViewController extends PanelViewController {
                 initVelocityTracker();
                 trackMovement(event);
                 if (mKeyguardShowing
-                        && shouldQuickSettingsIntercept(mInitialTouchX, mInitialTouchY, 0)) {
+                        && shouldQuickSettingsIntercept(mInitialTouchX, mInitialTouchY, 0, true, false)) {
                     // Dragging down on the lockscreen statusbar should prohibit other interactions
                     // immediately, otherwise we'll wait on the touchslop. This is to allow
                     // dragging down to expanded quick settings directly on the lockscreen.
@@ -1913,8 +1915,7 @@ public class NotificationPanelViewController extends PanelViewController {
                 }
                 if ((h > getTouchSlop(event) || (h < -getTouchSlop(event) && mQsExpanded))
                         && Math.abs(h) > Math.abs(x - mInitialTouchX)
-                        && shouldQuickSettingsIntercept(mInitialTouchX, mInitialTouchY, h)) {
-                    if (DEBUG_LOGCAT) Log.d(TAG, "onQsIntercept - start tracking expansion");
+                        && shouldQuickSettingsIntercept(mInitialTouchX, mInitialTouchY, h, true, false)) {
                     mView.getParent().requestDisallowInterceptTouchEvent(true);
                     mQsTracking = true;
                     traceQsJank(true /* startTracing */, false /* wasCancelled */);
@@ -2135,8 +2136,33 @@ public class NotificationPanelViewController extends PanelViewController {
         if (action == MotionEvent.ACTION_DOWN && isFullyCollapsed() && isQsExpansionEnabled()) {
             mTwoFingerQsExpandPossible = true;
         }
-        if (mTwoFingerQsExpandPossible && isOpenQsEvent(event) && event.getY(event.getActionIndex())
-                < mStatusBarMinHeight) {
+        boolean twoFingerQsEvent = mTwoFingerQsExpandPossible && isOpenQsEvent(event);
+        boolean oneFingerQsOverride = action == MotionEvent.ACTION_DOWN
+                && shouldQuickSettingsIntercept(event.getX(), event.getY(), -1, false, true);
+        if ((twoFingerQsEvent || oneFingerQsOverride)
+                && event.getY(event.getActionIndex()) < mStatusBarMinHeight
+                && mExpandedHeight <= mQsPeekHeight) {
+            if (oneFingerQsOverride) {
+                final SettingConfirmationSnackbarViewCreator
+                        mSnackbarViewCreator = new
+                        SettingConfirmationSnackbarViewCreator(mView.getContext());
+                SettingConfirmationHelper.prompt(
+                        mSnackbarViewCreator.getSnackbarView(),
+                        Settings.Secure.QUICK_SETTINGS_QUICK_PULL_DOWN,
+                        true,
+                        mView.getContext().getResources().getString(R.string.quick_settings_quick_pull_down),
+                        new SettingConfirmationHelper.OnSettingChoiceListener() {
+                            @Override
+                            public void onSettingConfirm(final String settingName) {
+                            }
+
+                            @Override
+                            public void onSettingDeny(final String settingName) {
+                                closeQs();
+                            }
+                        },
+                        null);
+            }
             mMetricsLogger.count(COUNTER_PANEL_OPEN_QS, 1);
             mQsExpandImmediate = true;
             setShowShelfOnly(true);
@@ -2190,8 +2216,7 @@ public class NotificationPanelViewController extends PanelViewController {
 
     private void handleQsDown(MotionEvent event) {
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN && shouldQuickSettingsIntercept(
-                event.getX(), event.getY(), -1)) {
-            if (DEBUG_LOGCAT) Log.d(TAG, "handleQsDown");
+                event.getX(), event.getY(), -1, true, false)) {
             mFalsingCollector.onQsDown();
             mQsTracking = true;
             onQsExpansionStarted();
@@ -3036,8 +3061,9 @@ public class NotificationPanelViewController extends PanelViewController {
     /**
      * @return Whether we should intercept a gesture to open Quick Settings.
      */
-    private boolean shouldQuickSettingsIntercept(float x, float y, float yDiff) {
-        if (!isQsExpansionEnabled() || mCollapsedOnDown
+    private boolean shouldQuickSettingsIntercept(float x, float y, float yDiff, boolean useHeader,
+             boolean notSetFallback) {
+        if (!isQsExpansionEnabled() || (useHeader && mCollapsedOnDown)
                 || (mKeyguardShowing && mKeyguardBypassController.getBypassEnabled())
                 || mSplitShadeEnabled) {
             return false;
@@ -3051,12 +3077,20 @@ public class NotificationPanelViewController extends PanelViewController {
                 /* bottom= */ header.getBottom() + frameTop);
         // Also allow QS to intercept if the touch is near the notch.
         mStatusBarTouchableRegionManager.updateRegionForNotch(mQsInterceptRegion);
-        final boolean onHeader = mQsInterceptRegion.contains((int) x, (int) y);
+        final boolean onHeader = useHeader && mQsInterceptRegion.contains((int) x, (int) y);
+
+        final float w = mView.getMeasuredWidth();
+        float region = (w * (1.f/4.f)); // TODO overlay region fraction?
+        final boolean showQsOverride = (mView.isLayoutRtl() ? (x < region) : (w - region < x))
+            && !mKeyguardShowing && SettingConfirmationHelper.get(
+                    mView.getContext().getContentResolver(),
+                    Settings.Secure.QUICK_SETTINGS_QUICK_PULL_DOWN,
+                    notSetFallback);
 
         if (mQsExpanded) {
             return onHeader || (yDiff < 0 && isInQsArea(x, y));
         } else {
-            return onHeader;
+            return onHeader || showQsOverride;
         }
     }
 
@@ -4278,7 +4312,7 @@ public class NotificationPanelViewController extends PanelViewController {
                     mMetricsLogger.count(COUNTER_PANEL_OPEN_PEEK, 1);
                     return true;
                 }
-                if (!shouldQuickSettingsIntercept(mDownX, mDownY, 0)
+                if (!shouldQuickSettingsIntercept(mDownX, mDownY, 0, true, false)
                         && mPulseExpansionHandler.onInterceptTouchEvent(event)) {
                     return true;
                 }
@@ -4337,7 +4371,7 @@ public class NotificationPanelViewController extends PanelViewController {
                 // If pulse is expanding already, let's give it the touch. There are situations
                 // where the panel starts expanding even though we're also pulsing
                 boolean pulseShouldGetTouch = (!mIsExpanding
-                        && !shouldQuickSettingsIntercept(mDownX, mDownY, 0))
+                        && !shouldQuickSettingsIntercept(mDownX, mDownY, 0, true, false))
                         || mPulseExpansionHandler.isExpanding();
                 if (pulseShouldGetTouch && mPulseExpansionHandler.onTouchEvent(event)) {
                     // We're expanding all the other ones shouldn't get this anymore
