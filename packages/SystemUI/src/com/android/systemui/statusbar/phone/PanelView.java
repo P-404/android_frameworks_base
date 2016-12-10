@@ -23,10 +23,12 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
@@ -147,6 +149,8 @@ public abstract class PanelView extends FrameLayout {
     protected final SysuiStatusBarStateController mStatusBarStateController =
             (SysuiStatusBarStateController) Dependency.get(StatusBarStateController.class);
 
+    private GestureDetector mDoubleTapGestureListener;
+
     protected void onExpandingFinished() {
         mBar.onExpandingFinished();
     }
@@ -212,6 +216,18 @@ public abstract class PanelView extends FrameLayout {
         mFlingAnimationUtilsDismissing = new FlingAnimationUtils(context,
                 0.5f /* maxLengthSeconds */, 0.2f /* speedUpFactor */, 0.6f /* x2 */,
                 0.84f /* y2 */);
+
+        mDoubleTapGestureListener = new GestureDetector(context,
+                new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onDoubleTap(MotionEvent event) {
+                final PowerManager pm = (PowerManager) context.getSystemService(
+                        Context.POWER_SERVICE);
+                pm.goToSleep(event.getEventTime());
+                return true;
+            }
+        });
+
         mBounceInterpolator = new BounceInterpolator();
         mFalsingManager = Dependency.get(FalsingManager.class);  // TODO: inject into a controller.
         mNotificationsDragEnabled =
@@ -402,6 +418,11 @@ public abstract class PanelView extends FrameLayout {
                 endMotionEvent(event, x, y, false /* forceCancel */);
                 break;
         }
+
+        if (mStatusBarStateController.getState() == StatusBarState.KEYGUARD) {
+            mDoubleTapGestureListener.onTouchEvent(event);
+        }
+
         return !mGestureWaitForTouchSlop || mTracking;
     }
 
