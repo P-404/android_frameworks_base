@@ -26,4 +26,8 @@
     <!-- Allow devices to hide black gradient behind QS Panel -->
     <bool name="config_hideQSBlackGradient">true</bool>
 
+    <!-- Burn-in protection -->
+    <bool name="config_statusBarBurnInProtection">false</bool>
+    <integer name="config_shift_interval">60</integer>
+
  </resources>
