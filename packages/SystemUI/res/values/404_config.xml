@@ -17,4 +17,8 @@
     <color name="config_fodColor">#00ff00</color>
     <color name="config_fodColorBackground">#20000000</color>
 
+    <!-- Burn in protection -->
+    <bool name="config_statusBarBurnInProtection">true</bool>
+    <integer name="config_shift_interval">60</integer>
+
 </resources>
