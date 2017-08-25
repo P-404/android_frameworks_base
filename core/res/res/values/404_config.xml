@@ -41,4 +41,10 @@
 
     <!-- Default value for Horizon light color (Blue) -->
     <integer name="config_AmbientPulseLightColor">0x3980FF</integer>
+
+    <!-- Path to fast charging status file to detect whether an oem fast charger is active -->
+    <string name="config_oemFastChargerStatusPath" translatable="false"></string>
+
+    <!-- Expected value from fast charging status file  -->
+    <string name="config_oemFastChargerStatusValue" translatable="false"></string>
 </resources>
