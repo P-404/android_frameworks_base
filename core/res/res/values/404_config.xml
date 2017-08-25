@@ -1,5 +1,5 @@
 <!--
-     Copyright (C) 2022 Project 404
+     Copyright (C) 2020-2022 Project 404
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -14,14 +14,9 @@
      limitations under the License.
 -->
 <resources>
-
-    <!-- For dynamic default font styles -->
-    <java-symbol type="string" name="config_bodyFontFamily" />
-
     <!-- Path to fast charging status file to detect whether an oem fast charger is active -->
-    <java-symbol type="string" name="config_oemFastChargerStatusPath" />
+    <string name="config_oemFastChargerStatusPath" translatable="false"></string>
 
-    <!-- Expected value from fast charging status file -->
-    <java-symbol type="string" name="config_oemFastChargerStatusValue" />
-
+    <!-- Expected value from fast charging status file  -->
+    <string name="config_oemFastChargerStatusValue" translatable="false"></string>
 </resources>
