@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Copyright (C) 2021 ArrowOS
+    Copyright (C) 2020-2021 Project 404
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -25,4 +25,7 @@
     <java-symbol name="reboot_system_message" type="string" />
     <java-symbol type="array" name="config_rebootActionsList" />
 
+    <!-- Device keyhandlers -->
+    <java-symbol type="array" name="config_deviceKeyHandlerLibs" />
+    <java-symbol type="array" name="config_deviceKeyHandlerClasses" />
 </resources>
