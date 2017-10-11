@@ -5071,4 +5071,13 @@
 
     <!-- the number of the max cached processes in the system. -->
     <integer name="config_customizedMaxCachedProcesses">32</integer>
+
+    <!-- Paths to the libraries that contain device specific key handlers -->
+    <string-array name="config_deviceKeyHandlerLibs" translatable="false">
+    </string-array>
+
+    <!-- Names of the key handler classes -->
+    <string-array name="config_deviceKeyHandlerClasses" translatable="false">
+    </string-array>
+
 </resources>
