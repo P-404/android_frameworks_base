@@ -20,6 +20,7 @@ import static android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_M
 import android.app.Dialog;
 import android.app.KeyguardManager;
 import android.content.Context;
+import android.os.PowerManager;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -86,7 +87,8 @@ public class GlobalActionsImpl implements GlobalActions, CommandQueue.Callbacks 
     }
 
     @Override
-    public void showShutdownUi(boolean isReboot, String reason) {
+    public void showShutdownUi(boolean isReboot, boolean isRebootRecovery,
+                boolean isRebootBootloader, String reason) {
         ScrimDrawable background = new ScrimDrawable();
         background.setAlpha((int) (SHUTDOWN_SCRIM_ALPHA * 255));
 
@@ -127,7 +129,15 @@ public class GlobalActionsImpl implements GlobalActions, CommandQueue.Callbacks 
         bar.getIndeterminateDrawable().setTint(color);
         TextView message = d.findViewById(R.id.text1);
         message.setTextColor(color);
-        if (isReboot) message.setText(R.string.reboot_to_reset_message);
+        String rebootMessage = mContext.getResources().getString(R.string.shutdown_progress);
+        if (reason != null && reason.equals(PowerManager.REBOOT_REQUESTED_BY_DEVICE_OWNER)) {
+            rebootMessage = mContext.getResources().getString(R.string.global_restart_message);
+        } else if (reason != null && reason.equals(PowerManager.REBOOT_RECOVERY)) {
+            rebootMessage = mContext.getResources().getString(R.string.global_restart_recovery_message);
+        } else if (reason != null && reason.equals(PowerManager.REBOOT_BOOTLOADER)) {
+            rebootMessage = mContext.getResources().getString(R.string.global_restart_bootloader_message);
+        }
+        message.setText(rebootMessage);
 
         GradientColors colors = Dependency.get(SysuiColorExtractor.class).getNeutralColors();
         background.setColor(colors.getMainColor(), false);

@@ -26,4 +26,17 @@
     <!-- Whether the device has a popup camera -->
     <bool name="config_hasPopupCamera">false</bool>
 
+    <!-- Defines the default set of extended global actions. Actions may still be disabled or hidden based
+         on the current state of the device.
+         Each item must be one of the following strings:
+         "quick_restart" = Restart the device by destroying AM
+         "recovery" = Restart the device to recovery mode
+         "bootloader" = Restart the device to bootloader
+         -->
+    <string-array translatable="false" name="config_extendedGlobalActionsList">
+        <item>quick_restart</item>
+        <item>recovery</item>
+        <item>bootloader</item>
+    </string-array>
+
 </resources>

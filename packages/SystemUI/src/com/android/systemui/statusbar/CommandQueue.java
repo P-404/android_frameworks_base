@@ -127,6 +127,7 @@ public class CommandQueue extends IStatusBar.Stub implements CallbackController<
     public static final int FLAG_EXCLUDE_COMPAT_MODE_PANEL = 1 << 4;
 
     private static final String SHOW_IME_SWITCHER_KEY = "showImeSwitcherKey";
+    private static final String REBOOT_BOOTLOADER_KEY = "bootloader";
 
     private final Object mLock = new Object();
     private ArrayList<Callbacks> mCallbacks = new ArrayList<>();
@@ -267,7 +268,8 @@ public class CommandQueue extends IStatusBar.Stub implements CallbackController<
         default void showPinningEnterExitToast(boolean entering) { }
         default void showPinningEscapeToast() { }
         default void handleShowGlobalActionsMenu() { }
-        default void handleShowShutdownUi(boolean isReboot, String reason) { }
+        default void handleShowShutdownUi(boolean isReboot, boolean isRebootRecovery,
+                boolean isRebootBootloader, String reason) { }
 
         default void showWirelessChargingAnimation(int batteryLevel) {  }
 
@@ -719,11 +721,12 @@ public class CommandQueue extends IStatusBar.Stub implements CallbackController<
     }
 
     @Override
-    public void showShutdownUi(boolean isReboot, String reason) {
+    public void showShutdownUi(boolean isReboot, boolean isRebootRecovery,
+                boolean isRebootBootloader, String reason) {
         synchronized (mLock) {
             mHandler.removeMessages(MSG_SHOW_SHUTDOWN_UI);
-            mHandler.obtainMessage(MSG_SHOW_SHUTDOWN_UI, isReboot ? 1 : 0, 0, reason)
-                    .sendToTarget();
+            mHandler.obtainMessage(MSG_SHOW_SHUTDOWN_UI, 
+                                   isReboot ? 1 : 0, isRebootRecovery ? 1 : 0, reason).sendToTarget();
         }
     }
 
@@ -1030,7 +1033,7 @@ public class CommandQueue extends IStatusBar.Stub implements CallbackController<
                     break;
                 case MSG_SHOW_SHUTDOWN_UI:
                     for (int i = 0; i < mCallbacks.size(); i++) {
-                        mCallbacks.get(i).handleShowShutdownUi(msg.arg1 != 0, (String) msg.obj);
+                        mCallbacks.get(i).handleShowShutdownUi(msg.arg1 != 0, msg.arg1 != 0, msg.arg1 != 0, (String) msg.obj);
                     }
                     break;
                 case MSG_SET_TOP_APP_HIDES_STATUS_BAR:

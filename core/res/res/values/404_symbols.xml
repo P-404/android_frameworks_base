@@ -26,4 +26,23 @@
   <java-symbol type="string" name="popup_camera_dialog_no" />
   <java-symbol type="string" name="popup_camera_dialog_raise" />
 
+  <!-- Extended Power Menu -->
+  <java-symbol type="array" name="config_extendedGlobalActionsList" />
+  <java-symbol type="drawable" name="ic_restart_quick" />
+  <java-symbol type="drawable" name="ic_restart_recovery" />
+  <java-symbol type="drawable" name="ic_restart_bootloader" />
+  <!-- Defined in res/res/values/symbols.xml -
+  <java-symbol type="string" name="global_action_restart" />-->
+  <java-symbol type="string" name="global_action_quick_restart" />
+  <java-symbol type="string" name="global_action_recovery" />
+  <java-symbol type="string" name="global_action_bootloader" />
+  <!-- Shutdown Thread -->
+  <java-symbol type="string" name="global_restart" />
+  <java-symbol type="string" name="global_restart_message" />
+  <java-symbol type="string" name="global_quick_restart" />
+  <java-symbol type="string" name="global_restart_recovery" />
+  <java-symbol type="string" name="global_restart_recovery_message" />
+  <java-symbol type="string" name="global_restart_bootloader" />
+  <java-symbol type="string" name="global_restart_bootloader_message" />
+
 </resources>

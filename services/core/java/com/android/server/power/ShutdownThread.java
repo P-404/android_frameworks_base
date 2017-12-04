@@ -82,6 +82,8 @@ public final class ShutdownThread extends Thread {
     private static boolean sIsStarted = false;
 
     private static boolean mReboot;
+    private static boolean mRebootBootloader;
+    private static boolean mRebootRecovery;
     private static boolean mRebootSafeMode;
     private static boolean mRebootHasProgressBar;
     private static String mReason;
@@ -142,6 +144,8 @@ public final class ShutdownThread extends Thread {
      */
     public static void shutdown(final Context context, String reason, boolean confirm) {
         mReboot = false;
+        mRebootBootloader = false;
+        mRebootRecovery = false;
         mRebootSafeMode = false;
         mReason = reason;
         shutdownInner(context, confirm);
@@ -230,6 +234,48 @@ public final class ShutdownThread extends Thread {
      */
     public static void reboot(final Context context, String reason, boolean confirm) {
         mReboot = true;
+        mRebootBootloader = false;
+        mRebootRecovery = false;
+        mRebootSafeMode = false;
+        mRebootHasProgressBar = false;
+        mReason = reason;
+        shutdownInner(context, confirm);
+    }
+
+    /**
+     * Request a clean shutdown, waiting for subsystems to clean up their
+     * state etc.  Must be called from a Looper thread in which its UI
+     * is shown.
+     *
+     * @param context Context used to display the shutdown progress dialog. This must be a context
+     *                suitable for displaying UI (aka Themable).
+     * @param reason code to pass to the kernel (e.g. "recovery"), or null.
+     * @param confirm true if user confirmation is needed before shutting down.
+     */
+    public static void rebootBootloader(final Context context, String reason, boolean confirm) {
+        mReboot = true;
+        mRebootBootloader = true;
+        mRebootRecovery = false;
+        mRebootSafeMode = false;
+        mRebootHasProgressBar = false;
+        mReason = reason;
+        shutdownInner(context, confirm);
+    }
+
+    /**
+     * Request a clean shutdown, waiting for subsystems to clean up their
+     * state etc.  Must be called from a Looper thread in which its UI
+     * is shown.
+     *
+     * @param context Context used to display the shutdown progress dialog. This must be a context
+     *                suitable for displaying UI (aka Themable).
+     * @param reason code to pass to the kernel (e.g. "recovery"), or null.
+     * @param confirm true if user confirmation is needed before shutting down.
+     */
+    public static void rebootRecovery(final Context context, String reason, boolean confirm) {
+        mReboot = true;
+        mRebootBootloader = false;
+        mRebootRecovery = true;
         mRebootSafeMode = false;
         mRebootHasProgressBar = false;
         mReason = reason;
@@ -251,6 +297,8 @@ public final class ShutdownThread extends Thread {
         }
 
         mReboot = true;
+        mRebootBootloader = false;
+        mRebootRecovery = false;
         mRebootSafeMode = true;
         mRebootHasProgressBar = false;
         mReason = null;
@@ -261,7 +309,7 @@ public final class ShutdownThread extends Thread {
         // Throw up a system dialog to indicate the device is rebooting / shutting down.
         ProgressDialog pd = new ProgressDialog(context);
 
-        // Path 1: Reboot to recovery for update
+        //  Path 1: Reboot to recovery for update
         //   Condition: mReason startswith REBOOT_RECOVERY_UPDATE
         //
         //  Path 1a: uncrypt needed
@@ -269,18 +317,30 @@ public final class ShutdownThread extends Thread {
         //              /cache/recovery/block.map doesn't.
         //   UI: determinate progress bar (mRebootHasProgressBar == True)
         //
-        // * Path 1a is expected to be removed once the GmsCore shipped on
+        //  Path 1a is expected to be removed once the GmsCore shipped on
         //   device always calls uncrypt prior to reboot.
         //
         //  Path 1b: uncrypt already done
         //   UI: spinning circle only (no progress bar)
         //
-        // Path 2: Reboot to recovery for factory reset
+        //  Path 2: mReboot: Regular reboot / User requested
+        //   Condition: mReason == REBOOT_REQUESTED_BY_DEVICE_OWNER
+        //   UI: spinning circle only (no progress bar)
+        //
+        //  Path 3: Reboot to recovery for Factory Reset/Flashing
         //   Condition: mReason == REBOOT_RECOVERY
         //   UI: spinning circle only (no progress bar)
         //
-        // Path 3: Regular reboot / shutdown
-        //   Condition: Otherwise
+        //  Path 4: Reboot to bootloader for OEM/Debugging
+        //   Condition: mReason == REBOOT_BOOTLOADER
+        //   UI: spinning circle only (no progress bar)
+        //
+        //  Path 5: Regular reboot / User requested shutdown
+        //   Condition: mReason == SHUTDOWN_USER_REQUESTED
+        //   UI: spinning circle only (no progress bar)
+        //
+        //  Path 6: Shutdown
+        //   Condition: Otherwise if other conditions aren't called
         //   UI: spinning circle only (no progress bar)
 
         // mReason could be "recovery-update" or "recovery-update,quiescent".
@@ -306,21 +366,33 @@ public final class ShutdownThread extends Thread {
                 pd.setMessage(context.getText(
                             com.android.internal.R.string.reboot_to_update_reboot));
             }
-        } else if (mReason != null && mReason.equals(PowerManager.REBOOT_RECOVERY)) {
-            if (RescueParty.isAttemptingFactoryReset()) {
-                // We're not actually doing a factory reset yet; we're rebooting
-                // to ask the user if they'd like to reset, so give them a less
-                // scary dialog message.
-                pd.setTitle(context.getText(com.android.internal.R.string.power_off));
-                pd.setMessage(context.getText(com.android.internal.R.string.shutdown_progress));
-                pd.setIndeterminate(true);
-            } else {
-                // Factory reset path. Set the dialog message accordingly.
-                pd.setTitle(context.getText(com.android.internal.R.string.reboot_to_reset_title));
-                pd.setMessage(context.getText(
-                            com.android.internal.R.string.reboot_to_reset_message));
-                pd.setIndeterminate(true);
+        } else if (mReboot) { // PowerManager.REBOOT_REQUESTED_BY_DEVICE_OWNER
+            if (showSysuiReboot()) {
+                return null;
             }
+            pd.setTitle(context.getText(com.android.internal.R.string.global_restart));
+            pd.setMessage(context.getText(com.android.internal.R.string.global_restart_message));
+            pd.setIndeterminate(true);
+        } else if (mReason != null && mReason.equals(PowerManager.REBOOT_RECOVERY)) {
+            if (showSysuiReboot()) {
+                return null;
+            }
+            pd.setTitle(context.getText(com.android.internal.R.string.global_restart_recovery));
+            pd.setMessage(context.getText(com.android.internal.R.string.global_restart_recovery_message));
+            pd.setIndeterminate(true);
+        } else if (mReason != null && mReason.equals(PowerManager.REBOOT_BOOTLOADER)) {
+            if (showSysuiReboot()) {
+                return null;
+            }
+            pd.setTitle(context.getText(com.android.internal.R.string.global_restart_bootloader));
+            pd.setMessage(context.getText(com.android.internal.R.string.global_restart_bootloader_message));
+            pd.setIndeterminate(true);
+        } else if (mReason != null && mReason.equals(PowerManager.SHUTDOWN_USER_REQUESTED)) {
+            if (showSysuiReboot()) {
+                return null;
+            }
+            pd.setTitle(context.getText(com.android.internal.R.string.global_restart));
+            pd.setMessage(context.getText(com.android.internal.R.string.global_restart_message));
         } else {
             if (showSysuiReboot()) {
                 return null;
@@ -341,7 +413,7 @@ public final class ShutdownThread extends Thread {
         try {
             StatusBarManagerInternal service = LocalServices.getService(
                     StatusBarManagerInternal.class);
-            if (service.showShutdownUi(mReboot, mReason)) {
+            if (service.showShutdownUi(mReboot, mRebootRecovery, mRebootBootloader, mReason)) {
                 // Sysui will handle shutdown UI.
                 Log.d(TAG, "SysUI handling shutdown UI");
                 return true;

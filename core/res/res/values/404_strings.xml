@@ -24,4 +24,19 @@
          they want to allow the application to do this. -->
     <string name="permdesc_fakePackageSignature">Allows the app to pretend to be a different app. Malicious applications might be able to use this to access private application data. Legitimate uses include an emulator pretending to be what it emulates. Grant this permission with caution only!</string>
 
+    <!-- Extended Restart -->
+    <!-- Defined in res/res/values/strings.xml -
+    <string name="global_action_restart">Restart</string>-->
+    <string name="global_action_quick_restart">Quick restart</string>
+    <string name="global_action_recovery">Recovery</string>
+    <string name="global_action_bootloader">Bootloader</string>
+    <!-- Shutdown Thread -->
+    <string name="global_restart">Restart</string>
+    <string name="global_restart_message">Restarting\u2026</string><!-- Can be used in SysUIReboot -->
+    <string name="global_quick_restart">Quick restart</string>
+    <string name="global_restart_recovery">Recovery</string>
+    <string name="global_restart_recovery_message">Restarting to recovery\u2026</string><!-- Can be used in SysUIReboot -->
+    <string name="global_restart_bootloader">Bootloader</string>
+    <string name="global_restart_bootloader_message">Restarting to bootloader\u2026</string><!-- Can be used in SysUIReboot -->
+
  </resources>

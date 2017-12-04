@@ -93,7 +93,8 @@ public interface StatusBarManagerInternal {
      */
     void setTopAppHidesStatusBar(boolean hidesStatusBar);
 
-    boolean showShutdownUi(boolean isReboot, String requestString);
+    boolean showShutdownUi(boolean isReboot, boolean isRebootRecovery,
+                boolean isRebootBootloader, String requestString);
 
     /**
      * Show a rotation suggestion that a user may approve to rotate the screen.

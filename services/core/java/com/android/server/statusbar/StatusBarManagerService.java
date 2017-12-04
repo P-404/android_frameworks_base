@@ -425,13 +425,14 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
         }
 
         @Override
-        public boolean showShutdownUi(boolean isReboot, String reason) {
+        public boolean showShutdownUi(boolean isReboot, boolean isRebootRecovery,
+                boolean isRebootBootloader, String reason) {
             if (!mContext.getResources().getBoolean(R.bool.config_showSysuiShutdown)) {
                 return false;
             }
             if (mBar != null) {
                 try {
-                    mBar.showShutdownUi(isReboot, reason);
+                    mBar.showShutdownUi(isReboot, isRebootRecovery, isRebootBootloader, reason);
                     return true;
                 } catch (RemoteException ex) {}
             }
@@ -1131,14 +1132,14 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
      * Allows the status bar to shutdown the device.
      */
     @Override
-    public void shutdown() {
+    public void shutdown(boolean confirm) {
         enforceStatusBarService();
         long identity = Binder.clearCallingIdentity();
         try {
             // ShutdownThread displays UI, so give it a UI context.
             mHandler.post(() ->
                     ShutdownThread.shutdown(getUiContext(),
-                        PowerManager.SHUTDOWN_USER_REQUESTED, false));
+                        PowerManager.SHUTDOWN_USER_REQUESTED, confirm));
         } finally {
             Binder.restoreCallingIdentity(identity);
         }
@@ -1148,19 +1149,61 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
      * Allows the status bar to reboot the device.
      */
     @Override
-    public void reboot(boolean safeMode) {
+    public void reboot(boolean confirm) {
         enforceStatusBarService();
         long identity = Binder.clearCallingIdentity();
         try {
-            mHandler.post(() -> {
-                // ShutdownThread displays UI, so give it a UI context.
-                if (safeMode) {
-                    ShutdownThread.rebootSafeMode(getUiContext(), true);
-                } else {
+            mHandler.post(() ->
                     ShutdownThread.reboot(getUiContext(),
-                            PowerManager.SHUTDOWN_USER_REQUESTED, false);
-                }
-            });
+                            PowerManager.REBOOT_REQUESTED_BY_DEVICE_OWNER, confirm));
+        } finally {
+            Binder.restoreCallingIdentity(identity);
+        }
+    }
+
+    /**
+     * Allows the status bar to reboot to bootloader.
+     */
+    @Override
+    public void rebootBootloader(boolean confirm) {
+        enforceStatusBarService();
+        long identity = Binder.clearCallingIdentity();
+        try {
+            mHandler.post(() ->
+                    ShutdownThread.rebootBootloader(getUiContext(),
+                            PowerManager.REBOOT_BOOTLOADER, confirm));
+        } finally {
+            Binder.restoreCallingIdentity(identity);
+        }
+    }
+
+    /**
+     * Allows the status bar to reboot to recovery.
+     */
+    @Override
+    public void rebootRecovery(boolean confirm) {
+        enforceStatusBarService();
+        long identity = Binder.clearCallingIdentity();
+        try {
+            mHandler.post(() ->
+                    ShutdownThread.rebootRecovery(getUiContext(),
+                            PowerManager.REBOOT_RECOVERY, confirm));
+        } finally {
+            Binder.restoreCallingIdentity(identity);
+        }
+    }
+
+    /**
+     * Allows the status bar to reboot to safe mode.
+     */
+    @Override
+    public void rebootSafeMode(boolean confirm) {
+        enforceStatusBarService();
+        long identity = Binder.clearCallingIdentity();
+        try {
+            // ShutdownThread displays UI, so give it a UI context.
+            mHandler.post(() ->
+                    ShutdownThread.rebootSafeMode(getUiContext(), confirm));
         } finally {
             Binder.restoreCallingIdentity(identity);
         }
