@@ -67,4 +67,7 @@
     <!-- Whether to allow process with media UID to access CameraServiceProxy -->
     <bool name="config_allowMediaUidForCameraServiceProxy">false</bool>
 
+    <!-- Proximity check for powerbutton flashlight toggle -->
+    <integer name="config_flashlightProximityTimeout">300</integer>
+
 </resources>
