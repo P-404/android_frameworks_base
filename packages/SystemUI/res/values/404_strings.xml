@@ -64,5 +64,7 @@
 
     <!-- Data usage info -->
     <string name="usage_data">used</string>
-
+     
+    <!-- AOD QS tile -->
+    <string name="quick_settings_aod_label">AOD</string>
 </resources>
