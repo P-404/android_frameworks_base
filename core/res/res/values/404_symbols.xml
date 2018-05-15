@@ -56,4 +56,10 @@
 
     <!-- App Lock -->
     <java-symbol type="string" name="lockscreen_pattern_instructions" />
+
+    <!-- Alert slider -->
+    <java-symbol type="string" name="alert_slider_state_path" />
+    <java-symbol type="string" name="alert_slider_uevent_match_path" />
+    <java-symbol type="bool" name="config_hasAlertSlider" />
+
 </resources>
