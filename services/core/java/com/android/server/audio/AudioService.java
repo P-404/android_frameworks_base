@@ -142,6 +142,7 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityManager;
 import android.widget.Toast;
 
+import com.android.internal.R;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.DumpUtils;
@@ -608,6 +609,9 @@ public class AudioService extends IAudioService.Stub
     // caches the value returned by AudioSystem.isMicrophoneMuted()
     private boolean mMicMuteFromSystemCached;
 
+    // Alert slider
+    private boolean mHasAlertSlider = false;
+
     @GuardedBy("mSettingsLock")
     private int mAssistantUid;
 
@@ -618,7 +622,6 @@ public class AudioService extends IAudioService.Stub
     @GuardedBy("mSupportedSystemUsagesLock")
     private @AttributeSystemUsage int[] mSupportedSystemUsages =
             new int[]{AudioAttributes.USAGE_CALL_ASSISTANT};
-
     // Defines the format for the connection "address" for ALSA devices
     public static String makeAlsaAddressString(int card, int device) {
         return "card=" + card + ";device=" + device + ";";
@@ -709,6 +712,10 @@ public class AudioService extends IAudioService.Stub
 
         mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
         mHasVibrator = mVibrator == null ? false : mVibrator.hasVibrator();
+
+        mHasAlertSlider = mContext.getResources().getBoolean(R.bool.config_hasAlertSlider)
+                && !TextUtils.isEmpty(mContext.getResources().getString(R.string.alert_slider_state_path))
+                && !TextUtils.isEmpty(mContext.getResources().getString(R.string.alert_slider_uevent_match_path));
 
         // Initialize volume
         // Priority 1 - Android Property
@@ -2075,6 +2082,27 @@ public class AudioService extends IAudioService.Stub
                 } else {
                     streamType = mVolumeControlStream;
                 }
+            }
+        }
+
+        if (mHasAlertSlider) {
+            int volumeType = mStreamVolumeAlias[streamType];
+            VolumeStreamState volumeState = mStreamStates[volumeType];
+            int state = getDeviceForStream(volumeType);
+            int index = volumeState.getIndex(state);
+            int ringerMode = getRingerModeInternal();
+            if ((volumeType == AudioSystem.STREAM_RING)
+                    && (direction == AudioManager.ADJUST_LOWER)
+                    && (index == 0)) {
+                direction = AudioManager.ADJUST_SAME;
+            }
+            if ((ringerMode == AudioManager.RINGER_MODE_SILENT)
+                    && (direction == AudioManager.ADJUST_RAISE
+                    && volumeType != AudioSystem.STREAM_MUSIC
+                    && volumeType != AudioSystem.STREAM_ALARM
+                    && volumeType != AudioSystem.STREAM_VOICE_CALL
+                    && !isInCommunication())) {
+                direction = AudioManager.ADJUST_SAME;
             }
         }
 
