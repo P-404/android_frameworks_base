@@ -40,6 +40,7 @@ import com.android.systemui.qs.tiles.DndTile;
 import com.android.systemui.qs.tiles.FlashlightTile;
 import com.android.systemui.qs.tiles.HeadsUpTile;
 import com.android.systemui.qs.tiles.HotspotTile;
+import com.android.systemui.qs.tiles.ImmersiveTile;
 import com.android.systemui.qs.tiles.IntentTile;
 import com.android.systemui.qs.tiles.LocationTile;
 import com.android.systemui.qs.tiles.NfcTile;
@@ -86,6 +87,7 @@ public class QSFactoryImpl implements QSFactory {
     private final Provider<RebootTile> mRebootTileProvider;
     private final Provider<AODTile> mAODTileProvider;
     private final Provider<CaffeineTile> mCaffeineTileProvider;
+    private final Provider<ImmersiveTile> mImmersiveTileProvider;
 
     private QSTileHost mHost;
 
@@ -113,7 +115,8 @@ public class QSFactoryImpl implements QSFactory {
             Provider<DataSwitchTile> dataSwitchTileProvider,
             Provider<RebootTile> rebootTileProvider,
             Provider<AODTile> aodTileProvider,
-            Provider<CaffeineTile> caffeineTileProvider) {
+            Provider<CaffeineTile> caffeineTileProvider,
+            Provider<ImmersiveTile> immersiveTileProvider) {
         mWifiTileProvider = wifiTileProvider;
         mBluetoothTileProvider = bluetoothTileProvider;
         mCellularTileProvider = cellularTileProvider;
@@ -138,6 +141,7 @@ public class QSFactoryImpl implements QSFactory {
         mRebootTileProvider = rebootTileProvider;
         mAODTileProvider = aodTileProvider;
         mCaffeineTileProvider = caffeineTileProvider;
+        mImmersiveTileProvider = immersiveTileProvider;
     }
 
     public void setHost(QSTileHost host) {
@@ -203,6 +207,8 @@ public class QSFactoryImpl implements QSFactory {
                 return mAODTileProvider.get();
             case "caffeine":
                 return mCaffeineTileProvider.get();
+            case "immersive":
+                return mImmersiveTileProvider.get();
         }
 
         // Intent tiles.
