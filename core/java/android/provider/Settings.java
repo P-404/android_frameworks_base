@@ -4980,6 +4980,12 @@ public final class Settings {
         public static final String AMBIENT_MUSIC_TICKER = "ambient_music_ticker";
 
         /**
+         * Volume panel on left
+         * @hide
+         */
+        public static final String VOLUME_PANEL_ON_LEFT = "volume_panel_on_left";
+
+        /**
          * These are all public system settings
          *
          * @hide
@@ -5099,6 +5105,7 @@ public final class Settings {
             PRIVATE_SETTINGS.add(STATUSBAR_CLOCK_DATE_FORMAT);
             PRIVATE_SETTINGS.add(STATUSBAR_CLOCK_DATE_POSITION);
             PRIVATE_SETTINGS.add(AUTHENTICATION_SUCCESS_VIB);
+            PRIVATE_SETTINGS.add(VOLUME_PANEL_ON_LEFT);
         }
 
         /**
