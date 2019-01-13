@@ -27,4 +27,9 @@
     <dimen name="screenrecord_status_icon_radius">5dp</dimen>
     <dimen name="screenrecord_status_text_size">14sp</dimen>
 
+    <!-- Network traffic monitor -->
+    <dimen name="net_traffic_single_text_size">12dp</dimen>
+    <dimen name="net_traffic_multi_text_size">8dp</dimen>
+    <dimen name="net_traffic_txt_img_padding">4dp</dimen>
+
 </resources>
