@@ -33,4 +33,10 @@
     <string name="global_restart_bootloader">Bootloader</string>
     <string name="global_restart_bootloader_message">Restarting to bootloader\u2026</string><!-- Can be used in SysUIReboot -->
 
+    <!--  Permissions for MicroG-->
+    <!-- Title of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
+    <string name="permlab_fakePackageSignature">Spoof package signature</string>
+    <!-- Description of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
+    <string name="permdesc_fakePackageSignature">Allows the app to pretend to be a different app. Malicious applications might be able to use this to access private application data. Legitimate uses include an emulator pretending to be what it emulates. Grant this permission with caution only!</string>
+
  </resources>
