@@ -13,12 +13,8 @@
 -->
 <resources>
 
-    <!-- The list of vendor package signatures that should also be considered
-         platform signatures, specifically for use on devices with a vendor partition. -->
-    <string-array name="config_vendorPlatformSignatures">
-    </string-array>
-
-    <!-- Shows the required view for in-display fingerprint -->
-    <bool name="config_supportsInDisplayFingerprint">false</bool>
+    <!-- Color of the FOD view -->
+    <color name="config_fodColor">#00ff00</color>
+    <color name="config_fodColorBackground">#20000000</color>
 
 </resources>
