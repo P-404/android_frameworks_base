@@ -653,9 +653,6 @@ public final class Zygote {
 
             Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
 
-            // Set the Java Language thread priority to the default value for new apps.
-            Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
-
             return ZygoteInit.zygoteInit(args.mTargetSdkVersion,
                     args.mRemainingArgs,
                     null /* classLoader */);
