@@ -3257,7 +3257,7 @@ public class SettingsProvider extends ContentProvider {
         }
 
         private final class UpgradeController {
-            private static final int SETTINGS_VERSION = 183;
+            private static final int SETTINGS_VERSION = 184;
 
             private final int mUserId;
 
@@ -4466,6 +4466,33 @@ public class SettingsProvider extends ContentProvider {
                             true /* makeDefault */, SettingsState.SYSTEM_PACKAGE_NAME);
 
                     currentVersion = 183;
+                }
+
+                if (currentVersion == 183) {
+                    // Version 184: microg location / geocoderbackends
+                    final SettingsState secureSettings = getSecureSettingsLocked(userId);
+                    Setting currentLocationSetting = secureSettings.getSettingLocked(
+                            Secure.MICROG_DEFAULT_LOCATION_BACKENDS);
+                    if (currentLocationSetting.isNull()) {
+                        secureSettings.insertSettingLocked(
+                                Settings.Secure.MICROG_DEFAULT_LOCATION_BACKENDS,
+                                getContext().getResources().getString(
+                                        R.string.def_microg_location_backends),
+                                null, true,
+                                SettingsState.SYSTEM_PACKAGE_NAME);
+                    }
+
+                    Setting currentGeocoderSetting = secureSettings.getSettingLocked(
+                            Secure.MICROG_DEFAULT_GEOCODER_BACKENDS);
+                    if (currentGeocoderSetting.isNull()) {
+                        secureSettings.insertSettingLocked(
+                                Settings.Secure.MICROG_DEFAULT_GEOCODER_BACKENDS,
+                                getContext().getResources().getString(
+                                        R.string.def_microg_geocoder_backends),
+                                null, true,
+                                SettingsState.SYSTEM_PACKAGE_NAME);
+                    }
+                    currentVersion = 184;
                 }
 
                 // vXXX: Add new settings above this point.
