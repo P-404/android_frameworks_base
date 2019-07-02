@@ -6111,6 +6111,8 @@ public class AudioService extends IAudioService.Stub
         mPlaybackMonitor.dump(pw);
 
         mRecordMonitor.dump(pw);
+        pw.println("\nSoundEffects:");
+        mSfxHelper.dump(pw, "  ");
 
         pw.println("\n");
         pw.println("\nEvent logs:");
