@@ -195,6 +195,8 @@ public class VolumeDialogImpl implements VolumeDialog,
     // Volume panel placement left or right
     private boolean mVolumePanelOnLeft;
 
+    private boolean mHasAlertSlider;
+
     private boolean mExpanded;
 
     private class CustomSettingsObserver extends ContentObserver {
@@ -247,6 +249,7 @@ public class VolumeDialogImpl implements VolumeDialog,
         mCustomSettingsObserver = new CustomSettingsObserver(mHandler);
         mCustomSettingsObserver.observe();
         mCustomSettingsObserver.update();
+        mHasAlertSlider = mContext.getResources().getBoolean(com.android.internal.R.bool.config_hasAlertSlider);
     }
 
     @Override
@@ -351,7 +354,6 @@ public class VolumeDialogImpl implements VolumeDialog,
             mODICaptionsTooltipViewStub = null;
         }
 
-
         mMediaOutputView = mDialog.findViewById(R.id.media_output_container);
         mMediaOutputIcon = mDialog.findViewById(R.id.media_output);
         if (mMediaOutputIcon != null) {
@@ -363,6 +365,10 @@ public class VolumeDialogImpl implements VolumeDialog,
         if (mExpandRows != null) {
             setLayoutGravity(mExpandRows.getLayoutParams(), panelGravity);
             mExpandRows.setRotation(mVolumePanelOnLeft ? -90 : 90);
+        }
+
+        if (mHasAlertSlider) {
+            mRinger.setVisibility(View.GONE);
         }
 
         if (mRows.isEmpty()) {
