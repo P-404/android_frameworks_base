@@ -251,6 +251,8 @@ public class VolumeDialogImpl implements VolumeDialog,
     private ViewStub mODICaptionsTooltipViewStub;
     private View mODICaptionsTooltipView = null;
 
+    private boolean mHasAlertSlider;
+
     private final boolean mUseBackgroundBlur;
     private Consumer<Boolean> mCrossWindowBlurEnabledListener;
     private BackgroundBlurDrawable mDialogRowsViewBackground;
@@ -276,6 +278,8 @@ public class VolumeDialogImpl implements VolumeDialog,
             mContext.getResources().getInteger(R.integer.config_dialogHideAnimationDurationMs);
         mUseBackgroundBlur =
             mContext.getResources().getBoolean(R.bool.config_volumeDialogUseBackgroundBlur);
+        mHasAlertSlider =
+	    mContext.getResources().getBoolean(com.android.internal.R.bool.config_hasAlertSlider);
 
         if (mUseBackgroundBlur) {
             final int dialogRowsViewColorAboveBlur = mContext.getColor(
@@ -530,6 +534,10 @@ public class VolumeDialogImpl implements VolumeDialog,
 
         mSettingsView = mDialog.findViewById(R.id.settings_container);
         mSettingsIcon = mDialog.findViewById(R.id.settings);
+
+        if (mHasAlertSlider) {
+            mRinger.setVisibility(View.GONE);
+        }
 
         if (mRows.isEmpty()) {
             if (!AudioSystem.isSingleVolume(mContext)) {
