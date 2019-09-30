@@ -4453,8 +4453,11 @@
 
   <java-symbol type="integer" name="config_customizedMaxCachedProcesses" />
 
-    <!-- Device keyhandlers -->
-    <java-symbol type="array" name="config_deviceKeyHandlerLibs" />
-    <java-symbol type="array" name="config_deviceKeyHandlerClasses" />
+  <!-- Device keyhandlers -->
+  <java-symbol type="array" name="config_deviceKeyHandlerLibs" />
+  <java-symbol type="array" name="config_deviceKeyHandlerClasses" />
 
+  <!-- Alert slider -->
+  <java-symbol type="bool" name="config_hasAlertSlider" />
+  <java-symbol type="integer" name="config_alertSliderLocation" />
 </resources>

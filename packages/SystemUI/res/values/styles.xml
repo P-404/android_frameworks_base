@@ -903,4 +903,9 @@
       <!-- Setting a placeholder will avoid using the SystemUI icon on the splash screen.  -->
       <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_blank</item>
     </style>
+
+    <style name="TriStateUiText">
+        <item name="android:textSize">11.0sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
 </resources>
