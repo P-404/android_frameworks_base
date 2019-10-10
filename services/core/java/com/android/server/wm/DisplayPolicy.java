@@ -497,7 +497,7 @@ public class DisplayPolicy {
         }
 
         if (mPerf != null)
-                SCROLL_BOOST_SS_ENABLE = Boolean.parseBoolean(mPerf.perfGetProp("vendor.perf.gestureflingboost.enable", "false"));
+                SCROLL_BOOST_SS_ENABLE = Boolean.parseBoolean(mPerf.perfGetProp("vendor.perf.gestureflingboost.enable", "true"));
         isLowRAM = SystemProperties.getBoolean("ro.config.low_ram", false);
 
         final Looper looper = UiThread.getHandler().getLooper();
