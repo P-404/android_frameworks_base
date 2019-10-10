@@ -17,4 +17,7 @@
   <java-symbol type="array" name="config_deviceKeyHandlerLibs" />
   <java-symbol type="array" name="config_deviceKeyHandlerClasses" />
 
+  <!-- Ambient Pulse Light -->
+  <java-symbol type="integer" name="config_AmbientPulseLightColor" />
+
 </resources>
