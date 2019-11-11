@@ -66,4 +66,7 @@
     <dimen name="qs_media_action_button_size">48dp</dimen>
     <dimen name="brightness_slider_height">48dp</dimen>
     <dimen name="op_qs_footer_action_button_size">48dp</dimen>
+
+    <!-- Qs visibility -->
+    <dimen name="qs_tile_height_wo_label">64dp</dimen>
 </resources>
