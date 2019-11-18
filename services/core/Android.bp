@@ -135,7 +135,6 @@ java_library_static {
         "netd_aidl_interfaces-platform-java",
         "overlayable_policy_aidl-java",
         "SurfaceFlingerProperties",
-        "vendor.qti.hardware.servicetracker-V1.0-java",
     ],
 }
 
