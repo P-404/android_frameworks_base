@@ -1837,6 +1837,9 @@ public class StatusBar extends SystemUI implements DemoMode,
            resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.QS_SHOW_BATTERY_PERCENT),
                     false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.LOCKSCREEN_MEDIA_BLUR),
+                    false, this, UserHandle.USER_ALL);
         }
 
         @Override
@@ -1852,6 +1855,9 @@ public class StatusBar extends SystemUI implements DemoMode,
                 updateQsPanelResources();
             } else if (uri.equals(Settings.System.getUriFor(Settings.System.QS_SHOW_BATTERY_PERCENT))) {
                 setQsBatteryPercentMode();
+            } else if (uri.equals(Settings.System.getUriFor(
+                    Settings.System.LOCKSCREEN_MEDIA_BLUR))) {
+                setLockScreenMediaBlurLevel();
             }
         }
 
@@ -1859,6 +1865,7 @@ public class StatusBar extends SystemUI implements DemoMode,
             setPulseOnNewTracks();
             updateQsPanelResources();
             setQsBatteryPercentMode();
+            setLockScreenMediaBlurLevel();
         }
     }
 
@@ -1879,6 +1886,12 @@ public class StatusBar extends SystemUI implements DemoMode,
     private void updateQsPanelResources() {
         if (mQSPanel != null) {
             mQSPanel.updateResources();
+        }
+    }
+
+    private void setLockScreenMediaBlurLevel() {
+        if (mMediaManager != null) {
+            mMediaManager.setLockScreenMediaBlurLevel();
         }
     }
 
