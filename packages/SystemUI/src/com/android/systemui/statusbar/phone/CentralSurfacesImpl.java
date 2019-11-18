@@ -1998,26 +1998,29 @@ public class CentralSurfacesImpl extends CoreStartable implements
 
         void observe() {
             ContentResolver resolver = mContext.getContentResolver();
-            /*resolver.registerContentObserver(Settings.System.getUriFor(
-                    Settings.System.XXX),
-                    false, this, UserHandle.USER_ALL);*/
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.LOCKSCREEN_MEDIA_BLUR),
+                    false, this, UserHandle.USER_ALL);
         }
 
         @Override
         public void onChange(boolean selfChange, Uri uri) {
-            /*if (uri.equals(Settings.System.getUriFor(
-                    Settings.System.XXX))) {
-                doXXX();
-            }*/
+	      if (uri.equals(Settings.System.getUriFor(
+                    Settings.System.LOCKSCREEN_MEDIA_BLUR))) {
+                setLockScreenMediaBlurLevel();
+            }
         }
 
         public void update() {
-            //doXXX();
+            setLockScreenMediaBlurLevel();
         }
     }
 
-    /*private void doXXX() {
-    }*/
+    private void setLockScreenMediaBlurLevel() {
+        if (mMediaManager != null) {
+            mMediaManager.setLockScreenMediaBlurLevel();
+        }
+    }
 
     static class AnimateExpandSettingsPanelMessage {
         final String mSubpanel;
