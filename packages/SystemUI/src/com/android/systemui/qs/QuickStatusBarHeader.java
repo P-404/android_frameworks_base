@@ -110,6 +110,10 @@ public class QuickStatusBarHeader extends FrameLayout {
 
     private boolean mUseCombinedQSHeader;
 
+    private static final int BATTERY_STYLE_CIRCLE = 1;
+    private static final int BATTERY_STYLE_DOTTED_CIRCLE = 2;
+    private static final int BATTERY_STYLE_FULL_CIRCLE = 3;
+
     public QuickStatusBarHeader(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
@@ -151,6 +155,7 @@ public class QuickStatusBarHeader extends FrameLayout {
         Configuration config = mContext.getResources().getConfiguration();
         setDatePrivacyContainersWidth(config.orientation == Configuration.ORIENTATION_LANDSCAPE);
 
+        mBatteryRemainingIcon.setIsQsHeader(true);
         // QS will always show the estimate, and BatteryMeterView handles the case where
         // it's unavailable or charging
         mBatteryRemainingIcon.setPercentShowMode(BatteryMeterView.MODE_ESTIMATE);
@@ -271,6 +276,13 @@ public class QuickStatusBarHeader extends FrameLayout {
             mClockView.setTextColor(textColor);
             if (mTintedIconManager != null) {
                 mTintedIconManager.setTint(textColor);
+            }
+            final int batteryStyle = mBatteryRemainingIcon.getBatteryStyle();
+            if (batteryStyle == BATTERY_STYLE_CIRCLE
+                    || batteryStyle == BATTERY_STYLE_DOTTED_CIRCLE
+                    || batteryStyle == BATTERY_STYLE_FULL_CIRCLE) {
+                textColorSecondary = Utils.getColorAttrDefaultColor(mContext,
+                        android.R.attr.textColorHint);
             }
             mBatteryRemainingIcon.updateColors(mTextColorPrimary, textColorSecondary,
                     mTextColorPrimary);
