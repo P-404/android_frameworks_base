@@ -56,4 +56,7 @@
     <dimen name="qs_media_action_button_margin_top">18dp</dimen>
     <dimen name="qs_media_action_button_size">40dp</dimen>
 
+    <!-- Width of the battery icon in the status bar when set to circle style. -->
+    <dimen name="status_bar_battery_icon_circle_width">13.5dp</dimen>
+
 </resources>
