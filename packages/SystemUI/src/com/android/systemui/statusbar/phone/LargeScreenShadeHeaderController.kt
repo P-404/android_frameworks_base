@@ -163,7 +163,6 @@ class LargeScreenShadeHeaderController @Inject constructor(
         val batteryIcon: BatteryMeterView = header.findViewById(R.id.batteryRemainingIcon)
 
         // battery settings same as in QS icons
-        batteryMeterViewController.ignoreTunerUpdates()
         batteryIcon.setPercentShowMode(BatteryMeterView.MODE_ESTIMATE)
 
         iconContainer = header.findViewById(R.id.statusIcons)
