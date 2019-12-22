@@ -20,4 +20,7 @@
 
     <!-- The margin between the pin view and the Emergency Carrier area -->
     <dimen name="pin_view_bottom_margin">0dp</dimen>
+
+    <!-- Padding added to keyguard status area when Type clock is in use -->
+    <dimen name="keyguard_status_area_typeclock_padding">32dp</dimen>
 </resources>
