@@ -49,6 +49,10 @@ LOCAL_REQUIRED_MODULES := \
 	IconShapeTeardropOverlay \
 	NavigationBarMode3ButtonOverlay \
 	NavigationBarMode2ButtonOverlay \
+	NavigationBarModeGesturalOverlayNoPill \
+	NavigationBarModeGesturalOverlayNoPillNarrowBack \
+	NavigationBarModeGesturalOverlayNoPillWideBack \
+	NavigationBarModeGesturalOverlayNoPillExtraWideBack \
 	NavigationBarModeGesturalOverlay \
 	NavigationBarModeGesturalOverlayNarrowBack \
 	NavigationBarModeGesturalOverlayWideBack \
