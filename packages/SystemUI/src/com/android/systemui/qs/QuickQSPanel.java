@@ -81,10 +81,6 @@ public class QuickQSPanel extends QSPanel {
     }
 
     @Override
-    protected void addDivider() {
-    }
-
-    @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         Dependency.get(TunerService.class).addTunable(mNumTiles, NUM_QUICK_TILES);
