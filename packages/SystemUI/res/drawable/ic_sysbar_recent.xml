@@ -1,26 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-     Copyright (C) 2018 The Android Open Source Project
-
-     Licensed under the Apache License, Version 2.0 (the "License");
-     you may not use this file except in compliance with the License.
-     You may obtain a copy of the License at
-
-          http://www.apache.org/licenses/LICENSE-2.0
-
-     Unless required by applicable law or agreed to in writing, software
-     distributed under the License is distributed on an "AS IS" BASIS,
-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     See the License for the specific language governing permissions and
-     limitations under the License.
--->
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="28dp"
-    android:height="28dp"
-    android:viewportWidth="28"
-    android:viewportHeight="28">
-
-    <path
-        android:fillColor="?attr/singleToneColor"
-        android:pathData="M19.9,21.5H8.1c-0.88,0-1.6-0.72-1.6-1.6V8.1c0-0.88,0.72-1.6,1.6-1.6h11.8c0.88,0,1.6,0.72,1.6,1.6v11.8 C21.5,20.78,20.78,21.5,19.9,21.5z" />
+<vector xmlns:androidprv="http://schemas.android.com/apk/prv/res/android" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:aapt="http://schemas.android.com/aapt" android:height="22dp" android:width="22dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#00000000" android:pathData="M7.034,4.552L16.966,4.552A2.483,2.483 0,0 1,19.448 7.034L19.448,16.966A2.483,2.483 0,0 1,16.966 19.448L7.034,19.448A2.483,2.483 0,0 1,4.552 16.966L4.552,7.034A2.483,2.483 0,0 1,7.034 4.552z" android:strokeColor="?attr/singleToneColor" android:strokeWidth="2.4828"/>
 </vector>
