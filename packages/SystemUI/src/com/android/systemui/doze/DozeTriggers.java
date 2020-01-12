@@ -44,7 +44,6 @@ import com.android.internal.util.Preconditions;
 import com.android.systemui.Dependency;
 import com.android.systemui.dock.DockManager;
 import com.android.systemui.statusbar.phone.DozeParameters;
-import com.android.systemui.statusbar.policy.FlashlightController;
 import com.android.systemui.util.Assert;
 import com.android.systemui.util.ProximitySensor;
 import com.android.systemui.util.wakelock.WakeLock;
@@ -83,7 +82,6 @@ public class DozeTriggers implements DozeMachine.Part {
     private final TriggerReceiver mBroadcastReceiver = new TriggerReceiver();
     private final DockEventListener mDockEventListener = new DockEventListener();
     private final DockManager mDockManager;
-    private final FlashlightController mFlashlightController;
 
     private long mNotificationPulseTime;
     private boolean mPulsePending;
@@ -108,7 +106,6 @@ public class DozeTriggers implements DozeMachine.Part {
                 dozeParameters.getPolicy());
         mUiModeManager = mContext.getSystemService(UiModeManager.class);
         mDockManager = dockManager;
-        mFlashlightController = Dependency.get(FlashlightController.class);
     }
 
     private void onNotification(Runnable onPulseSuppressedListener) {
@@ -355,17 +352,14 @@ public class DozeTriggers implements DozeMachine.Part {
         }
     }
 
-    private void toggleFlashlight() {
+    private void tryToggleFlashlight() {
         proximityCheckThenCall((result) -> {
             if (result == ProximityCheck.RESULT_NEAR) {
                 // in pocket, abort pulse
                 return;
-            } else if (mFlashlightController != null) {
+            } else {
                 // not in pocket, toggle flashlight
-                mFlashlightController.initFlashLight();
-                if (mFlashlightController.hasFlashlight() && mFlashlightController.isAvailable()) {
-                    mFlashlightController.setFlashlight(!mFlashlightController.isEnabled());
-                }
+                mDozeHost.performToggleFlashlight();
             }
         }, false/*performedProxCheck*/, DozeLog.REASON_TOGGLE_FLASHLIGHT);
     }
@@ -609,8 +603,8 @@ public class DozeTriggers implements DozeMachine.Part {
         }
 
         @Override
-        public void toggleCameraFlash() {
-            toggleFlashlight();
+        public void toggleFlashlightProximityCheck() {
+            tryToggleFlashlight();
         }
     };
 }
