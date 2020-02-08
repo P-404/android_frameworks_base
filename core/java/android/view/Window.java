@@ -636,6 +636,9 @@ public abstract class Window {
 
         /** Returns whether the window belongs to the task root. */
         boolean isTaskRoot();
+
+        /** Returns if the task was moved (or it was already at the back) */
+        boolean moveTaskToBack(boolean nonRoot);
     }
 
     /**
