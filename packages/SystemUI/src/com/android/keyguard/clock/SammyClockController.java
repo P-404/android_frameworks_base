@@ -170,6 +170,10 @@ public class SammyClockController implements ClockPlugin {
 
     @Override
     public void onTimeTick() {
+        mView.onTimeChanged();
+        mAmpmClock.refreshTime();
+        mHourClock.refreshTime();
+        mMinuteClock.refreshTime();
     }
 
     @Override
