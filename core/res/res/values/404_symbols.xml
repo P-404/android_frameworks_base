@@ -20,4 +20,10 @@
   <!-- Horizon Light -->
   <java-symbol type="integer" name="config_AmbientPulseLightColor" />
 
+  <!-- Whether the device has a popup camera -->
+  <java-symbol type="bool" name="config_hasPopupCamera" />
+  <java-symbol type="string" name="popup_camera_dialog_message" />
+  <java-symbol type="string" name="popup_camera_dialog_no" />
+  <java-symbol type="string" name="popup_camera_dialog_raise" />
+
 </resources>

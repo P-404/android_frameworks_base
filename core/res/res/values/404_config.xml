@@ -23,4 +23,7 @@
     <!-- Default value for Horizon light color (Blue) -->
     <integer name="config_AmbientPulseLightColor">0x3980FF</integer>
 
+    <!-- Whether the device has a popup camera -->
+    <bool name="config_hasPopupCamera">false</bool>
+
 </resources>
