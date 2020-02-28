@@ -51,6 +51,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.util.MathUtils;
 import android.view.LayoutInflater;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -339,6 +340,8 @@ public class NotificationPanelView extends PanelView implements
 
     // AOSPA additions
     private NotificationLightsView mPulseLightsView;
+    private GestureDetector mDoubleTapGestureListener;
+    private int mStatusBarHeaderHeight;
 
     private Runnable mHeadsUpExistenceChangedRunnable = new Runnable() {
         @Override
@@ -492,6 +495,19 @@ public class NotificationPanelView extends PanelView implements
         });
         mBottomAreaShadeAlphaAnimator.setDuration(160);
         mBottomAreaShadeAlphaAnimator.setInterpolator(Interpolators.ALPHA_OUT);
+
+        mDoubleTapGestureListener = new GestureDetector(context,
+                new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onDoubleTap(MotionEvent event) {
+                /*resetViews(false);
+                mQsExpandImmediate = false;
+                requestPanelHeightUpdate();
+                setListening(false);*/
+                mPowerManager.goToSleep(event.getEventTime());
+                return true;
+            }
+        });
     }
 
     /**
@@ -604,6 +620,8 @@ public class NotificationPanelView extends PanelView implements
                 com.android.internal.R.dimen.status_bar_height);
         mHeadsUpInset = statusbarHeight + getResources().getDimensionPixelSize(
                 R.dimen.heads_up_status_bar_padding);
+        mStatusBarHeaderHeight = getResources().getDimensionPixelSize(
+                R.dimen.status_bar_height);
     }
 
     /**
@@ -1260,7 +1278,10 @@ public class NotificationPanelView extends PanelView implements
         if (mStatusBar.isBouncerShowingScrimmed()) {
             return false;
         }
-
+        if (!mQsExpanded && event.getY() < mStatusBarHeaderHeight) {
+            mDoubleTapGestureListener.onTouchEvent(event);
+        }
+        
         // Make sure the next touch won't the blocked after the current ends.
         if (event.getAction() == MotionEvent.ACTION_UP
                 || event.getAction() == MotionEvent.ACTION_CANCEL) {
