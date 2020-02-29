@@ -2684,7 +2684,10 @@ enum PageId {
     // OS: R
     MEDIA_CONTROLS_SETTINGS = 1845;
 
-    // Custom Additions
+    // 404 Additions
     // Panel for Bluetooth
     PANEL_BLUETOOTH = 2001;
+
+    // Panel for Mobile Data
+    PANEL_MOBILE_DATA = 2002;
 }
