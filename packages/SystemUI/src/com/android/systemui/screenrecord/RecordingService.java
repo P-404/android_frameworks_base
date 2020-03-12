@@ -235,7 +235,7 @@ public class RecordingService extends Service {
             DisplayMetrics metrics = getResources().getDisplayMetrics();
             int screenWidth = metrics.widthPixels;
             int screenHeight = metrics.heightPixels;
-            mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+            mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.HEVC);
             mMediaRecorder.setVideoSize(screenWidth, screenHeight);
             mMediaRecorder.setVideoFrameRate(VIDEO_FRAME_RATE);
             mMediaRecorder.setVideoEncodingBitRate(VIDEO_BIT_RATE);
