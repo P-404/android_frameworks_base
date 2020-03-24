@@ -26,6 +26,7 @@ import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
+import android.hardware.biometrics.BiometricSourceType;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.RemoteException;
@@ -148,6 +149,15 @@ public class FODCircleView extends ImageView {
         public void onScreenTurnedOn() {
             if (mUpdateMonitor.isFingerprintDetectionRunning()) {
                 show();
+            }
+        }
+
+        @Override
+        public void onBiometricHelp(int msgId, String helpString,
+                BiometricSourceType biometricSourceType) {
+            if (msgId == -1) { // Auth error
+                hideCircle();
+                mHandler.post(() -> mFODAnimation.hideFODanimation());
             }
         }
     };
