@@ -114,10 +114,6 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
 
         setOrientation(VERTICAL);
 
-        mBrightnessView = LayoutInflater.from(mContext).inflate(
-            R.layout.quick_settings_brightness_dialog, this, false);
-        addView(mBrightnessView);
-
         mTileLayout = (QSTileLayout) LayoutInflater.from(mContext).inflate(
                 R.layout.qs_paged_tile_layout, this, false);
         mTileLayout.setListening(mListening);
@@ -125,6 +121,10 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
 
         mQsTileRevealController = new QSTileRevealController(mContext, this,
                 (PagedTileLayout) mTileLayout);
+
+        mBrightnessView = LayoutInflater.from(mContext).inflate(
+            R.layout.quick_settings_brightness_dialog, this, false);
+        addView(mBrightnessView);
 
         addDivider();
 
