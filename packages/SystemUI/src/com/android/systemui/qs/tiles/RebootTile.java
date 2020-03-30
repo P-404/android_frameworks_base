@@ -33,10 +33,12 @@ import javax.inject.Inject;
 public class RebootTile extends QSTileImpl<BooleanState> {
 
     private boolean mRebootToRecovery = false;
+    private final PowerManager mPowerManager;
 
     @Inject
     public RebootTile(QSHost host) {
         super(host);
+        mPowerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
     }
 
     @Override
@@ -56,11 +58,9 @@ public class RebootTile extends QSTileImpl<BooleanState> {
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {
-                PowerManager pm =
-                    (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
-                pm.reboot(mRebootToRecovery ? "recovery" : "");
+                mPowerManager.reboot(mRebootToRecovery ? "recovery" : "");
             }
-        }, 500);
+        }, 400);
     }
 
     @Override
