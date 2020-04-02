@@ -67,7 +67,7 @@ import javax.inject.Inject;
 public class DndTile extends QSTileImpl<BooleanState> {
 
     private static final Intent ZEN_SETTINGS =
-            new Intent(Settings.ACTION_ZEN_MODE_SETTINGS);
+            new Intent(Settings.Panel.ACTION_ZEN_MODE);
 
     private static final Intent ZEN_PRIORITY_SETTINGS =
             new Intent(Settings.ACTION_ZEN_MODE_PRIORITY_SETTINGS);

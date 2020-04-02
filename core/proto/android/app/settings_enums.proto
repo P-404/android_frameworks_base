@@ -2416,4 +2416,6 @@ enum PageId {
     PANEL_MOBILE_DATA = 2000;
     // Panel for Bluetooth
     PANEL_BLUETOOTH = 2001;
+    // Panel for Do not disturb
+    PANEL_ZEN_MODE = 2002;
 }
