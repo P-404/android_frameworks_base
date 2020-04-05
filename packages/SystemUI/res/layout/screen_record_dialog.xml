@@ -1,36 +1,158 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:clipChildren="false"
-              android:clipToPadding="false"
-              android:gravity="top"
-              android:orientation="vertical"
-              android:padding="@dimen/global_actions_padding"
-              android:background="@drawable/rounded_bg_full">
+<!--
+     Copyright (C) 2020 Paranoid Android
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<LinearLayout 
+    xmlns:androidprv="http://schemas.android.com/apk/prv/res/android"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:sysui="http://schemas.android.com/apk/res-auto"
+    xmlns:systemui="http://schemas.android.com/apk/res/com.android.systemui"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:orientation="vertical"
+    android:background="@drawable/rounded_bg_full"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
     <LinearLayout
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="@dimen/screenrecord_dialog_padding"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-        <CheckBox
-            android:id="@+id/checkbox_mic"
-            android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:layout_width="@dimen/screenrecord_logo_size"
+            android:layout_height="@dimen/screenrecord_logo_size"
+            android:layout_marginBottom="@dimen/screenrecord_dialog_padding"
+            android:src="@drawable/ic_screenrecord"
+            android:tint="@color/GM2_red_500" />
+
+        <TextView
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="@string/screenrecord_mic_label"/>
-        <CheckBox
-            android:id="@+id/checkbox_taps"
-            android:layout_width="match_parent"
+            android:text="@string/screenrecord_start_label" />
+
+        <TextView
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:paddingTop="@dimen/screenrecord_dialog_padding"
+            android:paddingBottom="@dimen/screenrecord_dialog_padding"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="@string/screenrecord_taps_label"/>
-        <Button
-            android:id="@+id/record_button"
+            android:text="@string/screenrecord_description" />
+
+        <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="@string/screenrecord_start_label"
-        />
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_gravity="center"
+                android:layout_width="@dimen/screenrecord_logo_size"
+                android:layout_height="@dimen/screenrecord_logo_size"
+                android:layout_marginRight="@dimen/screenrecord_dialog_padding"
+                android:src="@drawable/ic_mic_26dp"
+                android:tint="@color/GM2_grey_700"
+                android:layout_weight="0" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <TextView
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_gravity="center_vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="@string/screenrecord_audio_label" />
+
+                <TextView
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:id="@+id/audio_type"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="@string/screenrecord_mic_label" />
+            </LinearLayout>
+
+            <Switch
+                android:id="@+id/screenrecord_audio_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_weight="0" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_gravity="center"
+                android:layout_width="@dimen/screenrecord_logo_size"
+                android:layout_height="@dimen/screenrecord_logo_size"
+                android:layout_marginRight="@dimen/screenrecord_dialog_padding"
+                android:src="@drawable/ic_touch"
+                android:tint="@color/GM2_grey_700" />
+
+            <Switch
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="?android:attr/textColorPrimary"
+                android:id="@+id/screenrecord_taps_switch"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="@string/screenrecord_taps_label" />
+        </LinearLayout>
     </LinearLayout>
 
+    <View
+        android:background="@color/GM2_grey_300"
+        android:layout_width="match_parent"
+        android:layout_height="1dp" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:padding="@dimen/screenrecord_dialog_padding"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:layout_gravity="start"
+            android:id="@+id/button_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="@string/cancel"
+            android:textColor="?android:attr/colorAccent"
+            android:layout_weight="0"
+            android:background="?android:attr/selectableItemBackground"
+            style="@*android:style/Widget.DeviceDefault.Button.Borderless" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <Button
+            android:layout_gravity="end"
+            android:id="@+id/button_start"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="@string/screenrecord_start"
+            android:layout_weight="0"
+            style="@*android:style/Widget.DeviceDefault.Button.Colored" />
+    </LinearLayout>
 </LinearLayout>

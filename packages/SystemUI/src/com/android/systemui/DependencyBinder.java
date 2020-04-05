@@ -28,6 +28,8 @@ import com.android.systemui.power.PowerNotificationWarnings;
 import com.android.systemui.power.PowerUI;
 import com.android.systemui.qs.QSHost;
 import com.android.systemui.qs.QSTileHost;
+import com.android.systemui.screenrecord.RecordingController;
+import com.android.systemui.screenrecord.RecordingControllerImpl;
 import com.android.systemui.statusbar.NotificationRemoteInputManager;
 import com.android.systemui.statusbar.StatusBarStateControllerImpl;
 import com.android.systemui.statusbar.phone.DarkIconDispatcherImpl;
@@ -241,4 +243,10 @@ public abstract class DependencyBinder {
      */
     @Binds
     public abstract FalsingManager provideFalsingmanager(FalsingManagerProxy falsingManagerImpl);
+
+    /**
+     */
+    @Binds
+    public abstract RecordingController provideRecordingController(
+            RecordingControllerImpl controllerImpl);
 }

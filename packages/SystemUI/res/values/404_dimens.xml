@@ -21,4 +21,10 @@
     <dimen name="horizontal_max_swift">3.0dp</dimen>
     <dimen name="vertical_max_swift">1.0dp</dimen>
 
+    <!-- Screen record -->
+    <dimen name="screenrecord_dialog_padding">18dp</dimen>
+    <dimen name="screenrecord_logo_size">24dp</dimen>
+    <dimen name="screenrecord_status_icon_radius">5dp</dimen>
+    <dimen name="screenrecord_status_text_size">14sp</dimen>
+
 </resources>

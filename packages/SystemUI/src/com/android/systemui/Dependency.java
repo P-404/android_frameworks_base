@@ -48,6 +48,7 @@ import com.android.systemui.power.EnhancedEstimates;
 import com.android.systemui.power.PowerUI;
 import com.android.systemui.privacy.PrivacyItemController;
 import com.android.systemui.recents.OverviewProxyService;
+import com.android.systemui.screenrecord.RecordingController;
 import com.android.systemui.shared.plugins.PluginManager;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
 import com.android.systemui.shared.system.DevicePolicyManagerWrapper;
@@ -272,6 +273,7 @@ public class Dependency {
     @Inject Lazy<NotificationInterruptionStateProvider> mNotificationInterruptionStateProvider;
     @Inject Lazy<KeyguardDismissUtil> mKeyguardDismissUtil;
     @Inject Lazy<SmartReplyController> mSmartReplyController;
+    @Inject Lazy<RecordingController> mRecordingController;
     @Inject Lazy<RemoteInputQuickSettingsDisabler> mRemoteInputQuickSettingsDisabler;
     @Inject Lazy<BubbleController> mBubbleController;
     @Inject Lazy<NotificationEntryManager> mNotificationEntryManager;
@@ -468,6 +470,7 @@ public class Dependency {
                 mNotificationInterruptionStateProvider::get);
         mProviders.put(KeyguardDismissUtil.class, mKeyguardDismissUtil::get);
         mProviders.put(SmartReplyController.class, mSmartReplyController::get);
+        mProviders.put(RecordingController.class, mRecordingController::get);
         mProviders.put(RemoteInputQuickSettingsDisabler.class,
                 mRemoteInputQuickSettingsDisabler::get);
         mProviders.put(BubbleController.class, mBubbleController::get);
