@@ -159,7 +159,7 @@ public class BatteryMeterView extends LinearLayout implements
                 getResources().getDimensionPixelOffset(R.dimen.battery_margin_bottom));
         addView(mBatteryIconView, mlp);
 
-        updateShowPercent();
+        updateShowPercent(false);
         mDualToneHandler = new DualToneHandler(context);
         // Init to not dark at all.
         onDarkChanged(new Rect(), 0, DarkIconDispatcher.DEFAULT_ICON_TINT);
@@ -172,7 +172,7 @@ public class BatteryMeterView extends LinearLayout implements
                 getContext().getContentResolver().registerContentObserver(
                         Settings.System.getUriFor(SHOW_BATTERY_PERCENT), false, mSettingObserver,
                         newUserId);
-                updateShowPercent();
+                updateShowPercent(false);
             }
         };
 
@@ -210,7 +210,12 @@ public class BatteryMeterView extends LinearLayout implements
      */
     public void setPercentShowMode(@BatteryPercentMode int mode) {
         mShowPercentMode = mode;
-        updateShowPercent();
+        updateShowPercent(false);
+    }
+
+    public void setPercentShowMode(@BatteryPercentMode int mode, boolean forceShow) {
+        mShowPercentMode = mode;
+        updateShowPercent(forceShow);
     }
 
     /**
@@ -309,7 +314,7 @@ public class BatteryMeterView extends LinearLayout implements
         getContext().getContentResolver().registerContentObserver(
                 Settings.Global.getUriFor(Settings.Global.BATTERY_ESTIMATES_LAST_UPDATE_TIME),
                 false, mSettingObserver);
-        updateShowPercent();
+        updateShowPercent(false);
         subscribeForTunerUpdates();
         mUserTracker.startTracking();
     }
@@ -350,7 +355,7 @@ public class BatteryMeterView extends LinearLayout implements
             removeView(mBatteryPercentView);
             mBatteryPercentView = null;
         }
-        updateShowPercent();
+        updateShowPercent(false);
     }
 
     private void updatePercentText() {
@@ -395,7 +400,7 @@ public class BatteryMeterView extends LinearLayout implements
                         : R.string.accessibility_battery_level, mLevel));
     }
 
-    private void updateShowPercent() {
+    private void updateShowPercent(boolean forceShow) {
         final boolean showing = mBatteryPercentView != null;
         // TODO(b/140051051)
         final boolean systemSetting = 0 != whitelistIpcs(() -> Settings.System
@@ -419,6 +424,8 @@ public class BatteryMeterView extends LinearLayout implements
                         new ViewGroup.LayoutParams(
                                 LayoutParams.WRAP_CONTENT,
                                 LayoutParams.MATCH_PARENT));
+            } else if (forceShow) {
+                updatePercentText();
             }
         } else {
             if (showing) {
@@ -524,7 +531,7 @@ public class BatteryMeterView extends LinearLayout implements
         @Override
         public void onChange(boolean selfChange, Uri uri) {
             super.onChange(selfChange, uri);
-            updateShowPercent();
+            updateShowPercent(false);
             if (TextUtils.equals(uri.getLastPathSegment(),
                     Settings.Global.BATTERY_ESTIMATES_LAST_UPDATE_TIME)) {
                 // update the text for sure if the estimate in the cache was updated
