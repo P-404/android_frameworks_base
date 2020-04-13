@@ -48,7 +48,7 @@ public class ScreenRecordDialog extends Activity {
         Window w = getWindow();
         w.getDecorView();
         w.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        w.setGravity(Gravity.TOP);
+        w.setGravity(Gravity.BOTTOM);
         setContentView(R.layout.screen_record_dialog);
         ((Button) findViewById(R.id.button_cancel)).setOnClickListener(new View.OnClickListener() {
             @Override
