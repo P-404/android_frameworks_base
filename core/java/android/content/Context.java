@@ -5164,6 +5164,15 @@ public abstract class Context {
     public static final String DREAM_SERVICE = "dream";
 
     /**
+     * {@link android.app.AppLockManager} for accessing and setting locked apps state.
+     *
+     * @hide
+     * @see #getSystemService
+     * @see android.app.AppLockManager
+     */
+    public static final String APPLOCK_SERVICE = "applock";
+
+    /**
      * Determine whether the given permission is allowed for a particular
      * process and user ID running in the system.
      *
