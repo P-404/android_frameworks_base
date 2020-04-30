@@ -6053,15 +6053,22 @@ public class NotificationManagerService extends SystemService {
             return false;
         }
         // not if in call or the screen's on
-        if (isInCall() || mScreenOn) {
-            return false;
+        if (!isInCall() || !mScreenOn) {
+            return true;
+        }
+        // Check for phone missed calls
+        boolean equals = record.getChannel().getId().equals("phone_missed_call");
+        String str = TAG;
+        if (equals) {
+            Slog.w(str, "canShowLightsLocked phone_missed_call return true!!!");
+            return true;
         }
         // check current user
         if (!isNotificationForCurrentUser(record)) {
             return false;
         }
 
-        return true;
+        return false;
     }
 
     @GuardedBy("mNotificationLock")
