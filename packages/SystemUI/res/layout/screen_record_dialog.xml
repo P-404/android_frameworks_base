@@ -79,18 +79,18 @@
                     android:layout_gravity="center_vertical"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="@string/screenrecord_audio_label" />
+                    android:text="@string/screenrecord_audio_title" />
 
                 <TextView
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     android:id="@+id/audio_type"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="@string/screenrecord_mic_label" />
+                    android:text="@string/screenrecord_audio_summary" />
             </LinearLayout>
 
-            <Switch
-                android:id="@+id/screenrecord_audio_switch"
+            <Spinner
+                android:id="@+id/spinner_audio_source"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"
                 android:layout_weight="0" />

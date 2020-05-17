@@ -23,9 +23,12 @@
     <string name="quick_settings_screen_record_label">Screen Record</string>
     <string name="quick_settings_screen_record_start">Start</string>
     <string name="quick_settings_screen_record_stop">Stop</string>
-    <string name="screenrecord_audio_label">Record audio</string>
     <string name="screenrecord_description">While recording, Android System can capture any sensitive information that’s visible on your screen or played on your device. This includes passwords, payment info, photos, messages, and audio.</string>
-    <string name="screenrecord_mic_label">Microphone</string>
+    <string name="screenrecord_audio_title">Audio source</string>
+    <string name="screenrecord_audio_summary">Allows to pick the audio input or disable it.</string>
+    <string name="screenrecord_audio_recording_internal">Internal</string>
+    <string name="screenrecord_audio_recording_microphone">Microphone</string>
+    <string name="screenrecord_audio_recording_off">Disabled</string>
     <string name="screenrecord_ongoing_screen_and_audio">Recording screen and audio</string>
     <string name="screenrecord_ongoing_screen_only">Recording screen</string>
     <string name="screenrecord_start">Start</string>
