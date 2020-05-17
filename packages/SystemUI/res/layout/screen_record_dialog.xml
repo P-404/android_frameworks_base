@@ -117,6 +117,49 @@
                 android:layout_height="48dp"
                 android:text="@string/screenrecord_taps_label" />
         </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_gravity="center"
+                android:layout_width="@dimen/screenrecord_logo_size"
+                android:layout_height="@dimen/screenrecord_logo_size"
+                android:layout_marginRight="@dimen/screenrecord_dialog_padding"
+                android:src="@drawable/ic_screenrecord_low_quality"
+                android:tint="@color/GM2_grey_700"
+                android:layout_weight="0" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <TextView
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_gravity="center_vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="@string/screenrecord_video_bitrate_label" />
+
+                <TextView
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="@string/screenrecord_video_bitrate_summary" />
+            </LinearLayout>
+
+            <Spinner
+                android:id="@+id/screenrecord_bitrate_picker"
+                android:layout_weight="0"
+                android:entries="@array/screen_video_quality_entries"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp" />
+        </LinearLayout>
     </LinearLayout>
 
     <View

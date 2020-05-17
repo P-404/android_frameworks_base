@@ -32,6 +32,8 @@
     <string name="screenrecord_start_label">Start Recording?</string>
     <string name="screenrecord_taps_label">Show touches on screen</string>
     <string name="status_bar_screen_record">screen_record</string>
+    <string name="screenrecord_video_bitrate_label">Video Bitrate</string>
+    <string name="screenrecord_video_bitrate_summary">Set the video bitrate for better video quality, at the cost of a bigger file.</string>
 
     <!-- DataSwitch Tile -->
     <string name="qs_data_switch_label">Switch data card</string>
