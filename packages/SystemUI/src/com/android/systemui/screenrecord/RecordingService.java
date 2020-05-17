@@ -40,6 +40,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.SystemProperties;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
@@ -70,6 +71,7 @@ public class RecordingService extends Service {
     private static final String EXTRA_PATH = "extra_path";
     private static final String EXTRA_USE_AUDIO = "extra_useAudio";
     private static final String EXTRA_SHOW_TAPS = "extra_showTaps";
+    private static final String EXTRA_VIDEO_BITRATE = "extra_videoBitrate";
     private static final int REQUEST_CODE = 2;
 
     private static final String ACTION_START = "com.android.systemui.screenrecord.START";
@@ -79,7 +81,7 @@ public class RecordingService extends Service {
     private static final String ACTION_DELETE = "com.android.systemui.screenrecord.DELETE";
 
     private static final int TOTAL_NUM_TRACKS = 1;
-    private static final int VIDEO_BIT_RATE = 6000000;
+    private static int VIDEO_BIT_RATE;
     private static final int VIDEO_FRAME_RATE = 30;
     private static final int AUDIO_BIT_RATE = 16;
     private static final int AUDIO_SAMPLE_RATE = 44100;
@@ -91,9 +93,11 @@ public class RecordingService extends Service {
     private Notification.Builder mRecordingNotificationBuilder;
     private RecordingController mController;
 
+    private boolean mIsLowRamEnabled;
     private boolean mUseAudio;
     private boolean mShowTaps;
     private File mTempFile;
+    private int mVideoBitrateOpt;
 
     /**
      * Get an intent to start the recording service.
@@ -107,13 +111,14 @@ public class RecordingService extends Service {
      * @param showTaps   True to make touches visible while recording
      */
     public static Intent getStartIntent(Context context, int resultCode, Intent data,
-            boolean useAudio, boolean showTaps) {
+            boolean useAudio, boolean showTaps, int bitRateOpt) {
         return new Intent(context, RecordingService.class)
                 .setAction(ACTION_START)
                 .putExtra(EXTRA_RESULT_CODE, resultCode)
                 .putExtra(EXTRA_DATA, data)
                 .putExtra(EXTRA_USE_AUDIO, useAudio)
-                .putExtra(EXTRA_SHOW_TAPS, showTaps);
+                .putExtra(EXTRA_SHOW_TAPS, showTaps)
+                .putExtra(EXTRA_VIDEO_BITRATE, bitRateOpt);
     }
 
     @Override
@@ -133,6 +138,28 @@ public class RecordingService extends Service {
             case ACTION_START:
                 mUseAudio = intent.getBooleanExtra(EXTRA_USE_AUDIO, false);
                 mShowTaps = intent.getBooleanExtra(EXTRA_SHOW_TAPS, false);
+                mVideoBitrateOpt = intent.getIntExtra(EXTRA_VIDEO_BITRATE, 2);
+                mIsLowRamEnabled = SystemProperties.get("ro.config.low_ram").equals("true");
+                switch (mVideoBitrateOpt) {
+                    case 1:
+                        VIDEO_BIT_RATE = mIsLowRamEnabled ? 8388608 : 15728640;
+                        break;
+                    case 2:
+                        VIDEO_BIT_RATE = mIsLowRamEnabled ? 6291456 : 10485760;
+                        break;
+                    case 3:
+                        VIDEO_BIT_RATE = mIsLowRamEnabled ? 4194304 : 5242880;
+                        break;
+                    case 4:
+                        VIDEO_BIT_RATE = 1048576;
+                        break;
+                    case 0:
+                        VIDEO_BIT_RATE = mIsLowRamEnabled ? 10485760 : 20971520;
+                        break;
+                    default:
+                        VIDEO_BIT_RATE = 6000000;
+                        break;
+                }
                 try {
                     IBinder b = IMediaProjectionManager.Stub.asInterface(ServiceManager.getService(Context.MEDIA_PROJECTION_SERVICE))
                             .createProjection(getUserId(), getPackageName(), 0, false).asBinder();
@@ -237,7 +264,11 @@ public class RecordingService extends Service {
             int screenHeight = metrics.heightPixels;
             mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.HEVC);
             mMediaRecorder.setVideoSize(screenWidth, screenHeight);
-            mMediaRecorder.setVideoFrameRate(VIDEO_FRAME_RATE);
+            if (mVideoBitrateOpt > 2) {
+                mMediaRecorder.setVideoFrameRate(mIsLowRamEnabled ? 30 : 60);
+            } else {
+                mMediaRecorder.setVideoFrameRate(mIsLowRamEnabled ? 25 : 48);
+            }
             mMediaRecorder.setVideoEncodingBitRate(VIDEO_BIT_RATE);
 
             // Set up audio
@@ -297,7 +328,7 @@ public class RecordingService extends Service {
                 .setColor(getResources().getColor(R.color.GM2_red_700))
                 .setOngoing(true)
                 .setContentIntent(PendingIntent.getService(
-                        this, REQUEST_CODE, getStopIntent(this), 
+                        this, REQUEST_CODE, getStopIntent(this),
                         PendingIntent.FLAG_UPDATE_CURRENT))
                 .addExtras(extras);
         nm.notify(NOTIFICATION_ID, mRecordingNotificationBuilder.build());
