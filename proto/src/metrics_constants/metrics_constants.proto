@@ -7436,5 +7436,7 @@ message MetricsEvent {
     PANEL_BLUETOOTH = 2003;
     // Panel for Do not disturb
     PANEL_ZEN_MODE = 2004;
+    // 404
+    ERROR = 5000;
   }
 }
