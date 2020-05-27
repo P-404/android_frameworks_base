@@ -25,7 +25,7 @@
     <color name="config_fodColorBackground">#20000000</color>
 
     <!-- Allow devices to hide black gradient behind QS Panel -->
-    <bool name="config_hideQSBlackGradient">true</bool>
+    <bool name="config_hideQSBlackGradient">false</bool>
 
     <!-- Burn-in protection -->
     <bool name="config_statusBarBurnInProtection">false</bool>
