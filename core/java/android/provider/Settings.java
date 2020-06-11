@@ -4907,6 +4907,12 @@ public final class Settings {
         public static final String THREE_FINGER_GESTURE = "three_finger_gesture";
 
         /**
+         * Holds current enabled volume panel implementation
+         * @hide
+         */
+        public static final String SYSTEMUI_PLUGIN_VOLUME = "systemui_plugin_volume";
+
+        /**
          * These are all public system settings
          *
          * @hide
@@ -5017,6 +5023,7 @@ public final class Settings {
             PRIVATE_SETTINGS.add(LOCKSCREEN_MEDIA_ART);
             PRIVATE_SETTINGS.add(AMBIENT_NOTIFICATION_LIGHT);
             PRIVATE_SETTINGS.add(AMBIENT_NOTIFICATION_LIGHT_AUTOMATIC);
+            PRIVATE_SETTINGS.add(SYSTEMUI_PLUGIN_VOLUME);
         }
 
         /**
