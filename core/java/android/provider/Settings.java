@@ -5064,6 +5064,14 @@ public final class Settings {
         public static final String STATUSBAR_CLOCK_DATE_POSITION = "statusbar_clock_date_position";
 
         /**
+         * Data usage period
+         * 0: Daily
+         * 1: Monthly
+         * @hide
+         */
+        public static final String DATA_USAGE_PERIOD = "data_usage_period";
+
+        /**
          * These are all public system settings
          *
          * @hide
