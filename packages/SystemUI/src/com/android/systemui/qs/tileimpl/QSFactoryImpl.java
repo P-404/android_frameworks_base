@@ -35,6 +35,7 @@ import com.android.systemui.qs.tiles.CellularTile;
 import com.android.systemui.qs.tiles.ColorInversionTile;
 import com.android.systemui.qs.tiles.DataSaverTile;
 import com.android.systemui.qs.tiles.DataSwitchTile;
+import com.android.systemui.qs.tiles.DcDimmingTile;
 import com.android.systemui.qs.tiles.DndTile;
 import com.android.systemui.qs.tiles.FlashlightTile;
 import com.android.systemui.qs.tiles.HeadsUpTile;
@@ -86,6 +87,7 @@ public class QSFactoryImpl implements QSFactory {
     private final Provider<PowerShareTile> mPowerShareTileProvider;
     private final Provider<DataSwitchTile> mDataSwitchTileProvider;
     private final Provider<CaffeineTile> mCaffeineTileProvider;
+    private final Provider<DcDimmingTile> mDcDimmingTileProvider;
 
     private final Lazy<QSHost> mQsHostLazy;
 
@@ -110,6 +112,7 @@ public class QSFactoryImpl implements QSFactory {
             Provider<NfcTile> nfcTileProvider,
             Provider<GarbageMonitor.MemoryTile> memoryTileProvider,
             Provider<UiModeNightTile> uiModeNightTileProvider,
+            Provider<DcDimmingTile> dcDimTileProvider,
             Provider<ScreenRecordTile> screenRecordTileProvider,
             Provider<HeadsUpTile> headsUpTileProvider,
             Provider<PowerShareTile> powerShareTileProvider,
@@ -140,6 +143,7 @@ public class QSFactoryImpl implements QSFactory {
         mPowerShareTileProvider = powerShareTileProvider;
         mDataSwitchTileProvider = dataSwitchTileProvider;
         mCaffeineTileProvider = caffeineTileProvider;
+        mDcDimmingTileProvider = dcDimTileProvider;
     }
 
     public QSTile createTile(String tileSpec) {
@@ -201,6 +205,8 @@ public class QSFactoryImpl implements QSFactory {
                 return mDataSwitchTileProvider.get();
             case "caffeine":
                 return mCaffeineTileProvider.get();
+            case "dc_dimming":
+                return mDcDimmingTileProvider.get();
         }
 
         // Custom tiles
