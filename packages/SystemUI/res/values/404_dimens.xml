@@ -29,6 +29,7 @@
 
     <!-- Bottom margin size when fingerprint in display is active -->
     <dimen name="keyguard_indication_margin_bottom_fingerprint_in_display">@dimen/keyguard_indication_margin_bottom</dimen>
+    <dimen name="keyguard_security_fod_view_margin">128dp</dimen>
 
     <!-- Qs visibility -->
     <dimen name="qs_tile_height_wo_label">64dp</dimen>
