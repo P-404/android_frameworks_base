@@ -335,7 +335,7 @@
     <dimen name="qs_header_system_icons_area_height">48dp</dimen>
 
     <!-- How far the quick-quick settings panel extends below the status bar -->
-    <dimen name="qs_quick_header_panel_height">156dp</dimen>
+    <dimen name="qs_quick_header_panel_height">116dp</dimen>
 
     <!-- The height of the container that holds the system icons in the quick settings header in the
          car setting. -->
@@ -500,12 +500,12 @@
     <dimen name="qs_header_carrier_separator_width">6dp</dimen>
     <dimen name="qs_status_separator">32dp</dimen>
     <dimen name="qs_carrier_margin_width">4dp</dimen>
-    <dimen name="qs_footer_padding_start">16dp</dimen>
-    <dimen name="qs_footer_padding_end">16dp</dimen>
+    <dimen name="qs_footer_padding_start">8dp</dimen>
+    <dimen name="qs_footer_padding_end">8dp</dimen>
     <dimen name="qs_footer_icon_size">16dp</dimen>
     <dimen name="qs_paged_tile_layout_padding_bottom">0dp</dimen>
-    <dimen name="qs_header_top_padding">15dp</dimen>
-    <dimen name="qs_header_bottom_padding">14dp</dimen>
+    <dimen name="qs_header_top_padding">2dp</dimen>
+    <dimen name="qs_header_bottom_padding">2dp</dimen>
 
     <dimen name="qs_notif_collapsed_space">64dp</dimen>
 
