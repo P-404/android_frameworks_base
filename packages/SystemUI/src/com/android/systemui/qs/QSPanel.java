@@ -122,8 +122,6 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
 
     @Nullable
     protected View mFooter;
-    @Nullable
-    protected View mDivider;
 
     @Nullable
     private ViewGroup mHeaderContainer;
@@ -536,7 +534,6 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
     protected void onFinishInflate() {
         super.onFinishInflate();
         mFooter = findViewById(R.id.qs_footer);
-        mDivider = findViewById(R.id.divider);
         switchTileLayout(true /* force */);
     }
 
@@ -547,13 +544,6 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
     private boolean switchTileLayout(boolean force) {
         /** Whether or not the QuickQSPanel currently contains a media player. */
         boolean horizontal = shouldUseHorizontalLayout();
-        if (mDivider != null) {
-            if (!horizontal && mUsingMediaPlayer && mMediaHost.getVisible()) {
-                mDivider.setVisibility(View.VISIBLE);
-            } else {
-                mDivider.setVisibility(View.GONE);
-            }
-        }
         if (horizontal != mUsingHorizontalLayout || force) {
             mUsingHorizontalLayout = horizontal;
             View visibleView = horizontal ? mHorizontalLinearLayout : (View) mRegularTileLayout;
@@ -591,7 +581,6 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
             }
             updateTileLayoutMargins();
             updateFooterMargin();
-            updateDividerMargin();
             updateMediaDisappearParameters();
             updateMediaHostContentMargins();
             updateHorizontalLinearLayoutMargins();
@@ -1059,11 +1048,6 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
         return mSecurityFooter;
     }
 
-    @Nullable
-    public View getDivider() {
-        return mDivider;
-    }
-
     public void showDeviceMonitoringDialog() {
         if (mSecurityFooter != null) {
             mSecurityFooter.showDeviceMonitoringDialog();
@@ -1079,7 +1063,6 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
                 mContentMarginEnd - mVisualTilePadding);
         updateMediaHostContentMargins();
         updateFooterMargin();
-        updateDividerMargin();
     }
 
     private void updateFooterMargin() {
@@ -1119,11 +1102,6 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
             marginEnd = 0;
         }
         updateMargins((View) mTileLayout, mVisualMarginStart, marginEnd);
-    }
-
-    private void updateDividerMargin() {
-        if (mDivider == null) return;
-        updateMargins(mDivider, mContentMarginStart, mContentMarginEnd);
     }
 
     /**
