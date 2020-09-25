@@ -4806,6 +4806,11 @@ public final class Settings {
         };
 
         /**
+         * @hide
+         */
+        public static final String LOCKSCREEN_MEDIA_ART = "lockscreen_media_art";
+
+        /**
          * These are all public system settings
          *
          * @hide
@@ -4913,6 +4918,7 @@ public final class Settings {
             PRIVATE_SETTINGS.add(SHOW_BATTERY_PERCENT);
             PRIVATE_SETTINGS.add(DISPLAY_COLOR_MODE);
             PRIVATE_SETTINGS.add(CALL_CONNECTED_TONE_ENABLED);
+            PRIVATE_SETTINGS.add(LOCKSCREEN_MEDIA_ART);
         }
 
         /**
