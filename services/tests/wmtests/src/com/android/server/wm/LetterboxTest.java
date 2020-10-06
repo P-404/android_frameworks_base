@@ -18,7 +18,6 @@ package com.android.server.wm;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
@@ -55,11 +54,16 @@ public class LetterboxTest {
         mTransaction = spy(StubTransaction.class);
     }
 
+    @Test
+    public void testOverlappingWith_usesGlobalCoordinates() {
+        mLetterbox.layout(new Rect(0, 0, 10, 50), new Rect(0, 2, 10, 45), new Point(1000, 2000));
+        assertTrue(mLetterbox.isOverlappingWith(new Rect(0, 0, 1, 1)));
+    }
+
     private static final int TOP_BAR = 0x1;
     private static final int BOTTOM_BAR = 0x2;
     private static final int LEFT_BAR = 0x4;
     private static final int RIGHT_BAR = 0x8;
-
     @Test
     public void testNotIntersectsOrFullyContains_usesGlobalCoordinates() {
         final Rect outer = new Rect(0, 0, 10, 50);

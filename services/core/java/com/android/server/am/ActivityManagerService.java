@@ -292,6 +292,7 @@ import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.DebugUtils;
 import android.util.EventLog;
+import android.util.IntArray;
 import android.util.Log;
 import android.util.Pair;
 import android.util.PrintWriterPrinter;
@@ -313,6 +314,7 @@ import android.view.autofill.AutofillManagerInternal;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.app.IAppOpsActiveCallback;
 import com.android.internal.app.IAppOpsCallback;
 import com.android.internal.app.IAppOpsService;
 import com.android.internal.app.ProcessMap;
@@ -667,6 +669,14 @@ public class ActivityManagerService extends IActivityManager.Stub
 
     /** Total # of UID change events dispatched, shown in dumpsys. */
     int mUidChangeDispatchCount;
+
+    /**
+     * Uids of apps with current active camera sessions.  Access synchronized on
+     * the IntArray instance itself, and no other locks must be acquired while that
+     * one is held.
+     */
+    @GuardedBy("mActiveCameraUids")
+    final IntArray mActiveCameraUids = new IntArray(4);
 
     /**
      * Helper class which strips out priority and proto arguments then calls the dump function with
@@ -2054,7 +2064,10 @@ public class ActivityManagerService extends IActivityManager.Stub
                     }
                     if (proc != null) {
                         long startTime = SystemClock.currentThreadTimeMillis();
-                        long pss = Debug.getPss(pid, tmp, null);
+                        // skip background PSS calculation of apps that are capturing
+                        // camera imagery
+                        final boolean usingCamera = isCameraActiveForUid(proc.uid);
+                        long pss = usingCamera ? 0 : Debug.getPss(pid, tmp, null);
                         long endTime = SystemClock.currentThreadTimeMillis();
                         synchronized (ActivityManagerService.this) {
                             if (pss != 0 && proc.thread != null && proc.setProcState == procState
@@ -2067,6 +2080,7 @@ public class ActivityManagerService extends IActivityManager.Stub
                                 ProcessList.abortNextPssTime(proc.procStateMemTracker);
                                 if (DEBUG_PSS) Slog.d(TAG_PSS, "Skipped pss collection of " + pid +
                                         ": " + (proc.thread == null ? "NO_THREAD " : "") +
+                                        (usingCamera ? "CAMERA " : "") +
                                         (proc.pid != pid ? "PID_CHANGED " : "") +
                                         " initState=" + procState + " curState=" +
                                         proc.setProcState + " " +
@@ -2156,6 +2170,14 @@ public class ActivityManagerService extends IActivityManager.Stub
                         }
                     }
                 });
+
+        final int[] cameraOp = {AppOpsManager.OP_CAMERA};
+        mAppOpsService.startWatchingActive(cameraOp, new IAppOpsActiveCallback.Stub() {
+            @Override
+            public void opActiveChanged(int op, int uid, String packageName, boolean active) {
+                cameraActiveChanged(uid, active);
+            }
+        });
     }
 
     public void setWindowManager(WindowManagerService wm) {
@@ -6134,7 +6156,7 @@ public class ActivityManagerService extends IActivityManager.Stub
                                 mPendingStartActivityUids.isPendingTopPid(pr.uid, pids[i]);
                     states[i] = isPendingTop ? PROCESS_STATE_TOP : pr.getCurProcState();
                     if (scores != null) {
-                        scores[i] = isPendingTop ? ProcessList.FOREGROUND_APP_ADJ : pr.curAdj;
+                        scores[i] = isPendingTop ? (ProcessList.FOREGROUND_APP_ADJ - 1) : pr.curAdj;
                     }
                 } else {
                     states[i] = PROCESS_STATE_NONEXISTENT;
@@ -18321,6 +18343,27 @@ public class ActivityManagerService extends IActivityManager.Stub
                 // This uid isn't actually running...  still send a report about it being "stopped".
                 doStopUidLocked(uid, null);
             }
+        }
+    }
+
+    final void cameraActiveChanged(@UserIdInt int uid, boolean active) {
+        synchronized (mActiveCameraUids) {
+            final int curIndex = mActiveCameraUids.indexOf(uid);
+            if (active) {
+                if (curIndex < 0) {
+                    mActiveCameraUids.add(uid);
+                }
+            } else {
+                if (curIndex >= 0) {
+                    mActiveCameraUids.remove(curIndex);
+                }
+            }
+        }
+    }
+
+    final boolean isCameraActiveForUid(@UserIdInt int uid) {
+        synchronized (mActiveCameraUids) {
+            return mActiveCameraUids.indexOf(uid) >= 0;
         }
     }
 

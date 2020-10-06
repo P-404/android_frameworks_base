@@ -18,8 +18,6 @@ package com.android.server.inputmethod;
 import static android.view.Display.DEFAULT_DISPLAY;
 import static android.view.Display.INVALID_DISPLAY;
 
-import static com.android.internal.inputmethod.StartInputReason.WINDOW_FOCUS_GAIN_REPORT_WITH_SAME_EDITOR;
-
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 import android.Manifest;
@@ -211,6 +209,7 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
     static final int MSG_INITIALIZE_IME = 1040;
     static final int MSG_CREATE_SESSION = 1050;
     static final int MSG_REMOVE_IME_SURFACE = 1060;
+    static final int MSG_REMOVE_IME_SURFACE_FROM_WINDOW = 1061;
 
     static final int MSG_START_INPUT = 2000;
 
@@ -717,11 +716,6 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
      * {@link #unbindCurrentMethodLocked()}.</em>
      */
     int mImeWindowVis;
-
-    /**
-     * Checks if the client needs to start input.
-     */
-    private boolean mCurClientNeedStartInput = false;
 
     private AlertDialog.Builder mDialogBuilder;
     private AlertDialog mSwitchingDialog;
@@ -2948,7 +2942,7 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
                 vis = 0;
             }
             if (!mCurPerceptible) {
-                vis = 0;
+                vis &= ~InputMethodService.IME_VISIBLE;
             }
             // mImeWindowVis should be updated before calling shouldShowImeSwitcherLocked().
             final boolean needsToShowImeSwitcher = shouldShowImeSwitcherLocked(vis);
@@ -3466,20 +3460,14 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
         if (mCurFocusedWindow == windowToken) {
             if (DEBUG) {
                 Slog.w(TAG, "Window already focused, ignoring focus gain of: " + client
-                        + " attribute=" + attribute + ", token = " + windowToken);
+                        + " attribute=" + attribute + ", token = " + windowToken
+                        + ", startInputReason="
+                        + InputMethodDebug.startInputReasonToString(startInputReason));
             }
-            // Needs to start input when the same window focus gain but not with the same editor,
-            // or when the current client needs to start input (e.g. when focusing the same
-            // window after device turned screen on).
-            if (attribute != null && (startInputReason != WINDOW_FOCUS_GAIN_REPORT_WITH_SAME_EDITOR
-                    || mCurClientNeedStartInput)) {
-                if (mIsInteractive) {
-                    mCurClientNeedStartInput = false;
-                }
+            if (attribute != null) {
                 return startInputUncheckedLocked(cs, inputContext, missingMethods,
                         attribute, startInputFlags, startInputReason);
             }
-
             return new InputBindResult(
                     InputBindResult.ResultCode.SUCCESS_REPORT_WINDOW_FOCUS_ONLY,
                     null, null, null, -1, null);
@@ -4005,6 +3993,13 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
         mHandler.sendMessage(mHandler.obtainMessage(MSG_REMOVE_IME_SURFACE));
     }
 
+    @Override
+    public void removeImeSurfaceFromWindow(IBinder windowToken) {
+        // No permission check, because we'll only execute the request if the calling window is
+        // also the current IME client.
+        mHandler.obtainMessage(MSG_REMOVE_IME_SURFACE_FROM_WINDOW, windowToken).sendToTarget();
+    }
+
     @BinderThread
     private void notifyUserAction(@NonNull IBinder token) {
         if (DEBUG) {
@@ -4278,11 +4273,27 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
                 return true;
             }
             case MSG_REMOVE_IME_SURFACE: {
-                try {
-                    if (mEnabledSession != null && mEnabledSession.session != null) {
-                        mEnabledSession.session.removeImeSurface();
+                synchronized (mMethodMap) {
+                    try {
+                        if (mEnabledSession != null && mEnabledSession.session != null
+                                && !mShowRequested) {
+                            mEnabledSession.session.removeImeSurface();
+                        }
+                    } catch (RemoteException e) {
                     }
-                } catch (RemoteException e) {
+                }
+                return true;
+            }
+            case MSG_REMOVE_IME_SURFACE_FROM_WINDOW: {
+                IBinder windowToken = (IBinder) msg.obj;
+                synchronized (mMethodMap) {
+                    try {
+                        if (windowToken == mCurFocusedWindow
+                                && mEnabledSession != null && mEnabledSession.session != null) {
+                            mEnabledSession.session.removeImeSurface();
+                        }
+                    } catch (RemoteException e) {
+                    }
                 }
                 return true;
             }
@@ -4435,9 +4446,6 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
     private void handleSetInteractive(final boolean interactive) {
         synchronized (mMethodMap) {
             mIsInteractive = interactive;
-            if (!interactive) {
-                mCurClientNeedStartInput = true;
-            }
             updateSystemUiLocked(interactive ? mImeWindowVis : 0, mBackDisposition);
 
             // Inform the current client of the change in active status
@@ -5115,6 +5123,11 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
         @Override
         public void reportImeControl(@Nullable IBinder windowToken) {
             mService.reportImeControl(windowToken);
+        }
+
+        @Override
+        public void removeImeSurface() {
+            mService.mHandler.sendMessage(mService.mHandler.obtainMessage(MSG_REMOVE_IME_SURFACE));
         }
     }
 

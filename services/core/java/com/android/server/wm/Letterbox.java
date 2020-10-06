@@ -124,6 +124,19 @@ public class Letterbox {
         }
         return (emptyCount + noOverlappingCount) == mSurfaces.length;
     }
+
+    /**
+     * Returns true if any part of the letterbox overlaps with the given {@code rect}.
+     */
+    public boolean isOverlappingWith(Rect rect) {
+        for (LetterboxSurface surface : mSurfaces) {
+            if (surface.isOverlappingWith(rect)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Hides the letterbox.
      *
@@ -296,6 +309,17 @@ public class Letterbox {
 
         public int getHeight() {
             return Math.max(0, mLayoutFrameGlobal.height());
+        }
+
+        /**
+         * Returns if the given {@code rect} overlaps with this letterbox piece.
+         * @param rect the area to check for overlap in global coordinates
+         */
+        public boolean isOverlappingWith(Rect rect) {
+            if (mLayoutFrameGlobal.isEmpty()) {
+                return false;
+            }
+            return Rect.intersects(rect, mLayoutFrameGlobal);
         }
 
         public void applySurfaceChanges(SurfaceControl.Transaction t) {

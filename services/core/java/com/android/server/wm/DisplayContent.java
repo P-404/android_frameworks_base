@@ -3506,12 +3506,13 @@ class DisplayContent extends WindowContainer<DisplayContent.DisplayChildWindowCo
     }
 
     private boolean isImeControlledByApp() {
-        return mInputMethodTarget != null && !WindowConfiguration.isSplitScreenWindowingMode(
-                mInputMethodTarget.getWindowingMode());
+        return mInputMethodInputTarget != null && !WindowConfiguration.isSplitScreenWindowingMode(
+                        mInputMethodInputTarget.getWindowingMode());
     }
 
     boolean isImeAttachedToApp() {
         return isImeControlledByApp()
+                && mInputMethodTarget != null
                 && mInputMethodTarget.mActivityRecord != null
                 && mInputMethodTarget.getWindowingMode() == WINDOWING_MODE_FULLSCREEN
                 // An activity with override bounds should be letterboxed inside its parent bounds,
@@ -3537,9 +3538,9 @@ class DisplayContent extends WindowContainer<DisplayContent.DisplayChildWindowCo
     InsetsControlTarget getImeFallback() {
         // host is in non-default display that doesn't support system decor, default to
         // default display's StatusBar to control IME (when available), else let system control it.
-        WindowState statusBar = 
-                mWmService.getDefaultDisplayContentLocked().getDisplayPolicy().getStatusBar();
-        return statusBar != null ? statusBar : mRemoteInsetsControlTarget;
+        final DisplayContent defaultDc = mWmService.getDefaultDisplayContentLocked();
+        WindowState statusBar = defaultDc.getDisplayPolicy().getStatusBar();
+        return statusBar != null ? statusBar : defaultDc.mRemoteInsetsControlTarget;
     }
 
     boolean canShowIme() {
@@ -3574,12 +3575,11 @@ class DisplayContent extends WindowContainer<DisplayContent.DisplayChildWindowCo
         }
     }
 
-    private void updateImeControlTarget() {
+    void updateImeControlTarget() {
         mInputMethodControlTarget = computeImeControlTarget();
         mInsetsStateController.onImeControlTargetChanged(mInputMethodControlTarget);
 
-        final WindowState win = mInputMethodControlTarget != null
-                ? mInputMethodControlTarget.getWindow() : null;
+        final WindowState win = InsetsControlTarget.asWindowOrNull(mInputMethodControlTarget);
         final IBinder token = win != null ? win.mClient.asBinder() : null;
         // Note: not allowed to call into IMMS with the WM lock held, hence the post.
         mWmService.mH.post(() ->
@@ -3600,10 +3600,12 @@ class DisplayContent extends WindowContainer<DisplayContent.DisplayChildWindowCo
      */
     @VisibleForTesting
     InsetsControlTarget computeImeControlTarget() {
-        if (!isImeControlledByApp() && mRemoteInsetsControlTarget != null) {
+        if (!isImeControlledByApp() && mRemoteInsetsControlTarget != null
+                || (mInputMethodInputTarget != null
+                        && getImeHostOrFallback(mInputMethodInputTarget.getWindow())
+                                == mRemoteInsetsControlTarget)) {
             return mRemoteInsetsControlTarget;
         } else {
-            // Otherwise, we just use the ime target as received from IME.
             return mInputMethodInputTarget;
         }
     }

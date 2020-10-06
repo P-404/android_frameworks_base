@@ -501,6 +501,7 @@ public class InsetsController implements WindowInsetsController, InsetsAnimation
     private PendingControlRequest mPendingImeControlRequest;
 
     private int mLastLegacySoftInputMode;
+    private int mLastLegacyWindowFlags;
     private int mLastLegacySystemUiFlags;
     private DisplayCutout mLastDisplayCutout;
     private boolean mStartingAnimation;
@@ -569,8 +570,8 @@ public class InsetsController implements WindowInsetsController, InsetsAnimation
 
             WindowInsets insets = state.calculateInsets(mFrame, mState /* ignoringVisibilityState*/,
                     mLastInsets.isRound(), mLastInsets.shouldAlwaysConsumeSystemBars(),
-                    mLastDisplayCutout, mLastLegacySoftInputMode, mLastLegacySystemUiFlags,
-                    null /* typeSideMap */);
+                    mLastDisplayCutout, mLastLegacySoftInputMode, mLastLegacyWindowFlags,
+                    mLastLegacySystemUiFlags, null /* typeSideMap */);
             mHost.dispatchWindowInsetsAnimationProgress(insets, mUnmodifiableTmpRunningAnims);
             if (DEBUG) {
                 for (WindowInsetsAnimation anim : mUnmodifiableTmpRunningAnims) {
@@ -706,13 +707,14 @@ public class InsetsController implements WindowInsetsController, InsetsAnimation
     @VisibleForTesting
     public WindowInsets calculateInsets(boolean isScreenRound,
             boolean alwaysConsumeSystemBars, DisplayCutout cutout,
-            int legacySoftInputMode, int legacySystemUiFlags) {
+            int legacySoftInputMode, int legacyWindowFlags, int legacySystemUiFlags) {
         mLastLegacySoftInputMode = legacySoftInputMode;
+        mLastLegacyWindowFlags = legacyWindowFlags;
         mLastLegacySystemUiFlags = legacySystemUiFlags;
         mLastDisplayCutout = cutout;
         mLastInsets = mState.calculateInsets(mFrame, null /* ignoringVisibilityState*/,
                 isScreenRound, alwaysConsumeSystemBars, cutout,
-                legacySoftInputMode, legacySystemUiFlags,
+                legacySoftInputMode, legacyWindowFlags, legacySystemUiFlags,
                 null /* typeSideMap */);
         return mLastInsets;
     }
@@ -737,7 +739,7 @@ public class InsetsController implements WindowInsetsController, InsetsAnimation
             }
         }
 
-        final boolean hasControl = mTmpControlArray.size() > 0;
+        boolean requestedStateStale = false;
         final int[] showTypes = new int[1];
         final int[] hideTypes = new int[1];
 
@@ -754,8 +756,25 @@ public class InsetsController implements WindowInsetsController, InsetsAnimation
         // Ensure to create source consumers if not available yet.
         for (int i = mTmpControlArray.size() - 1; i >= 0; i--) {
             final InsetsSourceControl control = mTmpControlArray.valueAt(i);
-            InsetsSourceConsumer consumer = getSourceConsumer(control.getType());
+            final @InternalInsetsType int type = control.getType();
+            final InsetsSourceConsumer consumer = getSourceConsumer(type);
             consumer.setControl(control, showTypes, hideTypes);
+
+            if (!requestedStateStale) {
+                final boolean requestedVisible = consumer.isRequestedVisible();
+
+                // We might have changed our requested visibilities while we don't have the control,
+                // so we need to update our requested state once we have control. Otherwise, our
+                // requested state at the server side might be incorrect.
+                final boolean requestedVisibilityChanged =
+                        requestedVisible != mRequestedState.getSourceOrDefaultVisibility(type);
+
+                // The IME client visibility will be reset by insets source provider while updating
+                // control, so if IME is requested visible, we need to send the request to server.
+                final boolean imeRequestedVisible = type == ITYPE_IME && requestedVisible;
+
+                requestedStateStale = requestedVisibilityChanged || imeRequestedVisible;
+            }
 
         }
         mTmpControlArray.clear();
@@ -772,10 +791,7 @@ public class InsetsController implements WindowInsetsController, InsetsAnimation
         if (hideTypes[0] != 0) {
             applyAnimation(hideTypes[0], false /* show */, false /* fromIme */);
         }
-        if (hasControl && mRequestedState.hasSources()) {
-            // We might have changed our requested visibilities while we don't have the control,
-            // so we need to update our requested state once we have control. Otherwise, our
-            // requested state at the server side might be incorrect.
+        if (requestedStateStale) {
             updateRequestedState();
         }
     }

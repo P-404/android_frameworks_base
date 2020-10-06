@@ -58,6 +58,7 @@ public class BoostFramework {
     private static Method sReleaseHandlerFunc = null;
     private static Method sFeedbackFunc = null;
     private static Method sPerfGetPropFunc = null;
+    private static Method sAcqAndReleaseFunc = null;
 
     private static Method sIOPStart = null;
     private static Method sIOPStop  = null;
@@ -236,6 +237,9 @@ public class BoostFramework {
 
                     argClasses = new Class[] {String.class, String.class};
                     sPerfGetPropFunc = sPerfClass.getMethod("perfGetProp", argClasses);
+
+                    argClasses = new Class[] {int.class, int.class, int.class, int.class, int[].class};
+                    sAcqAndReleaseFunc = sPerfClass.getMethod("perfLockAcqAndRelease", argClasses);
 
                     try {
                         argClasses = new Class[] {int.class, int.class, String.class, int.class, String.class};
@@ -429,6 +433,20 @@ public class BoostFramework {
                 ret = (String)retVal;
             }else {
                 ret = def_val;
+            }
+        } catch(Exception e) {
+            Log.e(TAG,"Exception " + e);
+        }
+        return ret;
+    }
+
+/** @hide */
+    public int perfLockAcqAndRelease(int handle, int duration, int numArgs,int reserveNumArgs, int... list) {
+        int ret = -1;
+        try {
+            if (sAcqAndReleaseFunc != null) {
+                Object retVal = sAcqAndReleaseFunc.invoke(mPerf, handle, duration, numArgs, reserveNumArgs, list);
+                ret = (int)retVal;
             }
         } catch(Exception e) {
             Log.e(TAG,"Exception " + e);

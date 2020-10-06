@@ -2170,6 +2170,9 @@ class WindowState extends WindowContainer<WindowState> implements WindowManagerP
         if (isInputMethodTarget()) {
             dc.computeImeTarget(true /* updateImeTarget */);
         }
+        if (dc.mInputMethodInputTarget == this) {
+            dc.setInputMethodInputTarget(null);
+        }
 
         final int type = mAttrs.type;
         if (WindowManagerService.excludeWindowTypeFromTapOutTask(type)) {
@@ -3800,6 +3803,10 @@ class WindowState extends WindowContainer<WindowState> implements WindowManagerP
     boolean letterboxNotIntersectsOrFullyContains(Rect rect) {
         return mActivityRecord == null
                 || mActivityRecord.letterboxNotIntersectsOrFullyContains(rect);
+    }
+
+    public boolean isLetterboxedOverlappingWith(Rect rect) {
+        return mActivityRecord != null && mActivityRecord.isLetterboxOverlappingWith(rect);
     }
 
     boolean isDragResizeChanged() {

@@ -19,8 +19,8 @@ package android.view.inputmethod;
 import static android.Manifest.permission.INTERACT_ACROSS_USERS_FULL;
 import static android.Manifest.permission.WRITE_SECURE_SETTINGS;
 
-import static com.android.internal.inputmethod.StartInputReason.WINDOW_FOCUS_GAIN_REPORT_WITHOUT_EDITOR;
-import static com.android.internal.inputmethod.StartInputReason.WINDOW_FOCUS_GAIN_REPORT_WITH_SAME_EDITOR;
+import static com.android.internal.inputmethod.StartInputReason.WINDOW_FOCUS_GAIN_REPORT_WITHOUT_CONNECTION;
+import static com.android.internal.inputmethod.StartInputReason.WINDOW_FOCUS_GAIN_REPORT_WITH_CONNECTION;
 
 import android.annotation.DrawableRes;
 import android.annotation.NonNull;
@@ -89,6 +89,7 @@ import com.android.internal.view.InputBindResult;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Collections;
@@ -610,14 +611,13 @@ public final class InputMethodManager {
         @Override
         public void startInputAsyncOnWindowFocusGain(View focusedView,
                 @SoftInputModeFlags int softInputMode, int windowFlags, boolean forceNewFocus) {
-            final boolean forceNewFocus1 = forceNewFocus;
             final int startInputFlags = getStartInputFlags(focusedView, 0);
 
             final ImeFocusController controller = getFocusController();
             if (controller == null) {
                 return;
             }
-            if (controller.checkFocus(forceNewFocus1, false)) {
+            if (controller.checkFocus(forceNewFocus, false)) {
                 // We need to restart input on the current focus view.  This
                 // should be done in conjunction with telling the system service
                 // about the window gaining focus, to help make the transition
@@ -633,20 +633,21 @@ public final class InputMethodManager {
                 // we'll just do a window focus gain and call it a day.
                 try {
                     View servedView = controller.getServedView();
-                    boolean nextFocusIsServedView = servedView != null && servedView == focusedView;
+                    boolean nextFocusHasConnection = servedView != null && servedView == focusedView
+                            && hasActiveConnection(focusedView);
                     if (DEBUG) {
                         Log.v(TAG, "Reporting focus gain, without startInput"
-                                + ", nextFocusIsServedView=" + nextFocusIsServedView);
+                                + ", nextFocusIsServedView=" + nextFocusHasConnection);
                     }
                     final int startInputReason =
-                            nextFocusIsServedView ? WINDOW_FOCUS_GAIN_REPORT_WITH_SAME_EDITOR
-                                    : WINDOW_FOCUS_GAIN_REPORT_WITHOUT_EDITOR;
+                            nextFocusHasConnection ? WINDOW_FOCUS_GAIN_REPORT_WITH_CONNECTION
+                                    : WINDOW_FOCUS_GAIN_REPORT_WITHOUT_CONNECTION;
                     mService.startInputOrWindowGainedFocus(
                             startInputReason, mClient,
                             focusedView.getWindowToken(), startInputFlags, softInputMode,
                             windowFlags,
-                            nextFocusIsServedView ? mCurrentTextBoxAttribute : null,
-                            nextFocusIsServedView ? mServedInputConnectionWrapper : null,
+                            null,
+                            null,
                             0 /* missingMethodFlags */,
                             mCurRootView.mContext.getApplicationInfo().targetSdkVersion);
                 } catch (RemoteException e) {
@@ -671,10 +672,6 @@ public final class InputMethodManager {
         @Override
         public void setCurrentRootView(ViewRootImpl rootView) {
             synchronized (mH) {
-                if (mCurRootView != null) {
-                    // Restart the input when the next window focus state of the root view changed.
-                    mRestartOnNextWindowFocus = true;
-                }
                 mCurRootView = rootView;
             }
         }
@@ -704,14 +701,24 @@ public final class InputMethodManager {
         }
 
         /**
-         * For {@link ImeFocusController} to check if the currently served view is accepting full
-         * text edits.
+         * Checks whether the active input connection (if any) is for the given view.
+         *
+         * TODO(b/160968797): Remove this method and move mServedInputConnectionWrapper to
+         *  ImeFocusController.
+         *
+         * Note that this method is only intended for restarting input after focus gain
+         * (e.g. b/160391516), DO NOT leverage this method to do another check.
          */
         @Override
-        public boolean isAcceptingText() {
+        public boolean hasActiveConnection(View view) {
             synchronized (mH) {
+                if (!hasServedByInputMethodLocked(view)) {
+                    return false;
+                }
+
                 return mServedInputConnectionWrapper != null
-                        && mServedInputConnectionWrapper.getInputConnection() != null;
+                        && mServedInputConnectionWrapper.isActive()
+                        && mServedInputConnectionWrapper.mServedView.get() == view;
             }
         }
     }
@@ -964,11 +971,13 @@ public final class InputMethodManager {
 
     private static class ControlledInputConnectionWrapper extends IInputConnectionWrapper {
         private final InputMethodManager mParentInputMethodManager;
+        private final WeakReference<View> mServedView;
 
-        public ControlledInputConnectionWrapper(final Looper mainLooper, final InputConnection conn,
-                final InputMethodManager inputMethodManager) {
+        ControlledInputConnectionWrapper(Looper mainLooper, InputConnection conn,
+                InputMethodManager inputMethodManager, View servedView) {
             super(mainLooper, conn);
             mParentInputMethodManager = inputMethodManager;
+            mServedView = new WeakReference<>(servedView);
         }
 
         @Override
@@ -991,6 +1000,7 @@ public final class InputMethodManager {
                     + "connection=" + getInputConnection()
                     + " finished=" + isFinished()
                     + " mParentInputMethodManager.mActive=" + mParentInputMethodManager.mActive
+                    + " mServedView=" + mServedView.get()
                     + "}";
         }
     }
@@ -1171,7 +1181,8 @@ public final class InputMethodManager {
         mMainLooper = looper;
         mH = new H(looper);
         mDisplayId = displayId;
-        mIInputContext = new ControlledInputConnectionWrapper(looper, mDummyInputConnection, this);
+        mIInputContext = new ControlledInputConnectionWrapper(looper, mDummyInputConnection, this,
+                null);
     }
 
     /**
@@ -1952,7 +1963,7 @@ public final class InputMethodManager {
                     icHandler = ic.getHandler();
                 }
                 servedContext = new ControlledInputConnectionWrapper(
-                        icHandler != null ? icHandler.getLooper() : vh.getLooper(), ic, this);
+                        icHandler != null ? icHandler.getLooper() : vh.getLooper(), ic, this, view);
             } else {
                 servedContext = null;
                 missingMethodFlags = 0;
@@ -2109,28 +2120,36 @@ public final class InputMethodManager {
 
     /**
      * Call showSoftInput with currently focused view.
-     * @return {@code true} if IME can be shown.
+     *
+     * @param windowToken the window from which this request originates. If this doesn't match the
+     *                    currently served view, the request is ignored and returns {@code false}.
+     *
+     * @return {@code true} if IME can (eventually) be shown, {@code false} otherwise.
      * @hide
      */
-    public boolean requestImeShow(ResultReceiver resultReceiver) {
+    public boolean requestImeShow(IBinder windowToken) {
         synchronized (mH) {
             final View servedView = getServedViewLocked();
-            if (servedView == null) {
+            if (servedView == null || servedView.getWindowToken() != windowToken) {
                 return false;
             }
-            showSoftInput(servedView, 0 /* flags */, resultReceiver);
+            showSoftInput(servedView, 0 /* flags */, null /* resultReceiver */);
             return true;
         }
     }
 
     /**
      * Notify IME directly that it is no longer visible.
+     *
+     * @param windowToken the window from which this request originates. If this doesn't match the
+     *                    currently served view, the request is ignored.
      * @hide
      */
-    public void notifyImeHidden() {
+    public void notifyImeHidden(IBinder windowToken) {
         synchronized (mH) {
             try {
-                if (mCurMethod != null) {
+                if (mCurMethod != null && mCurRootView != null
+                        && mCurRootView.getWindowToken() == windowToken) {
                     mCurMethod.notifyImeHidden();
                 }
             } catch (RemoteException re) {
@@ -2140,15 +2159,15 @@ public final class InputMethodManager {
 
     /**
      * Notify IME directly to remove surface as it is no longer visible.
+     * @param windowToken The client window token that requests the IME to remove its surface.
      * @hide
      */
-    public void removeImeSurface() {
+    public void removeImeSurface(IBinder windowToken) {
         synchronized (mH) {
             try {
-                if (mCurMethod != null) {
-                    mCurMethod.removeImeSurface();
-                }
-            } catch (RemoteException re) {
+                mService.removeImeSurfaceFromWindow(windowToken);
+            } catch (RemoteException e) {
+                throw e.rethrowFromSystemServer();
             }
         }
     }

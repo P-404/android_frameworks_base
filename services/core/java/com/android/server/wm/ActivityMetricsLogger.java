@@ -918,6 +918,11 @@ class ActivityMetricsLogger {
                 isGame = (mUxPerf.perfGetFeedback(BoostFramework.VENDOR_FEEDBACK_WORKLOAD_TYPE,
                                         mLaunchedActivity.packageName) == BoostFramework.WorkloadType.GAME) ? 1 : 0;
             }
+            if (mLaunchedActivity.processName != null) {
+                if (!mLaunchedActivity.processName.equals(info.packageName)) {
+                    isGame = 1;
+                }
+            }
             mUxPerf.perfUXEngine_events(BoostFramework.UXE_EVENT_GAME, 0, info.packageName, isGame);
         }
 

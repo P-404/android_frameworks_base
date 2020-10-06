@@ -422,9 +422,9 @@
     <string name="permlab_accessLocationExtraCommands" msgid="5162339812057983988">"atzitu kokapen-hornitzaileen komando gehigarriak"</string>
     <string name="permdesc_accessLocationExtraCommands" msgid="355369611979907967">"Kokapen-hornitzailearen agindu gehigarriak atzitzeko baimena ematen die aplikazioei. Horrela, agian aplikazioek GPSaren edo bestelako kokapenaren iturburuen funtzionamenduan eragina izan dezakete."</string>
     <string name="permlab_accessFineLocation" msgid="6426318438195622966">"lortu kokapen zehatza aurreko planoan bakarrik"</string>
-    <string name="permdesc_accessFineLocation" msgid="6732174080240016335">"Erabiltzen ari zarenean, aplikazioak kokapen zehatza lor dezake kokapen-zerbitzuen bidez. Aplikazioak kokapena lortu ahal izateko, kokapen-zerbitzuek aktibatuta egon behar dute gailuan. Bateria-erabilera areagotzen du horrek."</string>
+    <string name="permdesc_accessFineLocation" msgid="6732174080240016335">"Abian denean, aplikazioak kokapen zehatza lor dezake kokapen-zerbitzuen bidez. Aplikazioak kokapena lortu ahal izateko, kokapen-zerbitzuek aktibatuta egon behar dute gailuan. Bateria-erabilera areagotzen du horrek."</string>
     <string name="permlab_accessCoarseLocation" msgid="1561042925407799741">"atzitu gutxi gorabeherako kokapena aurreko planoan bakarrik"</string>
-    <string name="permdesc_accessCoarseLocation" msgid="778521847873199160">"Erabiltzen ari zarenean, aplikazioak gutxi gorabeherako kokapena lor dezake kokapen-zerbitzuen bidez. Aplikazioak kokapena lortu ahal izateko, kokapen-zerbitzuek aktibatuta egon behar dute gailuan."</string>
+    <string name="permdesc_accessCoarseLocation" msgid="778521847873199160">"Abian denean, aplikazioak gutxi gorabeherako kokapena lor dezake kokapen-zerbitzuen bidez. Aplikazioak kokapena lortu ahal izateko, kokapen-zerbitzuek aktibatuta egon behar dute gailuan."</string>
     <string name="permlab_accessBackgroundLocation" msgid="1721164702777366138">"atzitu kokapena atzeko planoan"</string>
     <string name="permdesc_accessBackgroundLocation" msgid="8264885066095638105">"Aplikazioak kokapena atzi dezake, baita aplikazioa erabiltzen ari ez zarenean ere."</string>
     <string name="permlab_modifyAudioSettings" msgid="6129039778010031815">"aldatu audio-ezarpenak"</string>
@@ -1926,7 +1926,7 @@
     <string name="time_picker_header_text" msgid="9073802285051516688">"Ezarri ordua"</string>
     <string name="time_picker_input_error" msgid="8386271930742451034">"Idatzi balio duen ordu bat"</string>
     <string name="time_picker_prompt_label" msgid="303588544656363889">"Idatzi ordua"</string>
-    <string name="time_picker_text_input_mode_description" msgid="4761160667516611576">"Aldatu testu modura ordua zehazteko."</string>
+    <string name="time_picker_text_input_mode_description" msgid="4761160667516611576">"Ordua idazteko, aldatu testua idazteko modura."</string>
     <string name="time_picker_radial_mode_description" msgid="1222342577115016953">"Aldatu erloju modura ordua zehazteko."</string>
     <string name="autofill_picker_accessibility_title" msgid="4425806874792196599">"Betetze automatikoaren aukerak"</string>
     <string name="autofill_save_accessibility_title" msgid="1523225776218450005">"Gorde betetze automatikoarekin erabiltzeko"</string>

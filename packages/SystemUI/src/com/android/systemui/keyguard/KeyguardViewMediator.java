@@ -481,6 +481,9 @@ public class KeyguardViewMediator extends SystemUI implements Dumpable {
                 if(currentState == TelephonyManager.SIM_STATE_READY){
                     if(simState != TelephonyManager.SIM_STATE_PIN_REQUIRED) {
                         mUnlockTrackSimStates.put(slotId, simState);
+                    }else{
+                        if (DEBUG) Log.e(TAG, "ship the unnecessary SIM_STATE_PIN_REQUIRED state");
+                        return;
                     }
                 }
             }

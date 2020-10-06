@@ -91,6 +91,7 @@ class DividerImeController implements DisplayImeController.ImePositionProcessor 
 
     private boolean mPaused = true;
     private boolean mPausedTargetAdjusted = false;
+    private boolean mAdjustedWhileHidden = false;
 
     DividerImeController(SplitScreenTaskOrganizer splits, TransactionPool pool, Handler handler) {
         mSplits = splits;
@@ -116,6 +117,18 @@ class DividerImeController implements DisplayImeController.ImePositionProcessor 
                 && (imeSplit.asBinder() == mSplits.mSecondary.token.asBinder());
     }
 
+    void reset() {
+        mPaused = true;
+        mPausedTargetAdjusted = false;
+        mAdjustedWhileHidden = false;
+        mAnimation = null;
+        mAdjusted = mTargetAdjusted = false;
+        mImeWasShown = mTargetShown = false;
+        mTargetPrimaryDim = mTargetSecondaryDim = mLastPrimaryDim = mLastSecondaryDim = 0.f;
+        mSecondaryHasFocus = false;
+        mLastAdjustTop = -1;
+    }
+
     private void updateDimTargets() {
         final boolean splitIsVisible = !getView().isHidden();
         mTargetPrimaryDim = (mSecondaryHasFocus && mTargetShown && splitIsVisible)
@@ -125,18 +138,20 @@ class DividerImeController implements DisplayImeController.ImePositionProcessor 
     }
 
     @Override
-    public void onImeStartPositioning(int displayId, int hiddenTop, int shownTop,
-            boolean imeShouldShow, SurfaceControl.Transaction t) {
+    @ImeAnimationFlags
+    public int onImeStartPositioning(int displayId, int hiddenTop, int shownTop,
+            boolean imeShouldShow, boolean imeIsFloating, SurfaceControl.Transaction t) {
         mHiddenTop = hiddenTop;
         mShownTop = shownTop;
         mTargetShown = imeShouldShow;
         if (!isDividerVisible()) {
-            return;
+            return 0;
         }
         final boolean splitIsVisible = !getView().isHidden();
         mSecondaryHasFocus = getSecondaryHasFocus(displayId);
         final boolean targetAdjusted = splitIsVisible && imeShouldShow && mSecondaryHasFocus
-                && !getLayout().mDisplayLayout.isLandscape() && !mSplits.mDivider.isMinimized();
+                && !imeIsFloating && !getLayout().mDisplayLayout.isLandscape()
+                && !mSplits.mDivider.isMinimized();
         if (mLastAdjustTop < 0) {
             mLastAdjustTop = imeShouldShow ? hiddenTop : shownTop;
         } else if (mLastAdjustTop != (imeShouldShow ? mShownTop : mHiddenTop)) {
@@ -154,7 +169,7 @@ class DividerImeController implements DisplayImeController.ImePositionProcessor 
         if (mPaused) {
             mPausedTargetAdjusted = targetAdjusted;
             if (DEBUG) Slog.d(TAG, " ime starting but paused " + dumpState());
-            return;
+            return (targetAdjusted || mAdjusted) ? IME_ANIMATION_NO_ALPHA : 0;
         }
         mTargetAdjusted = targetAdjusted;
         updateDimTargets();
@@ -170,11 +185,18 @@ class DividerImeController implements DisplayImeController.ImePositionProcessor 
             // If split is hidden, we don't want to trigger any relayouts that would cause the
             // divider to show again.
             updateImeAdjustState();
+        } else {
+            mAdjustedWhileHidden = true;
         }
+        return (mTargetAdjusted || mAdjusted) ? IME_ANIMATION_NO_ALPHA : 0;
     }
 
     private void updateImeAdjustState() {
-        if (mAdjusted != mTargetAdjusted) {
+        updateImeAdjustState(false /* force */);
+    }
+
+    private void updateImeAdjustState(boolean force) {
+        if (mAdjusted != mTargetAdjusted || force) {
             // Reposition the server's secondary split position so that it evaluates
             // insets properly.
             WindowContainerTransaction wct = new WindowContainerTransaction();
@@ -229,6 +251,11 @@ class DividerImeController implements DisplayImeController.ImePositionProcessor 
             }
         }
         mSplits.mDivider.setAdjustedForIme(mTargetShown && !mPaused);
+    }
+
+    public void updateAdjustForIme() {
+        updateImeAdjustState(mAdjustedWhileHidden);
+        mAdjustedWhileHidden = false;
     }
 
     @Override

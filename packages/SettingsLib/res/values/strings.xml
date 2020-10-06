@@ -654,6 +654,10 @@
     <string name="wifi_display_certification">Wireless display certification</string>
     <!-- Setting Checkbox title whether to enable WiFi coverage extending feature. -->
     <string name="wifi_coverage_extend">Enable Wi\u2011Fi Coverage Extend Feature</string>
+    <!-- Setting Checkbox title whether to enable SoftAp OCV Feature. -->
+    <string name="softap_ocv">Enable SoftAp OCV</string>
+    <!-- Setting Checkbox title whether to enable SoftAp Beacon Protection. -->
+    <string name="softap_beacon_protection">Enable SoftAp Beacon Protection</string>
     <!-- Setting Checkbox title whether to enable WiFi Verbose Logging. [CHAR LIMIT=40] -->
     <string name="wifi_verbose_logging">Enable Wi\u2011Fi Verbose Logging</string>
     <!-- Setting Checkbox title whether to disable WiFi Scan Throttling. [CHAR LIMIT=40] -->
@@ -729,6 +733,10 @@
     <!-- Setting Checkbox summary whether to enable Wifi verbose Logging [CHAR_LIMIT=NONE] -->
     <!-- Setting Checkbox summary whether to enable WiFi coverage extending feature. -->
     <string name="wifi_coverage_extend_summary">Enable extending Wi\u2011Fi coverage using Hotspot</string>
+    <!-- Setting Checkbox summary whether to enable SoftAp OCV. -->
+    <string name="softap_ocv_summary">Enable SoftAp OCV using Hotspot</string>
+    <!-- Setting Checkbox summary whether to enable SoftAp Beacon Protection. -->
+    <string name="softap_beacon_protection_summary">Enable SoftAp beacon protection using Hotspot</string>
     <!-- Setting Checkbox summary whether to enable Wifi verbose Logging [CHAR LIMIT=80] -->
     <string name="wifi_verbose_logging_summary">Increase Wi\u2011Fi logging level, show per SSID RSSI in Wi\u2011Fi Picker</string>
     <!-- Setting Checkbox summary whether to disable Wifi scan throttling [CHAR LIMIT=NONE] -->

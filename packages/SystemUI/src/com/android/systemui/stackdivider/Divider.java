@@ -193,10 +193,13 @@ public class Divider extends SystemUI implements DividerView.DividerCallbacks,
 
             @Override
             public void onKeyguardShowingChanged() {
-                if (!isDividerVisible() || mView == null) {
+                if (!isSplitActive() || mView == null) {
                     return;
                 }
                 mView.setHidden(mKeyguardStateController.isShowing());
+                if (!mKeyguardStateController.isShowing()) {
+                    mImePositionProcessor.updateAdjustForIme();
+                }
             }
 
             @Override
@@ -285,8 +288,9 @@ public class Divider extends SystemUI implements DividerView.DividerCallbacks,
      * while this only cares if some things are (eg. while entering/exiting as well).
      */
     private boolean isSplitActive() {
-        return mSplits.mPrimary.topActivityType != ACTIVITY_TYPE_UNDEFINED
-                || mSplits.mSecondary.topActivityType != ACTIVITY_TYPE_UNDEFINED;
+        return mSplits.mPrimary != null && mSplits.mSecondary != null
+                && (mSplits.mPrimary.topActivityType != ACTIVITY_TYPE_UNDEFINED
+                        || mSplits.mSecondary.topActivityType != ACTIVITY_TYPE_UNDEFINED);
     }
 
     private void addDivider(Configuration configuration) {
@@ -314,7 +318,7 @@ public class Divider extends SystemUI implements DividerView.DividerCallbacks,
     }
 
     private void update(Configuration configuration) {
-        final boolean isDividerHidden = mView != null && mView.isHidden();
+        final boolean isDividerHidden = mView != null && mKeyguardStateController.isShowing();
 
         removeDivider();
         addDivider(configuration);
@@ -527,6 +531,7 @@ public class Divider extends SystemUI implements DividerView.DividerCallbacks,
         updateVisibility(false /* visible */);
         mMinimized = false;
         removeDivider();
+        mImePositionProcessor.reset();
     }
 
     void ensureMinimizedSplit() {

@@ -858,6 +858,7 @@ public class DisplayContentTests extends WindowTestsBase {
     public void testComputeImeParent_app() throws Exception {
         final DisplayContent dc = createNewDisplay();
         dc.mInputMethodTarget = createWindow(null, TYPE_BASE_APPLICATION, "app");
+        dc.mInputMethodInputTarget = dc.mInputMethodTarget;
         assertEquals(dc.mInputMethodTarget.mActivityRecord.getSurfaceControl(),
                 dc.computeImeParent());
     }
@@ -886,6 +887,21 @@ public class DisplayContentTests extends WindowTestsBase {
         final DisplayContent dc = createNewDisplay();
         dc.mInputMethodTarget = createWindow(null, TYPE_STATUS_BAR, "statusBar");
         assertEquals(dc.getImeContainer().getParentSurfaceControl(), dc.computeImeParent());
+    }
+
+    @Test
+    public void testInputMethodInputTarget_isClearedWhenWindowStateIsRemoved() throws Exception {
+        final DisplayContent dc = createNewDisplay();
+
+        WindowState app = createWindow(null, TYPE_BASE_APPLICATION, dc, "app");
+
+        dc.mInputMethodInputTarget = app;
+        assertEquals(app, dc.computeImeControlTarget());
+
+        app.removeImmediately();
+
+        assertNull(dc.mInputMethodInputTarget);
+        assertNull(dc.computeImeControlTarget());
     }
 
     @Test

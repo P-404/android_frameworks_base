@@ -32,6 +32,7 @@ import android.net.wifi.IOnWifiActivityEnergyInfoListener;
 import android.net.wifi.IOnWifiUsabilityStatsListener;
 import android.net.wifi.IScanResultsCallback;
 import android.net.wifi.ISoftApCallback;
+import android.net.wifi.IWifiNotificationCallback;
 import android.net.wifi.ISuggestionConnectionStatusListener;
 import android.net.wifi.ITrafficStateCallback;
 import android.net.wifi.IWifiConnectedNetworkScorer;
@@ -241,6 +242,18 @@ interface IWifiManager
 
     boolean isWifiCoverageExtendFeatureEnabled();
 
+    boolean isSoftApOcvFeatureEnabled();
+
+    boolean isSoftApBeaconProtFeatureEnabled();
+
+    boolean isSoftApOcvFeatureSupported();
+
+    boolean isSoftApBeaconProtFeatureSupported();
+
+    void enableSoftApOcvFeature(boolean enable);
+
+    void enableSoftApBeaconProtFeature(boolean enable);
+
     void enableWifiCoverageExtendFeature(boolean enable);
 
     void registerNetworkRequestMatchCallback(in IBinder binder, in INetworkRequestMatchCallback callback, int callbackIdentifier);
@@ -310,4 +323,17 @@ interface IWifiManager
     boolean isVht8ssCapableDevice();
 
     String doDriverCmd(String command);
+
+    boolean setWifiEnabled2(String packageName, int staId, boolean enable);
+
+    boolean disconnect2(int staId, String packageName);
+
+    WifiInfo getConnectionInfo2(int staId, String callingPackage, String featureId);
+
+    ParceledListSlice getConfiguredNetworks2(int staId, String packageName, String featureId);
+
+    void registerForWifiNotification(int staId, in IBinder binder, in IWifiNotificationCallback callback, int callbackIdentifier);
+
+    void unregisterForWifiNotification(int staId, int callbackIdentifier);
+
 }

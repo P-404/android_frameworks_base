@@ -51,6 +51,7 @@ import android.app.AppGlobals;
 import android.app.GrantedUriPermission;
 import android.app.IUriGrantsManager;
 import android.content.ClipData;
+import android.content.ComponentName;
 import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -114,7 +115,7 @@ public class UriGrantsManagerService extends IUriGrantsManager.Stub {
     private static final boolean DEBUG = false;
     private static final String TAG = "UriGrantsManagerService";
     // Maximum number of persisted Uri grants a package is allowed
-    private static final int MAX_PERSISTED_URI_GRANTS = 128;
+    private static final int MAX_PERSISTED_URI_GRANTS = 512;
     private static final boolean ENABLE_DYNAMIC_PERMISSIONS = false;
 
     private final Object mLock = new Object();
@@ -698,6 +699,11 @@ public class UriGrantsManagerService extends IUriGrantsManager.Stub {
                                 final UriPermission perm = findOrCreateUriPermissionLocked(
                                         sourcePkg, targetPkg, targetUid, grantUri);
                                 perm.initPersistedModes(modeFlags, createdTime);
+                                mPmInternal.grantImplicitAccess(
+                                        targetUserId, null,
+                                        UserHandle.getAppId(targetUid),
+                                        pi.applicationInfo.uid,
+                                        false /* direct */);
                             }
                         } else {
                             Slog.w(TAG, "Persisted grant for " + uri + " had source " + sourcePkg
@@ -1171,6 +1177,9 @@ public class UriGrantsManagerService extends IUriGrantsManager.Stub {
             // grant, we can skip generating any bookkeeping; when any advanced
             // features have been requested, we proceed below to make sure the
             // provider supports granting permissions
+            mPmInternal.grantImplicitAccess(
+                    UserHandle.getUserId(targetUid), null,
+                    UserHandle.getAppId(targetUid), pi.applicationInfo.uid, false);
             return -1;
         }
 

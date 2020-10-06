@@ -229,6 +229,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
 
     private final Context mContext;
     private final boolean mIsPrimaryUser;
+    private final boolean mIsAutomotive;
     private final StatusBarStateController mStatusBarStateController;
     HashMap<Integer, SimData> mSimDatas = new HashMap<>();
     HashMap<Integer, ServiceState> mServiceStates = new HashMap<Integer, ServiceState>();
@@ -1771,6 +1772,8 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
             mFaceManager.addLockoutResetCallback(mFaceLockoutResetCallback);
         }
 
+        mIsAutomotive = isAutomotive();
+
         ActivityManagerWrapper.getInstance().registerTaskStackListener(mTaskStackListener);
         mUserManager = context.getSystemService(UserManager.class);
         mIsPrimaryUser = mUserManager.isPrimaryUser();
@@ -2425,6 +2428,12 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
 
         if (!SubscriptionManager.isValidSubscriptionId(subId)) {
             Log.w(TAG, "invalid subId in handleServiceStateChange()");
+            for (int j = 0; j < mCallbacks.size(); j++) {
+                KeyguardUpdateMonitorCallback cb = mCallbacks.get(j).get();
+                if (cb != null) {
+                    cb.onServiceStateChanged(subId, serviceState);
+                }
+            }
             return;
         } else {
             updateTelephonyCapable(true);
@@ -2489,6 +2498,14 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
                 .addCategory(Intent.CATEGORY_HOME);
         ResolveInfo resolveInfo = mContext.getPackageManager().resolveActivity(homeIntent,
                 0 /* flags */);
+
+        // TODO(b/160971249): Replace in the future by resolving activity as user.
+        if (resolveInfo == null && mIsAutomotive) {
+            Log.w(TAG, "resolveNeedsSlowUnlockTransition: returning false since activity "
+                    + "could not be resolved.");
+            return false;
+        }
+
         return FALLBACK_HOME_COMPONENT.equals(resolveInfo.getComponentInfo().getComponentName());
     }
 
@@ -2557,6 +2574,10 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
         }
 
         return false;
+    }
+
+    private boolean isAutomotive() {
+        return mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE);
     }
 
     /**
@@ -2751,36 +2772,6 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
             }
         }
     };
-
-    public boolean isOOS()
-    {
-        boolean ret = true;
-        int phoneCount = TelephonyManager.getDefault().getPhoneCount();
-
-        for (int phoneId = 0; phoneId < phoneCount; phoneId++) {
-            int[] subId = SubscriptionManager.getSubId(phoneId);
-            if (subId != null && subId.length >= 1) {
-                if (DEBUG) Log.d(TAG, "slot id:" + phoneId + " subId:" + subId[0]);
-                ServiceState state = mServiceStates.get(subId[0]);
-                if (state != null) {
-                    if (state.isEmergencyOnly())
-                        ret = false;
-                    if ((state.getVoiceRegState() != ServiceState.STATE_OUT_OF_SERVICE)
-                            && (state.getVoiceRegState() != ServiceState.STATE_POWER_OFF))
-                        ret = false;
-                    if (DEBUG) {
-                        Log.d(TAG, "is emergency: " + state.isEmergencyOnly());
-                        Log.d(TAG, "voice state: " + state.getVoiceRegState());
-                    }
-                } else {
-                    if (DEBUG) Log.d(TAG, "state is NULL");
-                }
-            }
-        }
-
-        if (DEBUG) Log.d(TAG, "is Emergency supported: " + ret);
-        return ret;
-    }
 
     /**
      * @return true if and only if the state has changed for the specified {@code slotId}
@@ -3047,6 +3038,9 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
                 final String time = dateFormat.format(new Date(model.getTimeMillis()));
                 pw.println("    " + time + " " + model.toString());
             }
+        }
+        if (mIsAutomotive) {
+            pw.println("  Running on Automotive build");
         }
     }
 }
