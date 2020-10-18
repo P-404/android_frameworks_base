@@ -750,10 +750,10 @@ public class KeyguardBottomAreaView extends FrameLayout implements View.OnClickL
 
         if (dozing) {
             mOverlayContainer.setVisibility(INVISIBLE);
-            mEmergencyCarrierArea.setVisibility(INVISIBLE);
+            mEmergencyCarrierArea.setVisibility(GONE);
         } else {
             mOverlayContainer.setVisibility(VISIBLE);
-            mEmergencyCarrierArea.setVisibility(VISIBLE);
+            mEmergencyCarrierArea.setVisibility(GONE);
             if (animate) {
                 startFinishDozeAnimation();
             }
