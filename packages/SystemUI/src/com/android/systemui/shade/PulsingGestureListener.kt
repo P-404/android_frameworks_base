@@ -57,6 +57,7 @@ class PulsingGestureListener @Inject constructor(
 ) : GestureDetector.SimpleOnGestureListener(), Dumpable {
     private var doubleTapEnabled = false
     private var singleTapEnabled = false
+    private var doubleTapEnabledNative = false
 
     init {
         val tunable = Tunable { key: String?, _: String? ->
@@ -67,11 +68,16 @@ class PulsingGestureListener @Inject constructor(
                 Settings.Secure.DOZE_TAP_SCREEN_GESTURE ->
                     singleTapEnabled = ambientDisplayConfiguration.tapGestureEnabled(
                             UserHandle.USER_CURRENT)
+                Settings.Secure.DOUBLE_TAP_TO_WAKE ->
+                    doubleTapEnabledNative = Settings.Secure.getIntForUser(
+                            notificationShadeWindowView.getContext().getContentResolver(),
+                            Settings.Secure.DOUBLE_TAP_TO_WAKE, 0, UserHandle.USER_CURRENT) == 1
             }
         }
         tunerService.addTunable(tunable,
                 Settings.Secure.DOZE_DOUBLE_TAP_GESTURE,
-                Settings.Secure.DOZE_TAP_SCREEN_GESTURE)
+                Settings.Secure.DOZE_TAP_SCREEN_GESTURE,
+                Settings.Secure.DOUBLE_TAP_TO_WAKE)
 
         dumpManager.registerDumpable(this)
     }
@@ -101,7 +107,7 @@ class PulsingGestureListener @Inject constructor(
         // checks MUST be on the ACTION_UP event.
         if (e.actionMasked == MotionEvent.ACTION_UP &&
                 statusBarStateController.isDozing &&
-                (doubleTapEnabled || singleTapEnabled) &&
+                (doubleTapEnabled || singleTapEnabled || doubleTapEnabledNative) &&
                 !falsingManager.isProximityNear &&
                 !falsingManager.isFalseDoubleTap
         ) {
