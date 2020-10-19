@@ -26,4 +26,10 @@
     <!-- Status bar - icons -->
     <string name="status_bar_icons_title">Status bar icons</string>
     <string name="status_bar_vpn">VPN</string>
+
+    <!-- Screenshot delete action -->
+    <!-- Label for UI element which allows deleting the screenshot [CHAR LIMIT=30] -->
+    <string name="screenshot_delete_label">Delete</string>
+    <!-- Content description indicating that tapping the element will allow deleting the screenshot [CHAR LIMIT=NONE] -->
+    <string name="screenshot_delete_description">Delete screenshot</string>
 </resources>
