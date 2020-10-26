@@ -36,6 +36,7 @@ import android.animation.ValueAnimator;
 import android.app.ActivityManager;
 import android.app.Fragment;
 import android.app.StatusBarManager;
+import android.content.Context;
 import android.content.ContentResolver;
 import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
@@ -60,6 +61,7 @@ import android.os.VibrationEffect;
 import android.provider.Settings;
 import android.util.Log;
 import android.util.MathUtils;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
@@ -514,6 +516,8 @@ public class NotificationPanelViewController extends PanelViewController {
     private NotificationShadeDepthController mDepthController;
     private int mDisplayId;
 
+    private GestureDetector mDoubleTapGestureListener;
+
     /**
      * Cache the resource id of the theme to avoid unnecessary work in onThemeChanged.
      *
@@ -824,6 +828,16 @@ public class NotificationPanelViewController extends PanelViewController {
         });
         mBottomAreaShadeAlphaAnimator.setDuration(160);
         mBottomAreaShadeAlphaAnimator.setInterpolator(Interpolators.ALPHA_OUT);
+        mDoubleTapGestureListener = new GestureDetector(mView.getContext(),
+                new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onDoubleTap(MotionEvent event) {
+                final PowerManager pm = (PowerManager) mView.getContext().getSystemService(
+                        Context.POWER_SERVICE);
+                pm.goToSleep(event.getEventTime());
+                return true;
+            }
+        });
         mLockscreenUserManager = notificationLockscreenUserManager;
         mEntryManager = notificationEntryManager;
         mConversationNotificationManager = conversationNotificationManager;
@@ -3917,6 +3931,10 @@ public class NotificationPanelViewController extends PanelViewController {
                 // to pull down QS or expand the shade.
                 if (mStatusBar.isBouncerShowingScrimmed()) {
                     return false;
+                }
+
+                if (mBarState == StatusBarState.KEYGUARD) {
+                    mDoubleTapGestureListener.onTouchEvent(event);
                 }
 
                 // Make sure the next touch won't the blocked after the current ends.
