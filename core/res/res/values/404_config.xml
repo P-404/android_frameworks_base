@@ -32,4 +32,7 @@
     <!-- Whether to cleanup fingerprints upon connection to the daemon and when user switches -->
     <bool name="config_cleanupUnusedFingerprints">true</bool>
 
+    <!-- Default value for Horizon light color (Blue) -->
+    <integer name="config_AmbientPulseLightColor">0x3980FF</integer>
+
 </resources>
