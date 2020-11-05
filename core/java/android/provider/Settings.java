@@ -4817,6 +4817,24 @@ public final class Settings {
         public static final String LOCKSCREEN_MEDIA_ART = "lockscreen_media_art";
 
         /**
+         * Whether to enable PULSE Edge lights
+         * @hide
+         */
+        public static final String AMBIENT_NOTIFICATION_LIGHT = "ambient_notification_light";
+
+        /**
+         * @hide
+         */
+        public static final String AMBIENT_NOTIFICATION_LIGHT_AUTOMATIC = "ambient_notification_light_automatic";
+
+        /**
+         * helper setting to contain the current pulse reason so we can check
+         * if it has been triggered from a notification or a gesture
+         * @hide
+         */
+        public static final String PULSE_TRIGGER_REASON = "pulse_trigger_reason";
+
+        /**
          * These are all public system settings
          *
          * @hide
@@ -4925,6 +4943,8 @@ public final class Settings {
             PRIVATE_SETTINGS.add(DISPLAY_COLOR_MODE);
             PRIVATE_SETTINGS.add(CALL_CONNECTED_TONE_ENABLED);
             PRIVATE_SETTINGS.add(LOCKSCREEN_MEDIA_ART);
+            PRIVATE_SETTINGS.add(AMBIENT_NOTIFICATION_LIGHT);
+            PRIVATE_SETTINGS.add(AMBIENT_NOTIFICATION_LIGHT_AUTOMATIC);
         }
 
         /**
