@@ -26,4 +26,7 @@
     <!-- Device key handlers -->
     <java-symbol type="array" name="config_deviceKeyHandlerLibs" />
     <java-symbol type="array" name="config_deviceKeyHandlerClasses" />
+
+   <!-- Horizon Light -->
+    <java-symbol type="integer" name="config_AmbientPulseLightColor" />
 </resources>
