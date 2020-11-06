@@ -2853,4 +2853,7 @@
     <string name="controls_menu_add">Add controls</string>
     <!-- Controls menu, edit [CHAR_LIMIT=30] -->
     <string name="controls_menu_edit">Edit controls</string>
+    
+    <!-- Statusbar network activity indicators -->
+    <string name="status_bar_network_activity">Network activity indicators</string>
 </resources>
