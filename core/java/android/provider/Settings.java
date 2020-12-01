@@ -4887,6 +4887,12 @@ public final class Settings {
         public static final String THREE_FINGER_GESTURE = "three_finger_gesture";
 
         /**
+        * whether to enable or disable vibration on succesful fingerprint auth
+        * @hide
+        */
+       public static final String AUTHENTICATION_SUCCESS_VIB = "authentication_success_vib";
+
+        /**
          * Show or hide clock
          * 0 - hide
          * 1 - show (default)
@@ -5080,6 +5086,7 @@ public final class Settings {
             PRIVATE_SETTINGS.add(STATUSBAR_CLOCK_DATE_STYLE);
             PRIVATE_SETTINGS.add(STATUSBAR_CLOCK_DATE_FORMAT);
             PRIVATE_SETTINGS.add(STATUSBAR_CLOCK_DATE_POSITION);
+            PRIVATE_SETTINGS.add(AUTHENTICATION_SUCCESS_VIB);
         }
 
         /**
