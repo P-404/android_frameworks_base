@@ -88,5 +88,6 @@ public class SystemSettings {
         Settings.System.NOTIFICATION_LIGHT_PULSE,
         Settings.System.LOCKSCREEN_MEDIA_ART,
         Settings.System.SCREENSHOT_SOUND,
+        Settings.System.AUTHENTICATION_SUCCESS_VIB,
     };
 }
