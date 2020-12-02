@@ -19,6 +19,7 @@ import com.android.systemui.dagger.qualifiers.UiBackground;
 import com.android.systemui.Dependency;
 import com.android.systemui.InitController;
 import com.android.systemui.assist.AssistManager;
+import com.android.systemui.biometrics.FODCircleViewImpl;
 import com.android.systemui.broadcast.BroadcastDispatcher;
 import com.android.systemui.bubbles.BubbleController;
 import com.android.systemui.colorextraction.SysuiColorExtractor;
@@ -188,7 +189,8 @@ public class StatusBarGoogle extends StatusBar {
             KeyguardIndicationController keyguardIndicationController,
             DismissCallbackRegistry dismissCallbackRegistry,
             Lazy<NotificationShadeDepthController> notificationShadeDepthControllerLazy,
-            StatusBarTouchableRegionManager statusBarTouchableRegionManager) {
+            StatusBarTouchableRegionManager statusBarTouchableRegionManager,
+            FODCircleViewImpl fodCircleViewImpl) {
         super(context,
                 notificationsController,
                 lightBarController,
@@ -265,7 +267,8 @@ public class StatusBarGoogle extends StatusBar {
                 keyguardIndicationController,
                 dismissCallbackRegistry,
                 notificationShadeDepthControllerLazy,
-                statusBarTouchableRegionManager);
+                statusBarTouchableRegionManager,
+                fodCircleViewImpl);
         mSmartSpaceController = smartSpaceController;
     }
 
