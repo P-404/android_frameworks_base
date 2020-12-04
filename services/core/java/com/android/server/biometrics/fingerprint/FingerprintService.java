@@ -78,7 +78,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.android.internal.util.p404.fod.FodUtils;
-
 import vendor.lineage.biometrics.fingerprint.inscreen.V1_0.IFingerprintInscreen;
 
 import java.io.File;
