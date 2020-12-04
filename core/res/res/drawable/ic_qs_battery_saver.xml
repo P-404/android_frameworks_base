@@ -1,5 +1,5 @@
 <!--
-    Copyright (C) 2019 The Android Open Source Project
+    Copyright (C) 2020 Project 404
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -20,11 +20,6 @@
         android:viewportWidth="24.0"
         android:viewportHeight="24.0"
         android:tint="?android:attr/colorControlNormal">
-    <path
-        android:fillColor="#FFF"
-        android:pathData="M16.67,4H14.5V2h-5v2H7.33C6.6,4 6,4.6 6,5.33V15v5.67C6,21.4 6.6,22 7.33,22h9.33C17.4,22 18,21.4 18,20.67V15V5.33C18,4.6 17.4,4 16.67,4zM16,15v5H8v-5V6h8V15z"/>
-    <path
-        android:fillColor="#FFF"
-        android:pathData="M15,12l-2,0l0,-2l-2,0l0,2l-2,0l0,2l2,0l0,2l2,0l0,-2l2,0z"/>
+    <path android:fillColor="#000000" android:pathData="M9,2.9H15V1.1H9V2.9ZM6.9,6C6.9,5.9447 6.9447,5.9 7,5.9H17C17.0552,5.9 17.1,5.9447 17.1,6V21C17.1,21.0552 17.0552,21.1 17,21.1H7C6.9447,21.1 6.9,21.0552 6.9,21V6ZM7,4.1C5.9506,4.1 5.1,4.9506 5.1,6V21C5.1,22.0493 5.9506,22.9 7,22.9H17C18.0493,22.9 18.9,22.0493 18.9,21V6C18.9,4.9506 18.0493,4.1 17,4.1H7ZM11.1,12V9.4H12.9V12H15.5V13.8H12.9V16.4H11.1V13.8H8.5V12H11.1Z" android:fillType="evenOdd"/>
 
 </vector>

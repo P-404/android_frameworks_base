@@ -1,5 +1,5 @@
 <!--
-  Copyright (C) 2018 The Android Open Source Project
+  Copyright (C) 2020 Project 404
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -20,7 +20,5 @@
         android:viewportWidth="24.0"
         android:viewportHeight="24.0"
         android:tint="?android:attr/colorControlNormal">
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M20.41,4.94l-1.35,-1.35c-0.78,-0.78 -2.05,-0.78 -2.83,0l0,0L3,16.82V21h4.18L20.41,7.77C21.2,6.99 21.2,5.72 20.41,4.94zM6.41,19.06L5,19v-1.36l9.82,-9.82l1.41,1.41L6.41,19.06z"/>
+    <path android:fillColor="#000000" android:pathData="M21.9,5.1L18.9,2.1C18.5,1.7 18.1,1.5 17.6,1.5C17.1,1.5 16.6,1.7 16.3,2.1L2.7,15.6L1.5,22.5L8.4,21.3L21.9,7.8C22.7,7 22.7,5.8 21.9,5.1ZM7.5,19.6L3.7,20.3L4.3,16.5L14.3,6.5L17.5,9.6L7.5,19.6ZM20.7,6.5L18.8,8.4L15.7,5.3L17.5,3.3H17.6L20.6,6.3C20.7,6.4 20.7,6.4 20.7,6.5Z"/>
 </vector>

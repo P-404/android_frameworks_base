@@ -1,5 +1,5 @@
 <!--
-    Copyright (C) 2016 The Android Open Source Project
+    Copyright (C) 2020 Project 404
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -19,7 +19,5 @@
         android:viewportWidth="24.0"
         android:viewportHeight="24.0"
         android:tint="?android:attr/colorControlNormal">
-    <path
-        android:fillColor="@android:color/white"
-        android:pathData="M17.71,7.71L12,2h-1v7.59L6.41,5 5,6.41 10.59,12 5,17.59 6.41,19 11,14.41L11,22h1l5.71,-5.71 -4.3,-4.29 4.3,-4.29zM13,5.83l1.88,1.88L13,9.59L13,5.83zM14.88,16.29L13,18.17v-3.76l1.88,1.88z"/>
+    <path android:fillColor="@android:color/white" android:pathData="M16.3619,16.4786L13,19L13,13.8171L16.3619,16.4786ZM13,5L16.3619,7.5214L13,10.1829L13,5ZM5.3793,16.216L6.6207,17.784L11,14.3171L11,20.8C11,21.038 11.0772,21.2696 11.22,21.46C11.5845,21.946 12.274,22.0445 12.76,21.68L18.3924,17.4557C18.4749,17.3938 18.5492,17.3215 18.6132,17.2406C19.0246,16.7209 18.9368,15.9662 18.4172,15.5549L13.9269,12L18.4172,8.4451C18.4981,8.3811 18.5705,8.3068 18.6324,8.2243C19.03,7.6941 18.9226,6.9419 18.3924,6.5443L12.76,2.32C12.5696,2.1772 12.338,2.1 12.1,2.1C11.4925,2.1 11,2.5925 11,3.2L11,9.6829L6.6207,6.216L5.3793,7.784L10.7047,12L5.3793,16.216Z" android:strokeColor="#00000000" android:strokeWidth="1" android:fillType="nonZero"/>
 </vector>
