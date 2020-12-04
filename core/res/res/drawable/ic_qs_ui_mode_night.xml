@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ Copyright (C) 2019 The Android Open Source Project
+  ~ Copyright (C) 2020 Project 404
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -15,11 +15,9 @@
   ~ limitations under the License
   -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-        android:width="24dp"
-        android:height="24dp"
-        android:viewportWidth="24.0"
-        android:viewportHeight="24.0">
-    <path
-        android:fillColor="@android:color/white"
-        android:pathData="M12,22C17.52,22 22,17.52 22,12 22,6.48 17.52,2 12,2 6.48,2 2,6.48 2,12 2,17.52 6.48,22 12,22ZM12,3.915c3.889,0 8,4.005 8,8.085 0,4.08 -3.927,7.992 -7.928,7.992z"/>
+        android:width="48dp"
+        android:height="48dp"
+        android:viewportWidth="48"
+        android:viewportHeight="48">
+    <path android:fillColor="#000000" android:pathData="M26.0454,41.8918L26.0454,48L21.9546,48L21.9546,41.8918L26.0454,41.8918ZM38.0978,35.2051L42.4169,39.5242L39.5242,42.4169L35.2051,38.0978L38.0978,35.2051ZM9.9022,35.2051L12.7949,38.0978L8.4758,42.4169L5.5831,39.5242L9.9022,35.2051ZM23.991,9C32.2752,9 38.991,15.7157 38.991,24C38.991,32.2843 32.2752,39 23.991,39C15.7067,39 8.991,32.2843 8.991,24C8.991,15.7157 15.7067,9 23.991,9ZM27.3992,16C27.9536,19.1322 26.9589,22.3776 24.6682,24.6682C22.3776,26.9589 19.1322,27.9536 16,27.3992C17.5754,30.473 20.9064,32.3271 24.4293,31.9521C28.396,31.5298 31.5298,28.396 31.9521,24.4293C32.3271,20.9064 30.473,17.5754 27.3992,16ZM48,21.9546L48,26.0454L41.8918,26.0454L41.8918,21.9546L48,21.9546ZM6.1082,21.9546L6.1082,26.0454L0,26.0454L0,21.9546L6.1082,21.9546ZM39.5242,5.5831L42.4169,8.4758L38.0978,12.7949L35.2051,9.9022L39.5242,5.5831ZM8.4758,5.5831L12.7949,9.9022L9.9022,12.7949L5.5831,8.4758L8.4758,5.5831ZM26.0454,0L26.0454,6.1082L21.9546,6.1082L21.9546,0L26.0454,0Z" android:strokeColor="#00000000" android:strokeWidth="1" android:fillType="nonZero"/>
 </vector>

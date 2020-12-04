@@ -92,6 +92,7 @@
 
         <include layout="@layout/qs_carrier_group"
                  android:id="@+id/carrier_group"
+                 android:visibility="invisible"
                  android:layout_width="wrap_content"
                  android:layout_height="match_parent"
                  android:layout_marginStart="@dimen/qs_status_separator"
