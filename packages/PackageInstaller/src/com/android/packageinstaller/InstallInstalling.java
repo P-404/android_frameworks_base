@@ -33,6 +33,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.BoostFramework;
 import android.view.View;
 import android.widget.Button;
 
@@ -74,6 +75,10 @@ public class InstallInstalling extends AlertActivity {
 
     /** The button that can cancel this dialog */
     private Button mCancelButton;
+
+    private BoostFramework mPerfBoost = null;
+    private boolean mIsPerfLockAcquired = false;
+    private static final int BOOST_DURATION_TIMEOUT = 60000;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -188,6 +193,11 @@ public class InstallInstalling extends AlertActivity {
      * Launch the "success" version of the final package installer dialog
      */
     private void launchSuccess() {
+        if (mIsPerfLockAcquired && mPerfBoost != null) {
+            mPerfBoost.perfLockRelease();
+            mIsPerfLockAcquired = false;
+            Log.d(LOG_TAG, "Perflock released for PackageInstaller launchSuccess");
+        }
         Intent successIntent = new Intent(getIntent());
         successIntent.setClass(this, InstallSuccess.class);
         successIntent.addFlags(Intent.FLAG_ACTIVITY_FORWARD_RESULT);
@@ -204,6 +214,11 @@ public class InstallInstalling extends AlertActivity {
      * @param statusMessage The status description.
      */
     private void launchFailure(int statusCode, int legacyStatus, String statusMessage) {
+        if (mIsPerfLockAcquired && mPerfBoost != null) {
+            mPerfBoost.perfLockRelease();
+            mIsPerfLockAcquired = false;
+            Log.d(LOG_TAG, "Perflock released for PackageInstaller launchFail ");
+        }
         Intent failureIntent = new Intent(getIntent());
         failureIntent.setClass(this, InstallFailed.class);
         failureIntent.addFlags(Intent.FLAG_ACTIVITY_FORWARD_RESULT);
@@ -268,6 +283,11 @@ public class InstallInstalling extends AlertActivity {
 
         InstallEventReceiver.removeObserver(this, mInstallId);
 
+        if (mIsPerfLockAcquired && mPerfBoost != null) {
+            mPerfBoost.perfLockRelease();
+            mIsPerfLockAcquired = false;
+            Log.d(LOG_TAG, "Perflock released for PackageInstaller destroy");
+        }
         super.onDestroy();
     }
 
@@ -305,6 +325,16 @@ public class InstallInstalling extends AlertActivity {
                     notifyAll();
                 }
                 return null;
+            }
+            if (mPerfBoost == null) {
+                mPerfBoost = new BoostFramework();
+            }
+            if (mPerfBoost != null && !mIsPerfLockAcquired) {
+                //Use big enough number here to hold the perflock for entire PackageInstall session
+                mPerfBoost.perfHint(BoostFramework.VENDOR_HINT_PACKAGE_INSTALL_BOOST,
+                        null, BOOST_DURATION_TIMEOUT, -1);
+                Log.d(LOG_TAG, "Perflock acquired for packageInstaller");
+                mIsPerfLockAcquired = true;
             }
 
             session.setStagingProgress(0);
