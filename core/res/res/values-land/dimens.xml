@@ -34,7 +34,7 @@
     <!-- Total height of QQS in landscape, this is effectively status_bar_height_landscape + 128 -->
     <dimen name="quick_qs_total_height">152dp</dimen>
     <!-- Default height of an action bar. -->
-    <dimen name="action_bar_default_height">40dip</dimen>
+    <dimen name="action_bar_default_height">37dip</dimen>
     <!-- Vertical padding around action bar icons. -->
     <dimen name="action_bar_icon_vertical_padding">4dip</dimen>
     <!-- Text size for action bar titles -->
