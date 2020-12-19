@@ -30,7 +30,6 @@ import android.os.UserHandle;
 import android.telecom.TelecomManager;
 import android.telephony.CellInfo;
 import android.telephony.ServiceState;
-import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.util.AttributeSet;
@@ -97,8 +96,7 @@ public class EmergencyButton extends Button {
 
     private final boolean mIsVoiceCapable;
     private final boolean mEnableEmergencyCallWhileSimLocked;
-    private boolean mEmergencyCapable[] =
-            new boolean[TelephonyManager.getDefault().getPhoneCount()];
+    private boolean mIsEmergencyCapable;
 
     public EmergencyButton(Context context) {
         this(context, null);
@@ -243,7 +241,8 @@ public class EmergencyButton extends Button {
                 }
 
                 if (mContext.getResources().getBoolean(R.bool.kg_hide_emgcy_btn_when_oos)) {
-                    visible = visible && isEmergencyCapable();
+                    KeyguardUpdateMonitor monitor = Dependency.get(KeyguardUpdateMonitor.class);
+                    visible = visible && (!monitor.isOOS() || mIsEmergencyCapable);
                 }
             }
         }
@@ -285,44 +284,20 @@ public class EmergencyButton extends Button {
     }
 
     private void requestCellInfoUpdate(){
-        KeyguardUpdateMonitor monitor = Dependency.get(KeyguardUpdateMonitor.class);
-        List<SubscriptionInfo>  list = monitor.getSubscriptionInfo(true);
-        if (list.size() > 0 ) {
-            for(SubscriptionInfo subInfo : list) {
-                requestCellInfoUpdate(subInfo.getSubscriptionId(), subInfo.getSimSlotIndex());
-            }
-        }else {
-            requestCellInfoUpdate(SubscriptionManager.INVALID_SUBSCRIPTION_ID, 0);
-        }
-    }
-
-    private void requestCellInfoUpdate(final int subId, final int phoneId) {
-        TelephonyManager tm = getTelephonyManager()
-                .createForSubscriptionId(subId);
-        tm.requestCellInfoUpdate(mContext.getMainExecutor(),
+        TelephonyManager tmWithoutSim = getTelephonyManager()
+                .createForSubscriptionId(SubscriptionManager.INVALID_SUBSCRIPTION_ID);
+        tmWithoutSim.requestCellInfoUpdate(mContext.getMainExecutor(),
                 new TelephonyManager.CellInfoCallback() {
-                    @Override
-                    public void onCellInfo(List<CellInfo> cellInfos) {
-                        if (cellInfos == null || cellInfos.isEmpty()) {
-                            Log.d(LOG_TAG, "requestCellInfoUpdate.onCellInfo is null " +
-                                    "or empty on phone" + phoneId);
-                            mEmergencyCapable[phoneId] = false;
-                        } else {
-                            mEmergencyCapable[phoneId]  = true;
-                        }
-                        updateEmergencyCallButton();
-                    }
-                });
-    }
-
-    private boolean isEmergencyCapable() {
-        boolean capable = false;
-        for(int i=0; i < mEmergencyCapable.length; ++i ) {
-            if ( mEmergencyCapable[i] ) {
-                capable = true;
-                break;
+            @Override
+            public void onCellInfo(List<CellInfo> cellInfos) {
+                if ( cellInfos == null || cellInfos.isEmpty()) {
+                    Log.d(LOG_TAG, "requestCellInfoUpdate.onCellInfo is null or empty");
+                    mIsEmergencyCapable = false;
+                }else{
+                    mIsEmergencyCapable = true;
+                }
+                updateEmergencyCallButton();
             }
-        }
-        return capable;
+        });
     }
 }

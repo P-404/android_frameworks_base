@@ -92,8 +92,6 @@ public final class CachedAppOptimizer {
     private static final String COMPACT_ACTION_ANON = "anon";
     private static final String COMPACT_ACTION_FULL = "all";
 
-    private static boolean isLowRAM = false;
-
     // Defaults for phenotype flags.
     @VisibleForTesting static Boolean DEFAULT_USE_COMPACTION = false;
     @VisibleForTesting static final Boolean DEFAULT_USE_FREEZER = false;
@@ -265,10 +263,6 @@ public final class CachedAppOptimizer {
         mProcStateThrottle = new HashSet<>();
         mProcessDependencies = processDependencies;
         mTestCallback = callback;
-        isLowRAM = SystemProperties.getBoolean("ro.config.low_ram", false);
-
-        if (isLowRAM == true)
-            DEFAULT_USE_COMPACTION = true;
     }
 
     /**
@@ -291,6 +285,10 @@ public final class CachedAppOptimizer {
         }
         Process.setThreadGroupAndCpuset(mCachedAppOptimizerThread.getThreadId(),
                 Process.THREAD_GROUP_SYSTEM);
+        setAppCompactProperties();
+    }
+
+    private void setAppCompactProperties() {
         boolean useCompaction =
                     Boolean.valueOf(mPerf.perfGetProp("vendor.appcompact.enable_app_compact",
                         "false"));
@@ -484,6 +482,12 @@ public final class CachedAppOptimizer {
      */
     @GuardedBy("mPhenotypeFlagLock")
     private void updateUseCompaction() {
+        // If this property is null there must have been some unexpected reset
+        String useCompaction = DeviceConfig.getProperty(DeviceConfig.NAMESPACE_ACTIVITY_MANAGER, KEY_USE_COMPACTION);
+        if (useCompaction == null) {
+            setAppCompactProperties();
+        }
+
         mUseCompaction = DeviceConfig.getBoolean(DeviceConfig.NAMESPACE_ACTIVITY_MANAGER,
                     KEY_USE_COMPACTION, DEFAULT_USE_COMPACTION);
 

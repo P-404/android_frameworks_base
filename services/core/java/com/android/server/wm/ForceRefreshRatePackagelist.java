@@ -24,16 +24,21 @@ package com.android.server.wm;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.provider.DeviceConfig;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.database.ContentObserver;
+import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.Display;
 import android.view.DisplayInfo;
 
-import com.android.internal.os.BackgroundThread;
-import com.android.server.wm.utils.DeviceConfigInterface;
-
+import com.android.server.UiThread;
 
 /**
  * A list for packages that should force the display out of high refresh rate.
@@ -41,43 +46,28 @@ import com.android.server.wm.utils.DeviceConfigInterface;
 class ForceRefreshRatePackageList {
 
     private static final String TAG = ForceRefreshRatePackageList.class.getSimpleName();
-    private static final String KEY_FORCE_REFRESH_RATE_LIST = "force_refresh_rate_list";
+    private static final String KEY_FORCE_REFRESH_RATE_LIST = "ext_force_refresh_rate_list";
     private static final float REFRESH_RATE_EPSILON  = 0.01f;
 
     private final ArrayMap<String, Float> mForcedPackageList = new ArrayMap<>();
     private final Object mLock = new Object();
+    private final Handler mHandler;
     private DisplayInfo mDisplayInfo;
-    private DeviceConfigInterface mDeviceConfig;
-    private OnPropertiesChangedListener mListener = new OnPropertiesChangedListener();
+    private SettingsObserver mSettingsObserver;
 
-    private static volatile ForceRefreshRatePackageList mInstance;
-
-    static ForceRefreshRatePackageList getInstance(WindowManagerService wmService) {
-        if (mInstance == null) {
-            synchronized (ForceRefreshRatePackageList.class) {
-                if (mInstance == null) {
-                    mInstance = new ForceRefreshRatePackageList(wmService);
-                }
-            }
-        }
-        return mInstance;
+    ForceRefreshRatePackageList(WindowManagerService wmService, DisplayInfo displayInfo) {
+        mDisplayInfo = displayInfo;
+        final Looper looper = UiThread.getHandler().getLooper();
+        mHandler = new Handler(looper);
+        mSettingsObserver = new SettingsObserver(wmService.mContext);
+        mHandler.post(mSettingsObserver::observe);
     }
 
-    private ForceRefreshRatePackageList(WindowManagerService wmService) {
-        mDisplayInfo = wmService.getDefaultDisplayContentLocked().getDisplayInfo();
-        mDeviceConfig = DeviceConfigInterface.REAL;
-        mDeviceConfig.addOnPropertiesChangedListener(DeviceConfig.NAMESPACE_DISPLAY_MANAGER,
-                BackgroundThread.getExecutor(), mListener);
-        final String property = mDeviceConfig.getProperty(DeviceConfig.NAMESPACE_DISPLAY_MANAGER,
-                KEY_FORCE_REFRESH_RATE_LIST);
-        updateForcedPackagelist(property);
-    }
-
-    private void updateForcedPackagelist(@Nullable String property) {
+    private void updateForcedPackagelist(String forcePackagesStr) {
         synchronized (mLock) {
             mForcedPackageList.clear();
-            if (!TextUtils.isEmpty(property)) {
-                String[] pairs = property.split(";");
+            if (!TextUtils.isEmpty(forcePackagesStr)) {
+                String[] pairs = forcePackagesStr.split(";");
                 for (String pair : pairs) {
                     String[] keyValue = pair.split(",");
                     if (keyValue != null && keyValue.length == 2) {
@@ -118,12 +108,33 @@ class ForceRefreshRatePackageList {
         return 0;
     }
 
-    private class OnPropertiesChangedListener implements DeviceConfig.OnPropertiesChangedListener {
-        public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
-            if (properties.getKeyset().contains(KEY_FORCE_REFRESH_RATE_LIST)) {
-                updateForcedPackagelist(
-                        properties.getString(KEY_FORCE_REFRESH_RATE_LIST, null /*default*/));
+    private class SettingsObserver extends ContentObserver {
+        private final Uri mForceRefreshRateListSetting =
+                Settings.System.getUriFor(KEY_FORCE_REFRESH_RATE_LIST);
+        private Context mContext;
+
+        SettingsObserver(@NonNull Context context) {
+            super(mHandler);
+            mContext = context;
+        }
+
+        public void observe() {
+            final ContentResolver cr = mContext.getContentResolver();
+            cr.registerContentObserver(mForceRefreshRateListSetting, false, this,
+                    UserHandle.USER_SYSTEM);
+            updateForcedPackagelist(getForcePackages());
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri, int userId) {
+            if (mForceRefreshRateListSetting.equals(uri)) {
+                updateForcedPackagelist(getForcePackages());
             }
+        }
+
+        private String getForcePackages() {
+            ContentResolver cr = mContext.getContentResolver();
+            return Settings.System.getString(cr, KEY_FORCE_REFRESH_RATE_LIST);
         }
     }
 }

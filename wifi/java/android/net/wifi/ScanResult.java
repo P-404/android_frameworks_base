@@ -560,7 +560,7 @@ public final class ScanResult implements Parcelable {
      * 5 GHz band last channel number
      * @hide
      */
-    public static final int BAND_5_GHZ_LAST_CH_NUM = 173;
+    public static final int BAND_5_GHZ_LAST_CH_NUM = 177;
     /**
      * 5 GHz band frequency of first channel in MHz
      * @hide
@@ -570,7 +570,7 @@ public final class ScanResult implements Parcelable {
      * 5 GHz band frequency of last channel in MHz
      * @hide
      */
-    public static final int BAND_5_GHZ_END_FREQ_MHZ = 5865;
+    public static final int BAND_5_GHZ_END_FREQ_MHZ = 5885;
 
     /**
      * 6 GHz band first channel number

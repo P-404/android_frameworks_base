@@ -1209,6 +1209,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
         boolean alwaysShowNetworkTypeIcon = false;
         boolean enableRatIconEnhancement = false;
         boolean showVowifiIcon = false;
+        boolean enableDdsRatIconEnhancement = false;
 
         static Config readConfig(Context context) {
             Config config = new Config();
@@ -1249,6 +1250,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
             config.enableRatIconEnhancement =
                     SystemProperties.getBoolean("persist.sysui.rat_icon_enhancement", false);
             config.showVowifiIcon = res.getBoolean(R.bool.config_display_vowifi);
+            config.enableDdsRatIconEnhancement =
+                    SystemProperties.getBoolean("persist.sysui.dds_rat_icon_enhancement", false);
 
             return config;
         }

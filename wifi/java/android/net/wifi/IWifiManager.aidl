@@ -336,4 +336,11 @@ interface IWifiManager
 
     void unregisterForWifiNotification(int staId, int callbackIdentifier);
 
+    boolean isWhitelistNetworkRoamingEnabled();
+
+    void enableWhitelistNetworkRoaming(boolean enable);
+
+    boolean isNewNetworkAutoConnectionEnabled();
+
+    void enableNewNetworkAutoConnection(boolean enable);
 }

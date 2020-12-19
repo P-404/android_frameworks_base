@@ -6866,4 +6866,60 @@ public class WifiManager {
 
     /* QTI specific changes - END */
 
+     /**
+      * Check whitelist network roaming feature enabled or not.
+      *
+      * @return true if whitelist network roaming feature is enabled.
+      *
+      * @hide no intent to publish
+      */
+      public boolean isWhitelistNetworkRoamingEnabled() {
+          try {
+              return mService.isWhitelistNetworkRoamingEnabled();
+          } catch (RemoteException e) {
+              throw e.rethrowFromSystemServer();
+          }
+      }
+
+     /**
+      * Enable/disable whitelist network roaming feature.
+      *
+      * @hide no intent to publish
+      */
+      public void enableWhitelistNetworkRoaming(boolean enable) {
+          try {
+              mService.enableWhitelistNetworkRoaming(enable);
+          } catch (RemoteException e) {
+              throw e.rethrowFromSystemServer();
+          }
+      }
+
+     /**
+      * Check auto connection attempts on new networks with partially matched
+      * known networks credentials enabled or not.
+      *
+      * @return true if auto connect new networks feature is enabled.
+      *
+      * @hide no intent to publish
+      */
+      public boolean isNewNetworkAutoConnectionEnabled() {
+          try {
+              return mService.isNewNetworkAutoConnectionEnabled();
+          } catch (RemoteException e) {
+              throw e.rethrowFromSystemServer();
+          }
+      }
+
+     /**
+      * Enable/disable auto connect new network feature.
+      *
+      * @hide no intent to publish
+      */
+      public void enableNewNetworkAutoConnection(boolean enable) {
+          try {
+              mService.enableNewNetworkAutoConnection(enable);
+          } catch (RemoteException e) {
+              throw e.rethrowFromSystemServer();
+          }
+      }
 }

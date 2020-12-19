@@ -905,6 +905,13 @@ public class WifiConfiguration implements Parcelable {
 
     /**
      * @hide
+     * boolean flag to indicate auto connection attempt is enabled. it is applicable only to
+     * ephemeral networks with partially matched SSID and BSSID of current connected network.
+     */
+    public boolean isAutoConnectionEnabled;
+
+    /**
+     * @hide
      * The WiFi configuration is considered to have no internet access for purpose of autojoining
      * if there has been a report of it having no internet access, and, it never have had
      * internet access in the past.
@@ -2179,6 +2186,7 @@ public class WifiConfiguration implements Parcelable {
         dppNetAccessKeyExpiry = -1;
         dppCsign = null;
         staId = WifiManager.STA_PRIMARY;
+        isAutoConnectionEnabled = false;
     }
 
     /**
@@ -2248,6 +2256,7 @@ public class WifiConfiguration implements Parcelable {
                 .append(" HIDDEN: ").append(this.hiddenSSID)
                 .append(" PMF: ").append(this.requirePmf)
                 .append("CarrierId: ").append(this.carrierId)
+                .append(" SSID Bridging - auto connection enabled: ").append(this.isAutoConnectionEnabled)
                 .append('\n');
 
 
@@ -2879,6 +2888,7 @@ public class WifiConfiguration implements Parcelable {
             staId = source.staId;
             carrierId = source.carrierId;
             mPasspointUniqueId = source.mPasspointUniqueId;
+            isAutoConnectionEnabled = source.isAutoConnectionEnabled;
         }
     }
 
@@ -2957,6 +2967,7 @@ public class WifiConfiguration implements Parcelable {
         dest.writeInt(staId);
         dest.writeInt(carrierId);
         dest.writeString(mPasspointUniqueId);
+        dest.writeInt(isAutoConnectionEnabled ? 1 : 0);
     }
 
     /** Implement the Parcelable interface {@hide} */
@@ -3037,6 +3048,7 @@ public class WifiConfiguration implements Parcelable {
                 config.staId = in.readInt();
                 config.carrierId = in.readInt();
                 config.mPasspointUniqueId = in.readString();
+                config.isAutoConnectionEnabled = in.readInt() != 0;
                 return config;
             }
 

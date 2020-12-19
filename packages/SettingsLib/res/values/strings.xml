@@ -664,6 +664,10 @@
     <string name="wifi_scan_throttling">Wi\u2011Fi scan throttling</string>
     <!-- Setting Checkbox title whether to enable WiFi enhanced mac randomization. [CHAR LIMIT=40] -->
     <string name="wifi_enhanced_mac_randomization">Wi\u2011Fi\u2011enhanced MAC randomization</string>
+    <!-- Setting Checkbox title whether to enable WiFi whitelist roaming feature. -->
+    <string name="wifi_whitelist_roaming">SSID Bridging \u2011 Fast Handover</string>
+    <!-- Setting Checkbox title whether to enable WiFi unsaved network linking feature. -->
+    <string name="wifi_new_network_auto_connection">SSID Bridging \u2011 Auto Connection</string>
     <!-- Setting Checkbox title whether to always keep mobile data active. [CHAR LIMIT=80] -->
     <string name="mobile_data_always_on">Mobile data always active</string>
     <!-- Setting Checkbox title whether to enable hardware acceleration for tethering. [CHAR LIMIT=80] -->
@@ -747,6 +751,10 @@
     <string name="wifi_metered_label">Metered</string>
     <!-- Label indicating network has been manually marked as unmetered -->
     <string name="wifi_unmetered_label">Unmetered</string>
+    <!-- Setting Checkbox summary whether to enable WiFi whitelist network roaming feature. -->
+    <string name="wifi_whitelist_roaming_summary">Enable roaming between different SSID WPA/WPA2\u2011PSK APs with same gateway MAC address</string>
+    <!-- Setting Checkbox summary whether to enable WiFi unsaved network linking feature. -->
+    <string name="wifi_new_network_auto_connection_summary">Enable auto connection attempts to a new WPA/WPA2\u2011PSK 5GHz SSID with current connected WPA/WPA2\u2011PSK 2GHz SSID credentials on SSID and BSSID partial match</string>
     <!-- UI debug setting: limit size of Android logger buffers -->
     <string name="select_logd_size_title">Logger buffer sizes</string>
     <!-- UI debug setting: limit size of Android logger buffers [CHAR LIMIT=59] -->
