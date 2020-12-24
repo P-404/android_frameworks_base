@@ -17,6 +17,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle" >
     <solid
-        android:color="#e5e5e5" />
-    <corners android:radius="2dp" />
+        android:color="@color/p404_qs_footer_drag_handle" />
+    <corners android:radius="2.0dip" />
 </shape>

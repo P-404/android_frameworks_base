@@ -22,4 +22,7 @@
     <color name="dismiss_all_background_color_ripple">#555555</color>
     <color name="dismiss_all_icon_color">@android:color/white</color>
 
+    <!-- QS footer drag handle -->
+    <color name="p404_qs_footer_drag_handle">#ff424242</color>
+
 </resources>

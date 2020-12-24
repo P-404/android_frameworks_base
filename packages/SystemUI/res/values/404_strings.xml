@@ -57,4 +57,6 @@
     <!-- App Lock -->
     <string name="applock_unlock">Unlock app</string>
 
+    <!-- Data usage info -->
+    <string name="usage_data">used today</string>
 </resources>

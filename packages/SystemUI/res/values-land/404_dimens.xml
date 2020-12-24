@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
- * Copyright (c) 2020 Project 404
+ * Copyright (c) 2021, Project 404
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,7 @@
 */
 -->
 <resources>
-
-    <!-- Clear all notifications button -->
-    <color name="dismiss_all_background_color">@android:color/white</color>
-    <color name="dismiss_all_background_color_ripple">#a8a8a8</color>
-    <color name="dismiss_all_icon_color">#8a000000</color>
-
-    <!-- QS Drag handle -->
-    <color name="p404_qs_footer_drag_handle">#ffc8c8c8</color>
-
+    <!-- QuickSettings Panel -->
+    <dimen name="qs_header_top_padding">8dp</dimen>
+    <dimen name="qs_header_bottom_padding">7dp</dimen>
 </resources>
