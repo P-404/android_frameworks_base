@@ -1052,6 +1052,15 @@ public class WifiManager {
     public static final String SCAN_RESULTS_AVAILABLE_ACTION = "android.net.wifi.SCAN_RESULTS";
 
     /**
+     * An access point partial scan has completed, and results are available.
+     * Call {@link #getScanResults()} to obtain the results.
+     * The broadcast intent may contain an extra field with the key {@link #EXTRA_RESULTS_UPDATED}
+     * and a {@code boolean} value indicating if the scan was successful.
+     * @hide
+     */
+    public static final String PARTIAL_SCAN_RESULTS_AVAILABLE_ACTION = "com.qualcomm.qti.net.wifi.PARTIAL_SCAN_RESULTS";
+
+    /**
      * Lookup key for a {@code boolean} extra in intent {@link #SCAN_RESULTS_AVAILABLE_ACTION}
      * representing if the scan was successful or not.
      * Scans may fail for multiple reasons, these may include:
@@ -4578,6 +4587,19 @@ public class WifiManager {
         }
     }
 
+    /**
+     * Enable/disable quick connect on partial scan results.
+     *
+     * @param  enable true to not allow quick connect, false to allow quick connect
+     * @hide
+     */
+    public void allowConnectOnPartialScanResults(boolean enable) {
+        try {
+            mService.allowConnectOnPartialScanResults(enable);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 
     /**
      * Sets the user choice for allowing auto-join to a network.
