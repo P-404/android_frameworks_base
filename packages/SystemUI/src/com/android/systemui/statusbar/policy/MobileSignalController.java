@@ -789,15 +789,21 @@ public class MobileSignalController extends SignalController<
             if ( mFiveGState.isNrIconTypeValid() ) {
                 mCurrentState.iconGroup = mFiveGState.getIconGroup();
             }else {
-                int iconType = TelephonyManager.NETWORK_TYPE_UNKNOWN;
                 if (mCurrentState.connected) {
                     if (isDataNetworkTypeAvailable()) {
-                        iconType = mTelephonyDisplayInfo.getNetworkType();
+                        int type = mTelephonyDisplayInfo.getOverrideNetworkType();
+                        if (type == TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NONE
+                                || type == TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_NSA_MMWAVE
+                                || type == TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_NSA ) {
+                            iconKey = toIconKey(mTelephonyDisplayInfo.getNetworkType());
+                        }else {
+                            iconKey = toDisplayIconKey(type);
+                        }
                     } else {
-                        iconType = getVoiceNetworkType();
+                        iconKey = toIconKey(getVoiceNetworkType());
                     }
                 }
-                mCurrentState.iconGroup = mNetworkToIconLookup.getOrDefault(toIconKey(iconType),
+                mCurrentState.iconGroup = mNetworkToIconLookup.getOrDefault(iconKey,
                         mDefaultIcons);
             }
         }

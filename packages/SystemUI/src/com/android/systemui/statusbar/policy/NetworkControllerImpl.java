@@ -1252,7 +1252,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
             config.showVowifiIcon = res.getBoolean(R.bool.config_display_vowifi);
             config.enableDdsRatIconEnhancement =
                     SystemProperties.getBoolean("persist.sysui.dds_rat_icon_enhancement", false);
-
+            if ( config.alwaysShowNetworkTypeIcon ) {
+                config.hideLtePlus = false;
+            }
             return config;
         }
     }
