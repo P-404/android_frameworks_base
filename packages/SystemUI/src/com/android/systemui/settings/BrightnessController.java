@@ -284,7 +284,7 @@ public class BrightnessController implements ToggleSlider.Listener {
                 switch (msg.what) {
                     case MSG_UPDATE_ICON:
                         updateIcon(msg.arg1 != 0);
-                        break;
+                    break;
                     case MSG_UPDATE_SLIDER:
                         updateSlider(Float.intBitsToFloat(msg.arg1), msg.arg2 != 0);
                         updateIcon(mAutomatic);
@@ -351,6 +351,8 @@ public class BrightnessController implements ToggleSlider.Listener {
         mDisplayManager = context.getSystemService(DisplayManager.class);
         mVrManager = IVrManager.Stub.asInterface(ServiceManager.getService(
                 Context.VR_SERVICE));
+        
+        updateIcon(mAutomatic);
     }
 
     public void addStateChangedCallback(BrightnessStateChangeCallback cb) {
@@ -485,7 +487,7 @@ public class BrightnessController implements ToggleSlider.Listener {
             }
         }
     }
-
+    
     private void updateVrMode(boolean isEnabled) {
         if (mIsVrModeEnabled != isEnabled) {
             mIsVrModeEnabled = isEnabled;

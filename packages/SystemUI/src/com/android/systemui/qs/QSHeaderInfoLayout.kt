@@ -39,30 +39,11 @@ class QSHeaderInfoLayout @JvmOverloads constructor(
 ) : FrameLayout(context, attrs, defStyle, defStyleRes) {
 
     private lateinit var alarmContainer: View
-    private lateinit var ringerContainer: View
-    private lateinit var statusSeparator: View
     private val location = Location(0, 0)
 
     override fun onFinishInflate() {
         super.onFinishInflate()
         alarmContainer = findViewById(R.id.alarm_container)
-        ringerContainer = findViewById(R.id.ringer_container)
-        statusSeparator = findViewById(R.id.status_separator)
-    }
-
-    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        // At most one view is there
-        if (statusSeparator.visibility == View.GONE) super.onLayout(changed, l, t, r, b)
-        else {
-            val layoutRTL = isLayoutRtl
-            val width = r - l
-            val height = b - t
-            var offset = 0
-
-            offset += alarmContainer.layoutView(width, height, offset, layoutRTL)
-            offset += statusSeparator.layoutView(width, height, offset, layoutRTL)
-            ringerContainer.layoutView(width, height, offset, layoutRTL)
-        }
     }
 
     private fun View.layoutView(pWidth: Int, pHeight: Int, offset: Int, RTL: Boolean): Int {
@@ -80,35 +61,6 @@ class QSHeaderInfoLayout @JvmOverloads constructor(
         // Once we measure the views, using as much space as they need, we need to remeasure them
         // assigning them their final width. This is because TextViews decide whether to MARQUEE
         // after onMeasure.
-        if (statusSeparator.visibility != View.GONE) {
-            val alarmWidth = alarmContainer.measuredWidth
-            val separatorWidth = statusSeparator.measuredWidth
-            val ringerWidth = ringerContainer.measuredWidth
-            val availableSpace = MeasureSpec.getSize(width) - separatorWidth
-            if (alarmWidth < availableSpace / 2) {
-                measureChild(
-                        ringerContainer,
-                        MeasureSpec.makeMeasureSpec(
-                                Math.min(ringerWidth, availableSpace - alarmWidth),
-                                MeasureSpec.AT_MOST),
-                        heightMeasureSpec)
-            } else if (ringerWidth < availableSpace / 2) {
-                measureChild(alarmContainer,
-                        MeasureSpec.makeMeasureSpec(
-                                Math.min(alarmWidth, availableSpace - ringerWidth),
-                                MeasureSpec.AT_MOST),
-                        heightMeasureSpec)
-            } else {
-                measureChild(
-                        alarmContainer,
-                        MeasureSpec.makeMeasureSpec(availableSpace / 2, MeasureSpec.AT_MOST),
-                        heightMeasureSpec)
-                measureChild(
-                        ringerContainer,
-                        MeasureSpec.makeMeasureSpec(availableSpace / 2, MeasureSpec.AT_MOST),
-                        heightMeasureSpec)
-            }
-        }
         setMeasuredDimension(width, measuredHeight)
     }
 

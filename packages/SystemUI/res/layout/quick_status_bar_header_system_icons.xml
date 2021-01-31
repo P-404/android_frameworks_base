@@ -28,48 +28,61 @@
     android:paddingTop="@dimen/status_bar_padding_top" >
 
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="horizontal"
-        android:gravity="center_vertical|start" >
-
-    <com.android.systemui.statusbar.policy.Clock
-        android:id="@+id/clock"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:minWidth="48dp"
-        android:gravity="center_vertical|start"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
         android:paddingStart="@dimen/status_bar_left_clock_starting_padding"
-        android:paddingEnd="@dimen/status_bar_left_clock_end_padding"
-        android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.StatusBar.Clock"
-        systemui:showDark="false" />
-    </LinearLayout>
+        android:paddingEnd="@dimen/status_bar_left_clock_end_padding" >
 
-    <android.widget.Space
-        android:id="@+id/space"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_vertical|center_horizontal"
-        android:visibility="gone" />
+        <RelativeLayout
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="start|center_vertical" >
 
-    <com.android.systemui.BatteryMeterView
-        android:id="@+id/batteryRemainingIcon"
-        android:layout_height="match_parent"
-        android:layout_width="wrap_content"
-        android:layout_gravity="center_vertical|end"
-        systemui:textAppearance="@style/TextAppearance.QS.Status"
-        android:paddingEnd="2dp" />
+            <com.android.systemui.statusbar.policy.Clock
+                android:id="@+id/clock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="48dp"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.QSHeader.Clock"
+                systemui:showDark="false" />
 
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="horizontal"
-        android:gravity="center_vertical|end" >
+            <com.android.systemui.statusbar.policy.DateView
+                android:id="@+id/date"
+                android:layout_below="@id/clock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:textAppearance="@style/DateAppearance.QS.Header"
+                systemui:datePattern="@string/abbrev_wday_month_day_no_year_alarm" />
+        </RelativeLayout>
 
-    <include layout="@layout/ongoing_privacy_chip" />
+        <RelativeLayout
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="center_vertical|end"
+            android:gravity="end|center_vertical"
+            android:theme="@style/QQSHeaderTheme" >
 
+        <com.android.systemui.statusbar.phone.StatusIconContainer
+                android:id="@+id/statusIcons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingEnd="@dimen/signal_cluster_battery_padding" />
+
+        <com.android.systemui.BatteryMeterView
+            android:id="@+id/batteryRemainingIcon"
+            android:layout_toEndOf="@id/statusIcons"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            systemui:textAppearance="@style/TextAppearance.QS.Header" />
+
+            <include layout="@layout/ongoing_privacy_chip" android:visibility="gone" />
+        </RelativeLayout>
     </LinearLayout>
 </LinearLayout>

@@ -14,6 +14,7 @@
 
 package com.android.systemui.qs;
 
+import android.content.Context;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnAttachStateChangeListener;
@@ -34,6 +35,7 @@ import com.android.systemui.util.Utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import com.android.systemui.R;
 
 public class QSAnimator implements Callback, PageListener, Listener, OnLayoutChangeListener,
         OnAttachStateChangeListener, Tunable {
@@ -45,7 +47,7 @@ public class QSAnimator implements Callback, PageListener, Listener, OnLayoutCha
 
     public static final float EXPANDED_TILE_DELAY = .86f;
 
-
+    private Context mContext;
     private final ArrayList<View> mAllViews = new ArrayList<>();
     /**
      * List of {@link View}s representing Quick Settings that are being animated from the quick QS
@@ -78,8 +80,10 @@ public class QSAnimator implements Callback, PageListener, Listener, OnLayoutCha
     private float mLastPosition;
     private QSTileHost mHost;
     private boolean mShowCollapsedOnKeyguard;
+    private int mMediaTopOffset;
 
-    public QSAnimator(QS qs, QuickQSPanel quickPanel, QSPanel panel) {
+    public QSAnimator(QS qs, QuickQSPanel quickPanel, QSPanel panel, Context context) {
+        mContext = context;
         mQs = qs;
         mQuickQsPanel = quickPanel;
         mQsPanel = panel;
@@ -95,6 +99,8 @@ public class QSAnimator implements Callback, PageListener, Listener, OnLayoutCha
             Log.w(TAG, "QS Not using page layout");
         }
         panel.setPageListener(this);
+
+        mMediaTopOffset = mContext.getResources().getDimensionPixelSize(R.dimen.quick_settings_top_margin_media_extra);
     }
 
     public void onRtlChanged() {
@@ -280,11 +286,16 @@ public class QSAnimator implements Callback, PageListener, Listener, OnLayoutCha
         }
 
         View brightnessView = mQsPanel.getBrightnessView();
-        if (brightnessView != null && Utils.useQsMediaPlayer(null) && !mQsPanel.shouldUseHorizontalLayout()
+        if (brightnessView != null && Utils.useQsMediaPlayer(mContext) && !mQsPanel.shouldUseHorizontalLayout()
                 && mQsPanel.isMediaHostVisible()) {
             View mQsPanelMediaHostView = mQsPanel.getMediaHost().getHostView();
             View mQuickQsPanelMediaHostView = mQuickQsPanel.getMediaHost().getHostView();
-            float translation = mQsPanelMediaHostView.getHeight() - mQuickQsPanelMediaHostView.getHeight();
+            float translation;
+            if (!mQsPanel.hasActiveMedia()) {
+                translation = mQsPanelMediaHostView.getHeight() + mMediaTopOffset;
+            } else {
+                translation = mQsPanelMediaHostView.getHeight() - mQuickQsPanelMediaHostView.getHeight();
+            }
             mBrightnessAnimator = new TouchAnimator.Builder().addFloat(brightnessView, "translationY", translation, 0)
                     .build();
             mAllViews.add(brightnessView);
@@ -394,7 +405,8 @@ public class QSAnimator implements Callback, PageListener, Listener, OnLayoutCha
         if (mAllowFancy) {
             mAllPagesDelayedAnimator.setPosition(position);
         }
-        if (position == 0.0f) {
+
+        if (position == 0f) {
             mQuickQsPanel.getBrightnessView().setVisibility(View.VISIBLE);
         } else {
             mQuickQsPanel.getBrightnessView().setVisibility(View.INVISIBLE);
