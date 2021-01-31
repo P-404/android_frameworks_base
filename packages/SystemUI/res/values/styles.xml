@@ -98,6 +98,13 @@
         <item name="android:textColor">@color/status_bar_clock_color</item>
     </style>
 
+    <style name="TextAppearance.QSHeader.Clock" parent="@*android:style/TextAppearance.StatusBar.Icon">
+        <item name="android:textSize">@dimen/qs_header_clock_size</item>
+        <item name="android:fontFamily">@*android:string/config_headlineFontFamilyMedium</item>
+        <item name="android:textColor">@color/status_bar_clock_color</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <style name="TextAppearance.StatusBar.Expanded" parent="@*android:style/TextAppearance.StatusBar">
         <item name="android:textColor">?android:attr/textColorTertiary</item>
     </style>
@@ -240,6 +247,17 @@
     <style name="TextAppearance.QS.Status" parent="TextAppearance.QS.TileLabel.Secondary">
         <item name="android:fontFamily">@*android:string/config_bodyFontFamily</item>
         <item name="android:textColor">@color/dark_mode_qs_icon_color_single_tone</item>
+    </style>
+
+    <style name="DateAppearance.QS.Header" parent="TextAppearance.QS.TileLabel.Secondary">
+        <item name="android:fontFamily">@*android:string/config_bodyFontFamily</item>
+        <item name="android:textColor">@color/status_bar_clock_color</item>
+        <item name="android:textSize">@dimen/qs_header_date_size</item>
+    </style>
+
+    <style name="TextAppearance.QS.Header" parent="TextAppearance.QS.TileLabel.Secondary">
+        <item name="android:fontFamily">@*android:string/config_bodyFontFamily</item>
+        <item name="android:textColor">@color/status_bar_clock_color</item>
     </style>
 
     <style name="TextAppearance.DeviceManagementDialog">
@@ -453,6 +471,11 @@
     <style name="QSHeaderTheme" parent="@style/Theme.SystemUI">
         <item name="lightIconTheme">@style/DualToneLightTheme</item>
         <item name="darkIconTheme">@style/QSHeaderDarkTheme</item>
+    </style>
+
+    <style name="QQSHeaderTheme" parent="@style/Theme.SystemUI">
+        <item name="lightIconTheme">@style/DualToneLightTheme</item>
+        <item name="darkIconTheme">@style/DualToneLightTheme</item>
     </style>
 
     <style name="QSIconTheme">
@@ -769,9 +792,9 @@
         <item name="android:overlapAnchor">true</item>
 
         <!-- used to override dark/light theming -->
-        <item name="*android:colorBackgroundFloating">@color/GM2_grey_800</item>
-        <item name="*android:colorPopupBackground">@color/GM2_grey_800</item>
-        <item name="*android:dialogCornerRadius">8dp</item>
+        <item name="*android:colorBackgroundFloating">@*android:color/primary_dark_device_default_settings</item>
+        <item name="*android:colorPopupBackground">@*android:color/primary_dark_device_default_settings</item>
+        <item name="*android:dialogCornerRadius">12dp</item>
     </style>
 
     <style name="TextAppearance.ControlSetup">
