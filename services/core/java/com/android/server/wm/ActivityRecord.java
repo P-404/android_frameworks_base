@@ -503,6 +503,7 @@ public final class ActivityRecord extends WindowToken implements WindowManagerSe
                                            // and reporting to the client that it is hidden.
     private boolean mSetToSleep; // have we told the activity to sleep?
     public boolean launching;      // is activity launch in progress?
+    public boolean translucentWindowLaunch; // a translucent window launch?
     boolean nowVisible;     // is this activity's window visible?
     boolean mDrawn;          // is this activity's window drawn?
     boolean mClientVisibilityDeferred;// was the visibility change message to client deferred?
@@ -1598,6 +1599,8 @@ public final class ActivityRecord extends WindowToken implements WindowManagerSe
         mClientVisible = true;
         idle = false;
         hasBeenLaunched = false;
+        launching = false;
+        translucentWindowLaunch = false;
         mStackSupervisor = supervisor;
 
         info.taskAffinity = getTaskAffinityWithUid(info.taskAffinity, info.applicationInfo.uid);
@@ -1788,9 +1791,11 @@ public final class ActivityRecord extends WindowToken implements WindowManagerSe
             ProtoLog.v(WM_DEBUG_STARTING_WINDOW, "Translucent=%s Floating=%s ShowWallpaper=%s",
                     windowIsTranslucent, windowIsFloating, windowShowWallpaper);
             if (windowIsTranslucent) {
+                translucentWindowLaunch = true;
                 return false;
             }
             if (windowIsFloating || windowDisableStarting) {
+                translucentWindowLaunch = true;
                 return false;
             }
             if (windowShowWallpaper) {

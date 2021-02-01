@@ -1648,7 +1648,8 @@ public class ActivityStack extends Task {
         // appropriate for it.
         mStackSupervisor.mStoppingActivities.remove(next);
         next.setSleeping(false);
-        next.launching = true;
+        if (!next.translucentWindowLaunch)
+            next.launching = true;
 
         if (DEBUG_SWITCH) Slog.v(TAG_SWITCH, "Resuming " + next);
 
