@@ -72,6 +72,7 @@
                 android:id="@+id/statusIcons"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/network_traffic"
                 android:paddingEnd="@dimen/signal_cluster_battery_padding" />
 
         <com.android.systemui.BatteryMeterView
@@ -80,6 +81,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
+            android:paddingEnd="2dp"
             systemui:textAppearance="@style/TextAppearance.QS.Header" />
 
         <com.android.systemui.statusbar.policy.NetworkTraffic
@@ -90,7 +92,7 @@
             android:layout_gravity="center_vertical|end"
             android:visibility="gone" />
 
-            <include layout="@layout/ongoing_privacy_chip" android:visibility="gone" />
+            <include layout="@layout/ongoing_privacy_chip" android:layout_toEndOf="@id/network_traffic" />
         </RelativeLayout>
     </LinearLayout>
 </LinearLayout>
