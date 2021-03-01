@@ -60,10 +60,10 @@
 
     <!-- QuickSettings Panel -->
     <dimen name="op_qs_footer_action_layout_size">96dp</dimen>
-    <dimen name="quick_settings_top_margin_media">2dp</dimen>
-    <dimen name="quick_settings_top_margin_media_extra">6dp</dimen>
+    <dimen name="quick_settings_top_margin_media">4dp</dimen>
+    <dimen name="quick_settings_top_margin_media_extra">10dp</dimen>
     <dimen name="qs_media_action_button_margin_top">18dp</dimen>
-    <dimen name="qs_media_action_button_size">40dp</dimen>
+    <dimen name="qs_media_action_button_size">48dp</dimen>
     <dimen name="brightness_slider_height">48dp</dimen>
     <dimen name="op_qs_footer_action_button_size">48dp</dimen>
 </resources>
