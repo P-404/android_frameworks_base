@@ -18,5 +18,5 @@
     android:shape="rectangle" >
     <solid
         android:color="@color/p404_qs_footer_drag_handle" />
-    <corners android:radius="2.0dip" />
+    <corners android:radius="2dp" />
 </shape>
