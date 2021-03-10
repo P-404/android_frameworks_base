@@ -692,8 +692,8 @@ public class LocalBluetoothProfileManager {
             profiles.add(mSapProfile);
             removedProfiles.remove(mSapProfile);
         }
-
-        if (mBCProfile != null) {
+        CachedBluetoothDevice cachedDevice = mDeviceManager.findDevice(device);
+        if (mBCProfile != null && cachedDevice != null && cachedDevice.isBASeeker()) {
             profiles.add(mBCProfile);
             removedProfiles.remove(mBCProfile);
             if(DEBUG) Log.d(TAG, "BC profile removed");
