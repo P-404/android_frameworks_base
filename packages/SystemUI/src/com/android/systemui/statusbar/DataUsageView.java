@@ -16,6 +16,8 @@ import com.android.systemui.Dependency;
 import com.android.systemui.R;
 import com.android.systemui.statusbar.policy.NetworkController;
 
+import android.provider.Settings;
+
 public class DataUsageView extends TextView {
 
     private static boolean shouldUpdateData;
@@ -47,10 +49,13 @@ public class DataUsageView extends TextView {
     }
 
     private void updateUsageData() {
+        boolean showDailyDataUsage = Settings.System.getInt(getContext().getContentResolver(),
+                Settings.System.DATA_USAGE_PERIOD, 1) == 0;
         DataUsageController mobileDataController = new DataUsageController(mContext);
         mobileDataController.setSubscriptionId(
                 SubscriptionManager.getDefaultDataSubscriptionId());
-        final DataUsageController.DataUsageInfo info = mobileDataController.getDataUsageInfo();
+        final DataUsageController.DataUsageInfo info = showDailyDataUsage ? mobileDataController.getDailyDataUsageInfo()
+                : mobileDataController.getDataUsageInfo();
         formatedinfo = formatDataUsage(info.usageLevel) + " " + mContext.getResources().getString(R.string.usage_data);
         shouldUpdateDataTextView = true;
     }
