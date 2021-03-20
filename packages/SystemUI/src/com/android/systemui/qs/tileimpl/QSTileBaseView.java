@@ -73,6 +73,7 @@ public class QSTileBaseView extends com.android.systemui.plugins.qs.QSTileView {
     private final int mColorActive;
     private final int mColorInactive;
     private final int mColorDisabled;
+    private final int owl_404;
     private int mCircleColor;
     private int mBgSize;
 
@@ -126,7 +127,7 @@ public class QSTileBaseView extends com.android.systemui.plugins.qs.QSTileView {
         mColorDisabled = Utils.getDisabled(context,
                 Utils.getColorAttrDefaultColor(context, android.R.attr.textColorTertiary));
         mColorInactive = Utils.getColorAttrDefaultColor(context, android.R.attr.textColorSecondary);
-
+	owl_404 =  ColorUtils.setAlphaComponent(activeColor, 200);
         setPadding(0, 0, 0, 0);
         setClipChildren(false);
         setClipToPadding(false);
@@ -299,10 +300,11 @@ public class QSTileBaseView extends com.android.systemui.plugins.qs.QSTileView {
     private int getCircleColor(int state) {
         switch (state) {
             case Tile.STATE_ACTIVE:
-                return mColorActive;
+                return owl_404;
             case Tile.STATE_INACTIVE:
+		return mColorActive;
             case Tile.STATE_UNAVAILABLE:
-                return mColorDisabled;
+                return mColorActive;
             default:
                 Log.e(TAG, "Invalid state " + state);
                 return 0;
