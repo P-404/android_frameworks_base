@@ -620,8 +620,11 @@ public class ScreenDecorations extends SystemUI implements Tunable {
         // upgrading all of the configs to contain (width, height) pairs. Instead assume that a
         // device configured using the single integer config value is okay with drawing the corners
         // as a square
-        final int newRoundedDefault = mContext.getResources().getDimensionPixelSize(
+        int newRoundedDefault = mContext.getResources().getDimensionPixelSize(
                 com.android.internal.R.dimen.rounded_corner_radius);
+        if (mDisableRoundedCorner == 1) {
+            newRoundedDefault = 0;
+        }
         final int newRoundedDefaultTop = mContext.getResources().getDimensionPixelSize(
                 com.android.internal.R.dimen.rounded_corner_radius_top);
         final int newRoundedDefaultBottom = mContext.getResources().getDimensionPixelSize(
