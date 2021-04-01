@@ -127,7 +127,7 @@ public class QSTileBaseView extends com.android.systemui.plugins.qs.QSTileView {
         mColorDisabled = Utils.getDisabled(context,
                 Utils.getColorAttrDefaultColor(context, android.R.attr.textColorTertiary));
         mColorInactive = Utils.getColorAttrDefaultColor(context, android.R.attr.textColorSecondary);
-	owl_404 =  ColorUtils.setAlphaComponent(activeColor, 200);
+	owl_404 =  ColorUtils.setAlphaComponent(activeColor, 255);
         setPadding(0, 0, 0, 0);
         setClipChildren(false);
         setClipToPadding(false);
