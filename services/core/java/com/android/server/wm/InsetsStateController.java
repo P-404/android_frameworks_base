@@ -109,6 +109,10 @@ class InsetsStateController {
      * @return The state stripped of the necessary information.
      */
     InsetsState getInsetsForDispatch(@NonNull WindowState target) {
+        final InsetsState rotatedState = target.mToken.getFixedRotationTransformInsetsState();
+        if (rotatedState != null) {
+            return rotatedState;
+        }
         final InsetsSourceProvider provider = target.getControllableInsetProvider();
         final @InternalInsetsType int type = provider != null
                 ? provider.getSource().getType() : ITYPE_INVALID;
@@ -472,10 +476,7 @@ class InsetsStateController {
     }
 
     void notifyInsetsChanged() {
-        mDisplayContent.forAllWindows(mDispatchInsetsChanged, true /* traverseTopToBottom */);
-        if (mDisplayContent.mRemoteInsetsControlTarget != null) {
-            mDisplayContent.mRemoteInsetsControlTarget.notifyInsetsChanged();
-        }
+        mDisplayContent.notifyInsetsChanged(mDispatchInsetsChanged);
     }
 
     void dump(String prefix, PrintWriter pw) {
