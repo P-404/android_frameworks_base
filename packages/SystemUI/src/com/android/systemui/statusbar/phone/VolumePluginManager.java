@@ -73,7 +73,6 @@ public class VolumePluginManager extends BroadcastReceiver {
     static final String[] ALLOWED_PLUGINS = {
         "co.potatoproject.plugin.volume.aosp",
         "co.potatoproject.plugin.volume.compact",
-        "co.potatoproject.plugin.volume.oreo",
         "co.potatoproject.plugin.volume.tiled",
     };
 
