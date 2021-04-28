@@ -115,10 +115,10 @@
 
             <com.android.systemui.statusbar.AlphaOptimizedImageView
                 android:id="@+id/edit"
+                style="@android:style/Widget.Material.Button.Borderless"
                 android:layout_width="@dimen/qs_footer_action_button_size"
                 android:layout_height="@dimen/qs_footer_action_button_size"
                 android:layout_gravity="left"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:clipToPadding="false"
                 android:contentDescription="@string/accessibility_quick_settings_edit"
@@ -134,7 +134,6 @@
                 android:layout_width="@dimen/qs_footer_action_button_size"
                 android:layout_height="@dimen/qs_footer_action_button_size"
                 android:layout_gravity="right"
-                android:background="@drawable/ripple_drawable"
                 android:contentDescription="@string/accessibility_quick_settings_settings"
                 android:padding="@dimen/qs_footer_icon_padding"
                 android:scaleType="centerInside"
