@@ -57,6 +57,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import android.os.SystemProperties;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 
 /**
@@ -528,6 +529,26 @@ public class LocalBluetoothProfileManager {
         return mBCProfile;
     }
 
+    private boolean isBASeeker(BluetoothDevice device) {
+        if (device == null) {
+            Log.e(TAG, "isBASeeker: device is null");
+            return false;
+        }
+        boolean ret = false;
+        Class<?> bcProfileClass = null;
+        String BC_PROFILE_CLASS = "com.android.settingslib.bluetooth.BCProfile";
+        Method baSeeker;
+        try {
+            bcProfileClass = Class.forName(BC_PROFILE_CLASS);
+            baSeeker = bcProfileClass.getDeclaredMethod("isBASeeker", BluetoothDevice.class);
+            ret = (boolean)baSeeker.invoke(null, device);
+        } catch (ClassNotFoundException | NoSuchMethodException
+                 | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return ret;
+    }
+
     public Object getBroadcastProfile() {
         return mBroadcastProfileObject;
     }
@@ -701,11 +722,11 @@ public class LocalBluetoothProfileManager {
             profiles.add(mSapProfile);
             removedProfiles.remove(mSapProfile);
         }
-        CachedBluetoothDevice cachedDevice = mDeviceManager.findDevice(device);
-        if (mBCProfile != null && cachedDevice != null && cachedDevice.isBASeeker()) {
+
+        if (mBCProfile != null && isBASeeker(device)) {
             profiles.add(mBCProfile);
             removedProfiles.remove(mBCProfile);
-            if(DEBUG) Log.d(TAG, "BC profile removed");
+            if(DEBUG) Log.d(TAG, "BC profile added");
         }
         if (DEBUG) {
             Log.d(TAG,"New Profiles" + profiles.toString());
