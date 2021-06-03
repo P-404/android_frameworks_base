@@ -124,12 +124,6 @@ public class LocalBluetoothProfileManager {
     private final Map<String, LocalBluetoothProfile>
             mProfileNameMap = new HashMap<String, LocalBluetoothProfile>();
 
-    private static final int NO_ADV_AUDIO_SUPPORT = 0;
-    private static final int ADV_AUDIO_CONNECTION_SUPPORT = 1;
-    private static final int ADV_AUDIO_CONECTIONLESS_SUPPORT = 2;
-
-    private int mAdvAudioFeatureMask;
-
     LocalBluetoothProfileManager(Context context,
             LocalBluetoothAdapter adapter,
             CachedBluetoothDeviceManager deviceManager,
@@ -140,9 +134,6 @@ public class LocalBluetoothProfileManager {
         mEventManager = eventManager;
         // pass this reference to adapter and event manager (circular dependency)
         adapter.setProfileManager(this);
-
-        mAdvAudioFeatureMask = SystemProperties.getInt(
-                               "persist.vendor.service.bt.adv_audio_mask", NO_ADV_AUDIO_SUPPORT);
 
         if (DEBUG) Log.d(TAG, "LocalBluetoothProfileManager construction complete");
     }
@@ -621,39 +612,36 @@ public class LocalBluetoothProfileManager {
             removedProfiles.remove(mA2dpProfile);
         }
 
-        if ((mAdvAudioFeatureMask & ADV_AUDIO_CONNECTION_SUPPORT)
-              == ADV_AUDIO_CONNECTION_SUPPORT) {
-            if (mHeadsetProfile != null) {
-                if (ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_VOICE_P_UUID)
-                       || ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_VOICE_T_UUID)
-                       || ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_HEARINGAID_UUID)
-                       || (mHeadsetProfile.getConnectionStatus(device)
-                          == BluetoothProfile.STATE_CONNECTED)) {
-                    if(DEBUG) Log.d(TAG, " Advance Audio Voice supported ");
-                    if (!profiles.contains(mHeadsetProfile)) {
-                      profiles.add(mHeadsetProfile);
-                      removedProfiles.remove(mHeadsetProfile);
-                    } else {
-                      if(DEBUG) Log.d(TAG, " HeadsetProfile already added ");
-                    }
+        if (mHeadsetProfile != null) {
+            if (ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_VOICE_P_UUID)
+                   || ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_VOICE_T_UUID)
+                   || ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_HEARINGAID_UUID)
+                   || (mHeadsetProfile.getConnectionStatus(device)
+                      == BluetoothProfile.STATE_CONNECTED)) {
+                if (!profiles.contains(mHeadsetProfile)) {
+                    profiles.add(mHeadsetProfile);
+                    removedProfiles.remove(mHeadsetProfile);
+                    if (DEBUG) Log.d(TAG, "Advance Audio Voice supported");
+                } else {
+                    if (DEBUG) Log.d(TAG, "HeadsetProfile already added");
                 }
             }
+        }
 
-            if ((mA2dpProfile != null)
-                && (ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_MEDIA_T_UUID)
-                    || ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_HEARINGAID_UUID)
-                    || ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_MEDIA_P_UUID)
-                    || ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_MEDIA_G_UUID)
-                    || ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_MEDIA_W_UUID)
-                    || (mA2dpProfile.getConnectionStatus(device)
-                        == BluetoothProfile.STATE_CONNECTED))) {
-                if(DEBUG) Log.d(TAG, " Advance Audio Media supported ");
-                if (!profiles.contains(mA2dpProfile)) {
-                  profiles.add(mA2dpProfile);
-                  removedProfiles.remove(mA2dpProfile);
-                } else {
-                  if(DEBUG) Log.d(TAG, " A2dpProfile already added ");
-                }
+        if ((mA2dpProfile != null)
+            && (ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_MEDIA_T_UUID)
+                || ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_HEARINGAID_UUID)
+                || ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_MEDIA_P_UUID)
+                || ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_MEDIA_G_UUID)
+                || ArrayUtils.contains(uuids, BluetoothUuid.ADVANCE_MEDIA_W_UUID)
+                || (mA2dpProfile.getConnectionStatus(device)
+                    == BluetoothProfile.STATE_CONNECTED))) {
+            if (!profiles.contains(mA2dpProfile)) {
+                profiles.add(mA2dpProfile);
+                removedProfiles.remove(mA2dpProfile);
+                if (DEBUG) Log.d(TAG, "Advance Audio Media supported");
+            } else {
+                if (DEBUG) Log.d(TAG, "A2dpProfile already added");
             }
         }
 
