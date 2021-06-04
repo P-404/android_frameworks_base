@@ -1869,6 +1869,22 @@ public class WifiManager {
      }
 
     /**
+     * Check whether concurrent band session is supported
+     *
+     * @return an int value that will be checked in APPs if
+     * concurrent band session is supported.
+     *
+     * @hide no intent to publish
+     */
+     public int isConcurrentBandSupported() {
+         try {
+             return mService.isConcurrentBandSupported();
+         } catch (RemoteException e) {
+             throw e.rethrowFromSystemServer();
+         }
+     }
+
+    /**
      * Internal method for doing the RPC that creates a new network description
      * or updates an existing one.
      *
