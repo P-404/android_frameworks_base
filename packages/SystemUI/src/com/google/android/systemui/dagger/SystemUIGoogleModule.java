@@ -61,7 +61,6 @@ import com.android.systemui.statusbar.policy.DeviceProvisionedControllerImpl;
 import com.android.systemui.statusbar.policy.HeadsUpManager;
 
 import com.google.android.systemui.NotificationLockscreenUserManagerGoogle;
-import com.google.android.systemui.power.EnhancedEstimatesGoogleImpl;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -86,7 +85,7 @@ public abstract class SystemUIGoogleModule {
     }
 
     @Binds
-    abstract EnhancedEstimates bindEnhancedEstimates(EnhancedEstimatesGoogleImpl enhancedEstimates);
+    abstract EnhancedEstimates bindEnhancedEstimates(EnhancedEstimatesImpl enhancedEstimates);
 
     @Binds
     abstract NotificationLockscreenUserManager bindNotificationLockscreenUserManager(
