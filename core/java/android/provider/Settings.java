@@ -4989,12 +4989,6 @@ public final class Settings {
         public static final String THREE_FINGER_GESTURE = "three_finger_gesture";
 
         /**
-         * Holds current enabled volume panel implementation
-         * @hide
-         */
-        public static final String SYSTEMUI_PLUGIN_VOLUME = "systemui_plugin_volume";
-
-        /**
          * Whether to show artist and title on ambient/lock screen on new music tracks
          * 0 - don't show track info
          * 1 - show track info on bottom of Ambient Display (Pixel style)
@@ -5188,7 +5182,6 @@ public final class Settings {
             PRIVATE_SETTINGS.add(LOCKSCREEN_MEDIA_ART);
             PRIVATE_SETTINGS.add(AMBIENT_NOTIFICATION_LIGHT);
             PRIVATE_SETTINGS.add(AMBIENT_NOTIFICATION_LIGHT_AUTOMATIC);
-            PRIVATE_SETTINGS.add(SYSTEMUI_PLUGIN_VOLUME);
             PRIVATE_SETTINGS.add(STATUSBAR_CLOCK);
             PRIVATE_SETTINGS.add(STATUSBAR_CLOCK_STYLE);
             PRIVATE_SETTINGS.add(STATUSBAR_CLOCK_SECONDS);

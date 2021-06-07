@@ -93,7 +93,7 @@ public class PluginManagerImpl extends BroadcastReceiver implements PluginManage
         mContext = context;
         mFactory = factory;
         mLooper = initializer.getBgLooper();
-        isDebuggable = true;
+        isDebuggable = debuggable;
         mWhitelistedPlugins.addAll(Arrays.asList(initializer.getWhitelistedPlugins(mContext)));
         mPluginPrefs = new PluginPrefs(mContext);
         mPluginEnabler = initializer.getPluginEnabler(mContext);

@@ -845,14 +845,5 @@
                 <action android:name="com.android.systemui.action.DISMISS_MEDIA_OUTPUT_DIALOG" />
             </intent-filter>
         </receiver>
-
-        <receiver android:name=".statusbar.phone.VolumePluginManager">
-            <intent-filter>
-                <action android:name="android.intent.action.PACKAGE_INSTALL" />
-                <action android:name="android.intent.action.PACKAGE_CHANGED" />
-                <action android:name="android.intent.action.PACKAGE_ADDED" />
-                <data android:scheme="package"/>
-            </intent-filter>
-        </receiver>
     </application>
 </manifest>

@@ -89,8 +89,7 @@ public class PluginInstanceManager<T extends Plugin> {
         mAllowMultiple = allowMultiple;
         mVersion = version;
         mWhitelistedPlugins.addAll(Arrays.asList(pluginWhitelist));
-        // We now actually do want to run plugins even in production so always allow running them
-        isDebuggable = true;
+        isDebuggable = debuggable;
     }
 
     public PluginInfo<T> getPlugin() {
