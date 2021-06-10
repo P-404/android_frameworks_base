@@ -2990,30 +2990,32 @@ class StorageManagerService extends IStorageManager.Stub
             throw new IllegalArgumentException("password cannot be empty");
         }
 
-        if (DEBUG_EVENTS) {
-            Slog.i(TAG, "changing encryption password...");
-        }
-
-        ILockSettings lockSettings = ILockSettings.Stub.asInterface(
-                        ServiceManager.getService("lock_settings"));
-        String currentPassword="default_password";
-        try {
-            currentPassword = lockSettings.getPassword();
-        } catch (Exception e) {
-            Slog.wtf(TAG, "Couldn't get password" + e);
-        }
-
-        try {
-            mVold.fdeChangePassword(type, currentPassword, password);
-            try {
-                lockSettings.sanitizePassword();
-            } catch (Exception e) {
-                Slog.wtf(TAG, "Couldn't sanitize password" + e);
+        synchronized (mLock) {
+            if (DEBUG_EVENTS) {
+                Slog.i(TAG, "changing encryption password...");
             }
-            return 0;
-        } catch (Exception e) {
-            Slog.wtf(TAG, e);
-            return -1;
+
+            ILockSettings lockSettings = ILockSettings.Stub.asInterface(
+                            ServiceManager.getService("lock_settings"));
+            String currentPassword="default_password";
+            try {
+                currentPassword = lockSettings.getPassword();
+            } catch (Exception e) {
+                Slog.wtf(TAG, "Couldn't get password" + e);
+            }
+
+            try {
+                mVold.fdeChangePassword(type, currentPassword, password);
+                try {
+                    lockSettings.sanitizePassword();
+                } catch (Exception e) {
+                    Slog.wtf(TAG, "Couldn't sanitize password" + e);
+                }
+                return 0;
+            } catch (Exception e) {
+                Slog.wtf(TAG, e);
+                return -1;
+            }
         }
     }
 
