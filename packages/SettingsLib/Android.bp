@@ -47,7 +47,6 @@ android_library {
         "androidx.mediarouter_mediarouter-nodeps",
         "com.google.android.material_material",
         "iconloader",
-        "WifiTrackerLib",
         "WifiTrackerLibRes",
         "SettingsLibHelpUtils",
         "SettingsLibRestrictedLockUtils",
