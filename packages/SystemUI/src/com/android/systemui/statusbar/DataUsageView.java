@@ -18,19 +18,21 @@ import com.android.systemui.statusbar.policy.NetworkController;
 
 public class DataUsageView extends TextView {
 
-    private static boolean shouldUpdateData;
-    private static boolean shouldUpdateDataTextView;
+    private boolean shouldUpdateData;
+    private boolean shouldUpdateDataTextView;
     private NetworkController mNetworkController;
+    private DataUsageController mDataUsageController;
     private Context mContext;
-    private String formatedinfo;
+    private String mFormatedInfo;
 
     public DataUsageView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
         mNetworkController = Dependency.get(NetworkController.class);
+        mDataUsageController = mNetworkController.getMobileDataController();
     }
 
-    public static void updateUsage() {
+    public void updateUsage() {
         shouldUpdateData = true;
     }
 
@@ -42,17 +44,28 @@ public class DataUsageView extends TextView {
         }
         if (shouldUpdateDataTextView) {
             shouldUpdateDataTextView = false;
-            setText(formatedinfo);
+            setText(mFormatedInfo);
         }
     }
 
     private void updateUsageData() {
-        DataUsageController mobileDataController = new DataUsageController(mContext);
-        mobileDataController.setSubscriptionId(
+        mDataUsageController.setSubscriptionId(
                 SubscriptionManager.getDefaultDataSubscriptionId());
-        final DataUsageController.DataUsageInfo info = mobileDataController.getDailyDataUsageInfo();
-        formatedinfo = formatDataUsage(info.usageLevel) + " " + mContext.getResources().getString(R.string.usage_data);
+        final DataUsageController.DataUsageInfo info = mDataUsageController.getDailyDataUsageInfo();
+        String carrier = info.carrier;
+        String formatedInfo = "";
+        if (carrier != null && !carrier.isEmpty()) {
+            String[] parts = carrier.split("\\|");
+            carrier = parts[0];
+            formatedInfo = carrier + ": ";
+        }
+        formatedInfo += formatDataUsage(info.usageLevel) + " " + mContext.getResources().getString(R.string.usage_data);
+        if (formatedInfo.equals(mFormatedInfo)) {
+            return;
+        }
+        mFormatedInfo = formatedInfo;
         shouldUpdateDataTextView = true;
+        invalidate();
     }
 
     private CharSequence formatDataUsage(long byteValue) {

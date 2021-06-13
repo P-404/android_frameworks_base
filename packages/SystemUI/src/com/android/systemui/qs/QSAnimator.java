@@ -286,6 +286,7 @@ public class QSAnimator implements Callback, PageListener, Listener, OnLayoutCha
         }
 
         View brightnessView = mQsPanel.getBrightnessView();
+        View footerView = mQsPanel.getFooterView();
         if (brightnessView != null && Utils.useQsMediaPlayer(mContext) && !mQsPanel.shouldUseHorizontalLayout()
                 && mQsPanel.isMediaHostVisible()) {
             View mQsPanelMediaHostView = mQsPanel.getMediaHost().getHostView();
@@ -296,9 +297,22 @@ public class QSAnimator implements Callback, PageListener, Listener, OnLayoutCha
             } else {
                 translation = mQsPanelMediaHostView.getHeight() - mQuickQsPanelMediaHostView.getHeight();
             }
-            mBrightnessAnimator = new TouchAnimator.Builder().addFloat(brightnessView, "translationY", translation, 0)
+            float translationFooter = 0.0f;
+            if (mQsPanel.isLandscape()) {
+                translationFooter = mQsPanel.getFooterHeight();
+            }
+            mBrightnessAnimator = new TouchAnimator.Builder()
+                    .addFloat(brightnessView, "translationY", translation, 0)
+                    .addFloat(footerView, "translationY", translationFooter, 0)
                     .build();
             mAllViews.add(brightnessView);
+            mAllViews.add(footerView);
+        } else if (mQsPanel.isLandscape()) {
+            float translationFooter = mQsPanel.getFooterHeight();
+            mBrightnessAnimator = new TouchAnimator.Builder()
+                    .addFloat(footerView, "translationY", translationFooter, 0)
+                    .build();
+            mAllViews.add(footerView);
         } else {
             mBrightnessAnimator = null;
         }
@@ -413,9 +427,9 @@ public class QSAnimator implements Callback, PageListener, Listener, OnLayoutCha
         }
 
         if (position == 0f) {
-            mQuickQsPanel.getBrightnessView().setVisibility(View.VISIBLE);
+            mQuickQsPanel.getFooterView().setVisibility(View.VISIBLE);
         } else {
-            mQuickQsPanel.getBrightnessView().setVisibility(View.INVISIBLE);
+            mQuickQsPanel.getFooterView().setVisibility(View.INVISIBLE);
         }
     }
 
