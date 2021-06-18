@@ -32,6 +32,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.RemoteException;
 import android.provider.Settings;
+import android.util.BoostFramework;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -84,6 +85,10 @@ public class FODCircleView extends ImageView {
     private boolean mTouchedOutside;
     private boolean mCanUnlockWithFp;
     private boolean mFpDisabled;
+
+    private BoostFramework mPerfBoost;
+    private boolean mIsPerfLockAcquired = false;
+    private static final int BOOST_DURATION_TIMEOUT = 2000;
 
     private Handler mHandler;
 
@@ -306,6 +311,7 @@ public class FODCircleView extends ImageView {
 
         mUpdateMonitor = Dependency.get(KeyguardUpdateMonitor.class);
         mUpdateMonitor.registerCallback(mMonitorCallback);
+        mPerfBoost = new BoostFramework();
     }
 
     @Override
@@ -375,6 +381,12 @@ public class FODCircleView extends ImageView {
         } catch (RemoteException e) {
             // do nothing
         }
+        if (!mIsPerfLockAcquired) {
+            mPerfBoost.perfHint(BoostFramework.VENDOR_HINT_FIRST_LAUNCH_BOOST,
+                    null,
+                    BOOST_DURATION_TIMEOUT);
+            mIsPerfLockAcquired = true;
+        }
     }
 
     public void dispatchRelease() {
@@ -401,6 +413,10 @@ public class FODCircleView extends ImageView {
             daemon.onHideFODView();
         } catch (RemoteException e) {
             // do nothing
+        }
+        if (mIsPerfLockAcquired) {
+            mPerfBoost.perfLockRelease();
+            mIsPerfLockAcquired = false;
         }
     }
 
