@@ -317,5 +317,6 @@ public class SecureSettingsValidators {
             }
             return true;
         });
+        VALIDATORS.put(Secure.FACE_UNLOCK_METHOD, BOOLEAN_VALIDATOR);
     }
 }
