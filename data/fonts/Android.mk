@@ -93,15 +93,6 @@ LOCAL_PREBUILT_MODULE_FILE := frameworks/base/data/fonts/fonts.xml
 
 include $(BUILD_PREBUILT)
 
-include $(CLEAR_VARS)
-
-LOCAL_MODULE := fonts_customization.xml
-LOCAL_MODULE_CLASS := ETC
-LOCAL_PRODUCT_MODULE := true
-LOCAL_PREBUILT_MODULE_FILE := frameworks/base/data/fonts/fonts_customization.xml
-
-include $(BUILD_PREBUILT)
-
 # Run sanity tests on fonts on checkbuild
 checkbuild: fontchain_lint
 
