@@ -58,6 +58,7 @@ import static org.xmlpull.v1.XmlPullParser.START_TAG;
 
 import android.Manifest;
 import android.annotation.Nullable;
+import android.annotation.UserIdInt;
 import android.app.ActivityManager;
 import android.app.ActivityManagerInternal;
 import android.app.AppOpsManager;
@@ -512,14 +513,21 @@ class StorageManagerService extends IStorageManager.Stub
         }
     }
 
-    private @Nullable VolumeInfo findStorageForUuid(String volumeUuid) {
+    private @Nullable VolumeInfo findStorageForUuidAsUser(String volumeUuid,
+            @UserIdInt int userId) {
         final StorageManager storage = mContext.getSystemService(StorageManager.class);
         if (Objects.equals(StorageManager.UUID_PRIVATE_INTERNAL, volumeUuid)) {
-            return storage.findVolumeById(VolumeInfo.ID_EMULATED_INTERNAL + ";" + 0);
+            return storage.findVolumeById(VolumeInfo.ID_EMULATED_INTERNAL + ";" + userId);
         } else if (Objects.equals(StorageManager.UUID_PRIMARY_PHYSICAL, volumeUuid)) {
             return storage.getPrimaryPhysicalVolume();
         } else {
-            return storage.findEmulatedForPrivate(storage.findVolumeByUuid(volumeUuid));
+            VolumeInfo info = storage.findVolumeByUuid(volumeUuid);
+            if (info == null) {
+                Slog.w(TAG, "findStorageForUuidAsUser cannot find volumeUuid:" + volumeUuid);
+                return null;
+            }
+            String emulatedUuid = info.getId().replace("private", "emulated") + ";" + userId;
+            return storage.findVolumeById(emulatedUuid);
         }
     }
 
@@ -2764,8 +2772,9 @@ class StorageManagerService extends IStorageManager.Stub
                 return;
 
             } else {
-                from = findStorageForUuid(mPrimaryStorageUuid);
-                to = findStorageForUuid(volumeUuid);
+                int currentUserId = mCurrentUserId;
+                from = findStorageForUuidAsUser(mPrimaryStorageUuid, currentUserId);
+                to = findStorageForUuidAsUser(volumeUuid, currentUserId);
 
                 if (from == null) {
                     Slog.w(TAG, "Failing move due to missing from volume " + mPrimaryStorageUuid);
@@ -2990,30 +2999,32 @@ class StorageManagerService extends IStorageManager.Stub
             throw new IllegalArgumentException("password cannot be empty");
         }
 
-        if (DEBUG_EVENTS) {
-            Slog.i(TAG, "changing encryption password...");
-        }
-
-        ILockSettings lockSettings = ILockSettings.Stub.asInterface(
-                        ServiceManager.getService("lock_settings"));
-        String currentPassword="default_password";
-        try {
-            currentPassword = lockSettings.getPassword();
-        } catch (Exception e) {
-            Slog.wtf(TAG, "Couldn't get password" + e);
-        }
-
-        try {
-            mVold.fdeChangePassword(type, currentPassword, password);
-            try {
-                lockSettings.sanitizePassword();
-            } catch (Exception e) {
-                Slog.wtf(TAG, "Couldn't sanitize password" + e);
+        synchronized (mLock) {
+            if (DEBUG_EVENTS) {
+                Slog.i(TAG, "changing encryption password...");
             }
-            return 0;
-        } catch (Exception e) {
-            Slog.wtf(TAG, e);
-            return -1;
+
+            ILockSettings lockSettings = ILockSettings.Stub.asInterface(
+                            ServiceManager.getService("lock_settings"));
+            String currentPassword="default_password";
+            try {
+                currentPassword = lockSettings.getPassword();
+            } catch (Exception e) {
+                Slog.wtf(TAG, "Couldn't get password" + e);
+            }
+
+            try {
+                mVold.fdeChangePassword(type, currentPassword, password);
+                try {
+                    lockSettings.sanitizePassword();
+                } catch (Exception e) {
+                    Slog.wtf(TAG, "Couldn't sanitize password" + e);
+                }
+                return 0;
+            } catch (Exception e) {
+                Slog.wtf(TAG, e);
+                return -1;
+            }
         }
     }
 
