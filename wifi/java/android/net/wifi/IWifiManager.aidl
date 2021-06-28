@@ -252,6 +252,8 @@ interface IWifiManager
 
     boolean isSoftApBeaconProtFeatureSupported();
 
+    int isConcurrentBandSupported();
+
     void enableSoftApOcvFeature(boolean enable);
 
     void enableSoftApBeaconProtFeature(boolean enable);
