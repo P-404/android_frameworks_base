@@ -241,13 +241,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
      * @param pid
      */
     @GuardedBy("mDeviceStateLock")
-    private void setSpeakerphoneOffForPid(int pid) {
-        SpeakerphoneClient client = getSpeakerphoneClientForPid(pid);
-        if (client == null) {
-            return;
+    private void setSpeakerphoneOffForPid(IBinder cb, int pid) {
+        if (AudioService.DEBUG_SCO) {
+            Log.i(TAG, "In setSpeakerphoneOffForPid: " + pid);
         }
-        client.unregisterDeathRecipient();
-        mSpeakerphoneClients.remove(client);
+        addSpeakerphoneClient(cb, pid, false);
         final String eventSource = new StringBuilder("setSpeakerphoneOffForPid(")
                 .append(pid).append(")").toString();
         updateSpeakerphoneOn(eventSource);
@@ -549,7 +547,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
             // Cancel speakerphone ON request by this same client: speakerphone and BT SCO routes
             // are mutually exclusive.
             // See symmetrical operation for setSpeakerphoneOn(true).
-            setSpeakerphoneOffForPid(Binder.getCallingPid());
+            setSpeakerphoneOffForPid(cb, Binder.getCallingPid());
             mBtHelper.startBluetoothScoForClient(cb, scoAudioMode, eventSource);
         }
     }
