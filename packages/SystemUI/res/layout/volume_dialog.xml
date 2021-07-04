@@ -123,16 +123,14 @@
                 </FrameLayout>
                 <FrameLayout
                     android:id="@+id/media_output_container"
-                    android:visibility="gone"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical">
                     <com.android.keyguard.AlphaOptimizedImageButton
                         android:id="@+id/media_output"
                         android:src="@drawable/ic_bluetooth_audio"
                         android:layout_width="@dimen/volume_dialog_tap_target_size"
                         android:layout_height="@dimen/volume_dialog_tap_target_size"
-                        android:layout_marginRight="8dp"
-                        android:layout_marginLeft="8dp"
                         android:contentDescription="@string/accessibility_volume_settings"
                         android:background="@drawable/volume_dialog_background"
                         android:tint="@color/accent_tint_color_selector"
