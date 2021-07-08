@@ -282,8 +282,8 @@ public class NetworkStatsCollection implements FileRotator.Reader {
             }
 
             final long rawBytes = entry.rxBytes + entry.txBytes;
-            final long rawRxBytes = entry.rxBytes;
-            final long rawTxBytes = entry.txBytes;
+            final long rawRxBytes = entry.rxBytes == 0 ? 1 : entry.rxBytes;
+            final long rawTxBytes = entry.txBytes == 0 ? 1 : entry.txBytes;
             final long targetBytes = augmentPlan.getDataUsageBytes();
             final long targetRxBytes = combined.multiplySafe(targetBytes, rawRxBytes, rawBytes);
             final long targetTxBytes = combined.multiplySafe(targetBytes, rawTxBytes, rawBytes);
