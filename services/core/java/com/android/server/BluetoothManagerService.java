@@ -2469,7 +2469,6 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
                     mHandler.removeMessages(MESSAGE_USER_SWITCHED);
 
                     try {
-                        mBluetoothLock.writeLock().lock();
                         int state = getState();
 
                         if (mBluetooth != null && ((state == BluetoothAdapter.STATE_ON)||
@@ -2477,9 +2476,12 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
                             if (state == BluetoothAdapter.STATE_ON) {
                                 /* disable and enable BT when detect a user switch */
                                 try {
+                                    mBluetoothLock.readLock().lock();
                                     mBluetooth.unregisterCallback(mBluetoothCallback);
                                 } catch (RemoteException re) {
                                     Slog.e(TAG, "Unable to unregister", re);
+                                } finally {
+                                    mBluetoothLock.readLock().unlock();
                                 }
 
                                 if (mState == BluetoothAdapter.STATE_TURNING_OFF) {
@@ -2538,10 +2540,17 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
                                 sendBluetoothServiceDownCallback();
 
                                 if(!didDisableTimeout) {
-                                    mBluetooth = null;
-                                    // Unbind
-                                    mContext.unbindService(mConnection);
-                                    mBluetoothGatt = null;
+                                    try {
+                                        mBluetoothLock.writeLock().lock();
+                                        if (mBluetooth != null) {
+                                            mBluetooth = null;
+                                            // Unbind
+                                            mContext.unbindService(mConnection);
+                                        }
+                                        mBluetoothGatt = null;
+                                    } finally {
+                                        mBluetoothLock.writeLock().unlock();
+                                    }
                                 }
 
                                 //
@@ -2569,10 +2578,16 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
                                     Slog.d(TAG, "Turn off from BLE state");
                                 }
                                 clearBleApps();
-                                addActiveLog(BluetoothProtoEnums.ENABLE_DISABLE_REASON_USER_SWITCH,
-                                        mContext.getPackageName(), false);
-                                mEnable = false;
-                                mBluetooth.onBrEdrDown();
+                                try {
+                                    mBluetoothLock.writeLock().lock();
+                                    addActiveLog(
+                                            BluetoothProtoEnums.ENABLE_DISABLE_REASON_USER_SWITCH,
+                                            mContext.getPackageName(), false);
+                                    mEnable = false;
+                                    mBluetooth.onBrEdrDown();
+                                } finally {
+                                    mBluetoothLock.writeLock().unlock();
+                                }
                             }
                         } else if (mBinding || mBluetooth != null) {
                             Message userMsg = mHandler.obtainMessage(MESSAGE_USER_SWITCHED);
@@ -2585,8 +2600,6 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
                         }
                     } catch (RemoteException e) {
                         Slog.e(TAG, "MESSAGE_USER_SWITCHED: Remote exception", e);
-                    } finally {
-                        mBluetoothLock.writeLock().unlock();
                     }
                     break;
                 }
