@@ -56,6 +56,11 @@ public final class ScanRecord {
     private static final int DATA_TYPE_SERVICE_SOLICITATION_UUIDS_32_BIT = 0x1F;
     private static final int DATA_TYPE_SERVICE_SOLICITATION_UUIDS_128_BIT = 0x15;
     private static final int DATA_TYPE_MANUFACTURER_SPECIFIC_DATA = 0xFF;
+    private static final int DATA_TYPE_TRANSPORT_DISCOVERY_DATA = 0x26;
+    /**
+     * @hide
+     */
+    public static int DATA_TYPE_GROUP_AD_TYPE = 0x00;
 
     // Flags of the advertising data.
     private final int mAdvertiseFlags;
@@ -77,6 +82,12 @@ public final class ScanRecord {
 
     // Raw bytes of scan record.
     private final byte[] mBytes;
+
+    // Transport Discovery data.
+    private final byte[] mTDSData;
+
+    // Group Identifier Data
+    private final byte[] mGroupIdentifierData;
 
     /**
      * Returns the advertising flags indicating the discoverable mode and capability of the device.
@@ -162,6 +173,22 @@ public final class ScanRecord {
     }
 
     /**
+     * @hide
+     * Returns Transport Discovery data
+     */
+    public byte[] getTDSData() {
+        return mTDSData;
+    }
+
+    /**
+     * @hide
+     * Returns Group Identifier data
+     */
+    public byte[] getGroupIdentifierData() {
+        return mGroupIdentifierData;
+    }
+
+    /**
      * Returns raw bytes of scan record.
      */
     public byte[] getBytes() {
@@ -173,7 +200,7 @@ public final class ScanRecord {
             SparseArray<byte[]> manufacturerData,
             Map<ParcelUuid, byte[]> serviceData,
             int advertiseFlags, int txPowerLevel,
-            String localName, byte[] bytes) {
+            String localName, byte[] tdsData, byte[] groupIdentifierData, byte[] bytes) {
         mServiceSolicitationUuids = serviceSolicitationUuids;
         mServiceUuids = serviceUuids;
         mManufacturerSpecificData = manufacturerData;
@@ -181,6 +208,8 @@ public final class ScanRecord {
         mDeviceName = localName;
         mAdvertiseFlags = advertiseFlags;
         mTxPowerLevel = txPowerLevel;
+        mTDSData = tdsData;
+        mGroupIdentifierData = groupIdentifierData;
         mBytes = bytes;
     }
 
@@ -210,6 +239,9 @@ public final class ScanRecord {
 
         SparseArray<byte[]> manufacturerData = new SparseArray<byte[]>();
         Map<ParcelUuid, byte[]> serviceData = new ArrayMap<ParcelUuid, byte[]>();
+
+        byte[] tdsData = null;
+        byte[] groupIdentifierData = null;
 
         try {
             while (currentPos < scanRecord.length) {
@@ -288,8 +320,15 @@ public final class ScanRecord {
                                 dataLength - 2);
                         manufacturerData.put(manufacturerId, manufacturerDataBytes);
                         break;
+                    case DATA_TYPE_TRANSPORT_DISCOVERY_DATA:
+                        tdsData = extractBytes(scanRecord, currentPos, dataLength);
+                        break;
+
                     default:
-                        // Just ignore, we don't handle such data type.
+                        if (fieldType == DATA_TYPE_GROUP_AD_TYPE) {
+                            Log.d(TAG, "Parsing Group Identifier data");
+                            groupIdentifierData = extractBytes(scanRecord, currentPos, dataLength);
+                        }
                         break;
                 }
                 currentPos += dataLength;
@@ -299,12 +338,14 @@ public final class ScanRecord {
                 serviceUuids = null;
             }
             return new ScanRecord(serviceUuids, serviceSolicitationUuids, manufacturerData,
-                    serviceData, advertiseFlag, txPowerLevel, localName, scanRecord);
+                    serviceData, advertiseFlag, txPowerLevel, localName, tdsData,
+                    groupIdentifierData, scanRecord);
         } catch (Exception e) {
             Log.e(TAG, "unable to parse scan record: " + Arrays.toString(scanRecord));
             // As the record is invalid, ignore all the parsed results for this packet
             // and return an empty record with raw scanRecord bytes in results
-            return new ScanRecord(null, null, null, null, -1, Integer.MIN_VALUE, null, scanRecord);
+            return new ScanRecord(null, null, null, null, -1, Integer.MIN_VALUE, null, null,
+                                  null, scanRecord);
         }
     }
 
@@ -315,7 +356,8 @@ public final class ScanRecord {
                 + ", mManufacturerSpecificData=" + BluetoothLeUtils.toString(
                 mManufacturerSpecificData)
                 + ", mServiceData=" + BluetoothLeUtils.toString(mServiceData)
-                + ", mTxPowerLevel=" + mTxPowerLevel + ", mDeviceName=" + mDeviceName + "]";
+                + ", mTxPowerLevel=" + mTxPowerLevel + ", mDeviceName=" + mDeviceName +
+                ", mTDSData=" + BluetoothLeUtils.toString(mTDSData) +"]";
     }
 
     // Parse service UUIDs.

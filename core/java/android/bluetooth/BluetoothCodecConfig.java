@@ -44,7 +44,9 @@ public final class BluetoothCodecConfig implements Parcelable {
             SOURCE_CODEC_TYPE_AAC,
             SOURCE_CODEC_TYPE_APTX,
             SOURCE_CODEC_TYPE_APTX_HD,
+            SOURCE_CODEC_TYPE_APTX_ADAPTIVE,
             SOURCE_CODEC_TYPE_LDAC,
+            SOURCE_CODEC_TYPE_APTX_TWSP,
             SOURCE_CODEC_TYPE_MAX,
             SOURCE_CODEC_TYPE_INVALID
     })
@@ -64,10 +66,25 @@ public final class BluetoothCodecConfig implements Parcelable {
     public static final int SOURCE_CODEC_TYPE_APTX_HD = 3;
 
     @UnsupportedAppUsage
-    public static final int SOURCE_CODEC_TYPE_LDAC = 4;
+    public static final int SOURCE_CODEC_TYPE_APTX_ADAPTIVE = 4;
 
     @UnsupportedAppUsage
-    public static final int SOURCE_CODEC_TYPE_MAX = 5;
+    public static final int SOURCE_CODEC_TYPE_LDAC = 5;
+
+    @UnsupportedAppUsage
+    public static final int SOURCE_CODEC_TYPE_APTX_TWSP = 6;
+
+    @UnsupportedAppUsage
+    public static final int SOURCE_CODEC_TYPE_MAX = 7;
+
+    /* CELT is not an A2DP Codec and only used to fetch encoder
+    ** format for BA usecase, moving out of a2dp codec value list
+    */
+    @UnsupportedAppUsage
+    public static final int SOURCE_CODEC_TYPE_CELT = 8;
+
+    @UnsupportedAppUsage
+    public static final int SOURCE_CODEC_TYPE_LC3 = 9;
 
     @UnsupportedAppUsage
     public static final int SOURCE_CODEC_TYPE_INVALID = 1000 * 1000;
@@ -125,6 +142,14 @@ public final class BluetoothCodecConfig implements Parcelable {
     @UnsupportedAppUsage
     public static final int SAMPLE_RATE_192000 = 0x1 << 5;
 
+    public static final int SAMPLE_RATE_16000 = 0x1 << 6;
+
+    public static final int SAMPLE_RATE_24000 = 0x1 << 7;
+
+    public static final int SAMPLE_RATE_32000 = 0x1 << 8;
+
+    public static final int SAMPLE_RATE_8000 = 0x1 << 9;
+
 
     /** @hide */
     @IntDef(prefix = "BITS_PER_SAMPLE_", value = {
@@ -166,6 +191,7 @@ public final class BluetoothCodecConfig implements Parcelable {
 
     @UnsupportedAppUsage
     public static final int CHANNEL_MODE_STEREO = 0x1 << 1;
+    public static final int CHANNEL_MODE_JOINT_STEREO = 0x1 << 2;
 
     private final @SourceCodecType int mCodecType;
     private @CodecPriority int mCodecPriority;
@@ -402,6 +428,10 @@ public final class BluetoothCodecConfig implements Parcelable {
                 return "aptX HD";
             case SOURCE_CODEC_TYPE_LDAC:
                 return "LDAC";
+            case SOURCE_CODEC_TYPE_APTX_ADAPTIVE:
+                return "aptX Adaptive";
+            case SOURCE_CODEC_TYPE_APTX_TWSP:
+                return "aptX TWS+";
             case SOURCE_CODEC_TYPE_INVALID:
                 return "INVALID CODEC";
             default:
@@ -648,6 +678,10 @@ public final class BluetoothCodecConfig implements Parcelable {
         switch (mCodecType) {
             case SOURCE_CODEC_TYPE_LDAC:
                 if (mCodecSpecific1 != other.mCodecSpecific1) {
+                    return false;
+                }
+            case SOURCE_CODEC_TYPE_APTX_ADAPTIVE:
+                if (other.mCodecSpecific4 > 0) {
                     return false;
                 }
                 // fall through

@@ -58,7 +58,9 @@ import android.util.Slog;
 import android.util.SparseArray;
 import android.util.TimeUtils;
 import android.util.proto.ProtoOutputStream;
+import android.util.BoostFramework;
 
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.app.procstats.ProcessState;
 import com.android.internal.app.procstats.ProcessStats;
@@ -67,6 +69,7 @@ import com.android.internal.os.ProcessCpuTracker;
 import com.android.internal.os.Zygote;
 import com.android.internal.util.FrameworkStatsLog;
 import com.android.server.MemoryPressureUtil;
+import com.android.server.Watchdog;
 import com.android.server.wm.WindowProcessController;
 import com.android.server.wm.WindowProcessListener;
 
@@ -162,8 +165,11 @@ class ProcessRecord implements WindowProcessListener {
     int curCapability;          // Current capability flags of this process. For example,
                                 // PROCESS_CAPABILITY_FOREGROUND_LOCATION is one capability.
     int setCapability;          // Last set capability flags.
+    @GuardedBy("mService.mOomAdjuster.mCachedAppOptimizer")
     long lastCompactTime;       // The last time that this process was compacted
+    @GuardedBy("mService.mOomAdjuster.mCachedAppOptimizer")
     int reqCompactAction;       // The most recent compaction action requested for this app.
+    @GuardedBy("mService.mOomAdjuster.mCachedAppOptimizer")
     int lastCompactAction;      // The most recent compaction action performed for this app.
     boolean frozen;             // True when the process is frozen.
     long freezeUnfreezeTime;    // Last time the app was (un)frozen, 0 for never
@@ -352,6 +358,24 @@ class ProcessRecord implements WindowProcessListener {
 
     boolean mReachable; // Whether or not this process is reachable from given process
 
+    /**
+     * The snapshot of {@link #setAdj}, meant to be read by {@link CachedAppOptimizer} only.
+     */
+    @GuardedBy("mService.mOomAdjuster.mCachedAppOptimizer")
+    int mSetAdjForCompact;
+
+    /**
+     * The snapshot of {@link #pid}, meant to be read by {@link CachedAppOptimizer} only.
+     */
+    @GuardedBy("mService.mOomAdjuster.mCachedAppOptimizer")
+    int mPidForCompact;
+
+    /**
+     * This process has been scheduled for a memory compaction.
+     */
+    @GuardedBy("mService.mOomAdjuster.mCachedAppOptimizer")
+    boolean mPendingCompact;
+
     void setStartParams(int startUid, HostingRecord hostingRecord, String seInfo,
             long startTime) {
         this.startUid = startUid;
@@ -447,8 +471,10 @@ class ProcessRecord implements WindowProcessListener {
                 pw.print(" setRaw="); pw.print(setRawAdj);
                 pw.print(" cur="); pw.print(curAdj);
                 pw.print(" set="); pw.println(setAdj);
-        pw.print(prefix); pw.print("lastCompactTime="); pw.print(lastCompactTime);
-                pw.print(" lastCompactAction="); pw.println(lastCompactAction);
+        synchronized (mService.mOomAdjuster.mCachedAppOptimizer) {
+            pw.print(prefix); pw.print("lastCompactTime="); pw.print(lastCompactTime);
+            pw.print(" lastCompactAction="); pw.println(lastCompactAction);
+        }
         pw.print(prefix); pw.print("mCurSchedGroup="); pw.print(mCurSchedGroup);
                 pw.print(" setSchedGroup="); pw.print(setSchedGroup);
                 pw.print(" systemNoUi="); pw.print(systemNoUi);
@@ -672,6 +698,9 @@ class ProcessRecord implements WindowProcessListener {
 
     public void setPid(int _pid) {
         pid = _pid;
+        synchronized (mService.mOomAdjuster.mCachedAppOptimizer) {
+            mPidForCompact = _pid;
+        }
         mWindowProcessController.setPid(pid);
         procStatFile = null;
         shortStringName = null;
@@ -679,6 +708,18 @@ class ProcessRecord implements WindowProcessListener {
     }
 
     public void makeActive(IApplicationThread _thread, ProcessStatsService tracker) {
+        String seempStr = "app_uid=" + uid
+                            + ",app_pid=" + pid + ",oom_adj=" + curAdj
+                            + ",setAdj=" + setAdj + ",hasShownUi=" + (hasShownUi ? 1 : 0)
+                            + ",cached=" + (mCached ? 1 : 0)
+                            + ",fA=" + (mHasForegroundActivities ? 1 : 0)
+                            + ",fS=" + (mHasForegroundServices ? 1 : 0)
+                            + ",systemNoUi=" + (systemNoUi ? 1 : 0)
+                            + ",curSchedGroup=" + mCurSchedGroup
+                            + ",curProcState=" + getCurProcState() + ",setProcState=" + setProcState
+                            + ",killed=" + (killed ? 1 : 0) + ",killedByAm=" + (killedByAm ? 1 : 0)
+                            + ",isDebugging=" + (isDebugging() ? 1 : 0);
+        android.util.SeempLog.record_str(386, seempStr);
         if (thread == null) {
             final ProcessState origBase = baseProcessTracker;
             if (origBase != null) {
@@ -712,6 +753,18 @@ class ProcessRecord implements WindowProcessListener {
     }
 
     public void makeInactive(ProcessStatsService tracker) {
+        String seempStr = "app_uid=" + uid
+                            + ",app_pid=" + pid + ",oom_adj=" + curAdj
+                            + ",setAdj=" + setAdj + ",hasShownUi=" + (hasShownUi ? 1 : 0)
+                            + ",cached=" + (mCached ? 1 : 0)
+                            + ",fA=" + (mHasForegroundActivities ? 1 : 0)
+                            + ",fS=" + (mHasForegroundServices ? 1 : 0)
+                            + ",systemNoUi=" + (systemNoUi ? 1 : 0)
+                            + ",curSchedGroup=" + mCurSchedGroup
+                            + ",curProcState=" + getCurProcState() + ",setProcState=" + setProcState
+                            + ",killed=" + (killed ? 1 : 0) + ",killedByAm=" + (killedByAm ? 1 : 0)
+                            + ",isDebugging=" + (isDebugging() ? 1 : 0);
+        android.util.SeempLog.record_str(387, seempStr);
         thread = null;
         mWindowProcessController.setThread(null);
         final ProcessState origBase = baseProcessTracker;
@@ -909,6 +962,7 @@ class ProcessRecord implements WindowProcessListener {
     void kill(String reason, @Reason int reasonCode, @SubReason int subReason, boolean noisy) {
         if (!killedByAm) {
             Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "kill");
+            BoostFramework ux_perf = new BoostFramework();
             if (mService != null && (noisy || info.uid == mService.mCurOomAdjUid)) {
                 mService.reportUidInfoMessageLocked(TAG,
                         "Killing " + toShortString() + " (adj " + setAdj + "): " + reason,
@@ -926,6 +980,13 @@ class ProcessRecord implements WindowProcessListener {
                 killed = true;
                 killedByAm = true;
             }
+            if (ux_perf != null && !mService.mForceStopKill && !mNotResponding && !mCrashing) {
+                ux_perf.perfUXEngine_events(BoostFramework.UXE_EVENT_KILL, 0, this.processName, 0);
+            } else {
+                mService.mForceStopKill = false;
+            }
+            if (ux_perf != null)
+                ux_perf.perfHint(BoostFramework.VENDOR_HINT_KILL, this.processName, pid, 0);//sending Kill notification to PreKill iresspective of Kill reason.
             Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
         }
     }
@@ -1655,28 +1716,26 @@ class ProcessRecord implements WindowProcessListener {
         StringBuilder report = new StringBuilder();
         report.append(MemoryPressureUtil.currentPsiState());
         ProcessCpuTracker processCpuTracker = new ProcessCpuTracker(true);
+        ArrayList<Integer> nativePids = null;
 
         // don't dump native PIDs for background ANRs unless it is the process of interest
-        String[] nativeProcs = null;
+        String[] nativeProc = null;
         if (isSilentAnr || onlyDumpSelf) {
             for (int i = 0; i < NATIVE_STACKS_OF_INTEREST.length; i++) {
                 if (NATIVE_STACKS_OF_INTEREST[i].equals(processName)) {
-                    nativeProcs = new String[] { processName };
+                    nativeProc = new String[] { processName };
                     break;
                 }
             }
-        } else {
-            nativeProcs = NATIVE_STACKS_OF_INTEREST;
-        }
-
-        int[] pids = nativeProcs == null ? null : Process.getPidsForCommands(nativeProcs);
-        ArrayList<Integer> nativePids = null;
-
-        if (pids != null) {
-            nativePids = new ArrayList<>(pids.length);
-            for (int i : pids) {
-                nativePids.add(i);
+            int[] pid = nativeProc == null ? null : Process.getPidsForCommands(nativeProc);
+            if(pid != null){
+                nativePids = new ArrayList<>(pid.length);
+                for (int i : pid) {
+                    nativePids.add(i);
+                }
             }
+        } else {
+            nativePids = Watchdog.getInstance().getInterestingNativePids();
         }
 
         // For background ANRs, don't pass the ProcessCpuTracker to

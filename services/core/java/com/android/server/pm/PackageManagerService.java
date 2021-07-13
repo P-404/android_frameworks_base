@@ -20,6 +20,7 @@ import static android.Manifest.permission.DELETE_PACKAGES;
 import static android.Manifest.permission.INSTALL_PACKAGES;
 import static android.Manifest.permission.MANAGE_DEVICE_ADMINS;
 import static android.Manifest.permission.MANAGE_PROFILE_AND_DEVICE_OWNERS;
+import static android.Manifest.permission.QUERY_ALL_PACKAGES;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.REQUEST_DELETE_PACKAGES;
 import static android.Manifest.permission.SET_HARMFUL_APP_WARNINGS;
@@ -28,6 +29,7 @@ import static android.app.AppOpsManager.MODE_ALLOWED;
 import static android.app.AppOpsManager.MODE_DEFAULT;
 import static android.app.AppOpsManager.MODE_IGNORED;
 import static android.content.Intent.ACTION_MAIN;
+import static android.content.Intent.CATEGORY_BROWSABLE;
 import static android.content.Intent.CATEGORY_DEFAULT;
 import static android.content.Intent.CATEGORY_HOME;
 import static android.content.Intent.EXTRA_LONG_VERSION_CODE;
@@ -318,6 +320,7 @@ import android.util.Xml;
 import android.util.apk.ApkSignatureVerifier;
 import android.util.jar.StrictJarFile;
 import android.util.proto.ProtoOutputStream;
+import android.util.BoostFramework;
 import android.view.Display;
 
 import com.android.internal.R;
@@ -1110,6 +1113,7 @@ public class PackageManagerService extends IPackageManager.Stub
         public @NonNull String requiredPermissionControllerPackage;
         public @NonNull String requiredUninstallerPackage;
         public @Nullable String requiredVerifierPackage;
+        public @Nullable String optionalVerifierPackage;
         public String[] separateProcesses;
         public @NonNull String servicesExtensionPackageName;
         public @Nullable String setupWizardPackage;
@@ -1634,6 +1638,7 @@ public class PackageManagerService extends IPackageManager.Stub
             | FLAG_PERMISSION_REVOKED_COMPAT;
 
     final @Nullable String mRequiredVerifierPackage;
+    final @Nullable String mOptionalVerifierPackage;
     final @NonNull String mRequiredInstallerPackage;
     final @NonNull String mRequiredUninstallerPackage;
     final @NonNull String mRequiredPermissionControllerPackage;
@@ -2799,6 +2804,7 @@ public class PackageManagerService extends IPackageManager.Stub
         mSeparateProcesses = testParams.separateProcesses;
         mViewCompiler = testParams.viewCompiler;
         mRequiredVerifierPackage = testParams.requiredVerifierPackage;
+        mOptionalVerifierPackage = testParams.optionalVerifierPackage;
         mRequiredInstallerPackage = testParams.requiredInstallerPackage;
         mRequiredUninstallerPackage = testParams.requiredUninstallerPackage;
         mRequiredPermissionControllerPackage = testParams.requiredPermissionControllerPackage;
@@ -3546,6 +3552,7 @@ public class PackageManagerService extends IPackageManager.Stub
 
             if (!mOnlyCore) {
                 mRequiredVerifierPackage = getRequiredButNotReallyRequiredVerifierLPr();
+                mOptionalVerifierPackage = getOptionalVerifierLPr();
                 mRequiredInstallerPackage = getRequiredInstallerLPr();
                 mRequiredUninstallerPackage = getRequiredUninstallerLPr();
                 mIntentFilterVerifierComponent = getIntentFilterVerifierComponentNameLPr();
@@ -3561,6 +3568,7 @@ public class PackageManagerService extends IPackageManager.Stub
                         SharedLibraryInfo.VERSION_UNDEFINED);
             } else {
                 mRequiredVerifierPackage = null;
+                mOptionalVerifierPackage = null;
                 mRequiredInstallerPackage = null;
                 mRequiredUninstallerPackage = null;
                 mIntentFilterVerifierComponent = null;
@@ -3658,8 +3666,6 @@ public class PackageManagerService extends IPackageManager.Stub
         PackageParser.readConfigUseRoundIcon(mContext.getResources());
 
         mServiceStartWithDelay = SystemClock.uptimeMillis() + (60 * 1000L);
-
-        Slog.i(TAG, "Fix for b/169414761 is applied");
     }
 
     /**
@@ -3991,11 +3997,38 @@ public class PackageManagerService extends IPackageManager.Stub
                 UserHandle.USER_SYSTEM, false /*allowDynamicSplits*/);
         if (matches.size() == 1) {
             return matches.get(0).getComponentInfo().packageName;
+        } else if (matches.size() > 1) {
+                String optionalVerifierName = mContext.getResources().getString(R.string.config_optionalPackageVerifierName);
+                if (TextUtils.isEmpty(optionalVerifierName))
+                    return matches.get(0).getComponentInfo().packageName;
+            for (int i = 0; i < matches.size(); i++) {
+                if (!matches.get(i).getComponentInfo().packageName.contains(optionalVerifierName))
+                    return matches.get(i).getComponentInfo().packageName;
+            }
         } else if (matches.size() == 0) {
             Log.e(TAG, "There should probably be a verifier, but, none were found");
             return null;
         }
         throw new RuntimeException("There must be exactly one verifier; found " + matches);
+    }
+
+    private @Nullable String getOptionalVerifierLPr() {
+        final Intent intent = new Intent("com.qualcomm.qti.intent.action.PACKAGE_NEEDS_OPTIONAL_VERIFICATION");
+
+        final List<ResolveInfo> matches = queryIntentReceiversInternal(intent, PACKAGE_MIME_TYPE,
+                MATCH_SYSTEM_ONLY | MATCH_DIRECT_BOOT_AWARE | MATCH_DIRECT_BOOT_UNAWARE,
+                UserHandle.USER_SYSTEM, false /*allowDynamicSplits*/);
+        if (matches.size() >= 1) {
+            String optionalVerifierName = mContext.getResources().getString(R.string.config_optionalPackageVerifierName);
+            if (TextUtils.isEmpty(optionalVerifierName))
+                return null;
+            for (int i = 0; i < matches.size(); i++) {
+                if (matches.get(i).getComponentInfo().packageName.contains(optionalVerifierName)) {
+                    return matches.get(i).getComponentInfo().packageName;
+                }
+            }
+        }
+        return null;
     }
 
     private @NonNull String getRequiredSharedLibraryLPr(String name, int version) {
@@ -6178,6 +6211,10 @@ public class PackageManagerService extends IPackageManager.Stub
 
     @Override
     public List<String> getAllPackages() {
+        // Allow iorapd to call this method.
+        if (Binder.getCallingUid() != Process.IORAPD_UID) {
+            enforceSystemOrRootOrShell("getAllPackages is limited to privileged callers");
+        }
         final int callingUid = Binder.getCallingUid();
         final int callingUserId = UserHandle.getUserId(callingUid);
         synchronized (mLock) {
@@ -6456,14 +6493,10 @@ public class PackageManagerService extends IPackageManager.Stub
                     true /*allowDynamicSplits*/);
             Trace.traceEnd(TRACE_TAG_PACKAGE_MANAGER);
 
-            final boolean queryMayBeFiltered =
-                    UserHandle.getAppId(filterCallingUid) >= Process.FIRST_APPLICATION_UID
-                            && !resolveForStart;
-
             final ResolveInfo bestChoice =
                     chooseBestActivity(
                             intent, resolvedType, flags, privateResolveFlags, query, userId,
-                            queryMayBeFiltered);
+                            queryMayBeFiltered(filterCallingUid, resolveForStart));
             final boolean nonBrowserOnly =
                     (privateResolveFlags & PackageManagerInternal.RESOLVE_NON_BROWSER_ONLY) != 0;
             if (nonBrowserOnly && bestChoice != null && bestChoice.handleAllWebDataURI) {
@@ -6473,6 +6506,25 @@ public class PackageManagerService extends IPackageManager.Stub
         } finally {
             Trace.traceEnd(TRACE_TAG_PACKAGE_MANAGER);
         }
+    }
+
+    /**
+     * Returns whether the query may be filtered to packages which are visible to the caller.
+     * Filtering occurs except in the following cases:
+     * <ul>
+     *     <li>system processes
+     *     <li>applications granted {@link android.Manifest.permission#QUERY_ALL_PACKAGES}
+     *     <li>when querying to start an app
+     * </ul>
+     *
+     * @param filterCallingUid the UID of the calling application
+     * @param queryForStart whether query is to start an app
+     * @return whether filtering may occur
+     */
+    private boolean queryMayBeFiltered(int filterCallingUid, boolean queryForStart) {
+        return UserHandle.getAppId(filterCallingUid) >= Process.FIRST_APPLICATION_UID
+                && checkUidPermission(QUERY_ALL_PACKAGES, filterCallingUid) != PERMISSION_GRANTED
+                && !queryForStart;
     }
 
     @Override
@@ -6840,7 +6892,7 @@ public class PackageManagerService extends IPackageManager.Stub
             boolean removeMatches, boolean debug, int userId) {
         return findPreferredActivityNotLocked(
                 intent, resolvedType, flags, query, priority, always, removeMatches, debug, userId,
-                UserHandle.getAppId(Binder.getCallingUid()) >= Process.FIRST_APPLICATION_UID);
+                queryMayBeFiltered(Binder.getCallingUid(), /* queryForStart= */ false));
     }
 
     // TODO: handle preferred activities missing while user has amnesia
@@ -7706,13 +7758,6 @@ public class PackageManagerService extends IPackageManager.Stub
                             Slog.i(TAG, "  + always: " + info.activityInfo.packageName
                                     + " : linkgen=" + linkGeneration);
                         }
-
-                        if (!intent.hasCategory(CATEGORY_BROWSABLE)
-                                || !intent.hasCategory(CATEGORY_DEFAULT)) {
-                            undefinedList.add(info);
-                            continue;
-                        }
-
                         // Use link-enabled generation as preferredOrder, i.e.
                         // prefer newly-enabled over earlier-enabled.
                         info.preferredOrder = linkGeneration;
@@ -12508,6 +12553,7 @@ public class PackageManagerService extends IPackageManager.Stub
                     if (hasOldPkg) {
                         mPermissionManager.revokeRuntimePermissionsIfGroupChanged(pkg, oldPkg,
                                 allPackageNames);
+                        mPermissionManager.revokeStoragePermissionsIfScopeExpanded(pkg, oldPkg);
                     }
                     if (hasPermissionDefinitionChanges) {
                         mPermissionManager.revokeRuntimePermissionsIfPermissionDefinitionChanged(
@@ -15310,6 +15356,9 @@ public class PackageManagerService extends IPackageManager.Stub
                     : getPackageUid(mRequiredVerifierPackage, MATCH_DEBUG_TRIAGED_MISSING,
                             verifierUser.getIdentifier());
             verificationState.setRequiredVerifierUid(requiredUid);
+            final int optionalUid = mOptionalVerifierPackage == null ? -1
+                    : getPackageUid(mOptionalVerifierPackage, MATCH_DEBUG_TRIAGED_MISSING,
+                            verifierUser.getIdentifier());
             final int installerUid =
                     verificationInfo == null ? -1 : verificationInfo.installerUid;
             final boolean isVerificationEnabled = isVerificationEnabled(
@@ -15392,14 +15441,42 @@ public class PackageManagerService extends IPackageManager.Stub
                     }
                 }
 
+                if (mOptionalVerifierPackage != null) {
+                    final Intent optionalIntent = new Intent(verification);
+                    optionalIntent.setAction("com.qualcomm.qti.intent.action.PACKAGE_NEEDS_OPTIONAL_VERIFICATION");
+                    final List<ResolveInfo> optional_receivers = queryIntentReceiversInternal(optionalIntent,
+                        PACKAGE_MIME_TYPE, 0, verifierUser.getIdentifier(), false /*allowDynamicSplits*/);
+                    final ComponentName optionalVerifierComponent = matchComponentForVerifier(
+                        mOptionalVerifierPackage, optional_receivers);
+                    optionalIntent.setComponent(optionalVerifierComponent);
+                    verificationState.addOptionalVerifier(optionalUid);
+                    if (mRequiredVerifierPackage != null) {
+                        mContext.sendBroadcastAsUser(optionalIntent, verifierUser, android.Manifest.permission.PACKAGE_VERIFICATION_AGENT);
+                    } else {
+                        mContext.sendOrderedBroadcastAsUser(optionalIntent, verifierUser, android.Manifest.permission.PACKAGE_VERIFICATION_AGENT,
+                        new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context context, Intent intent) {
+                                final Message msg = mHandler.obtainMessage(CHECK_PENDING_VERIFICATION);
+                                msg.arg1 = verificationId;
+                                mHandler.sendMessageDelayed(msg, getVerificationTimeout());
+                            }
+                        }, null, 0, null, null);
+                        /*
+                         * We don't want the copy to proceed until
+                         * verification succeeds.
+                         */
+                        mVerificationCompleted = false;
+                    }
+                }
                 if (mRequiredVerifierPackage != null) {
-                    final ComponentName requiredVerifierComponent = matchComponentForVerifier(
-                            mRequiredVerifierPackage, receivers);
                     /*
                      * Send the intent to the required verification agent,
                      * but only start the verification timeout after the
                      * target BroadcastReceivers have run.
                      */
+                    final ComponentName requiredVerifierComponent = matchComponentForVerifier(
+                            mRequiredVerifierPackage, receivers);
                     verification.setComponent(requiredVerifierComponent);
                     idleController.addPowerSaveTempWhitelistApp(Process.myUid(),
                             mRequiredVerifierPackage, idleDuration,
@@ -16101,6 +16178,8 @@ public class PackageManagerService extends IPackageManager.Stub
         final String installerPackageName = installSource.installerPackageName;
 
         if (DEBUG_INSTALL) Slog.d(TAG, "New package installed in " + pkg.getCodePath());
+        if (pkgName != null)
+            acquireUxPerfLock(BoostFramework.UXE_EVENT_PKG_INSTALL, pkgName, 0);
         synchronized (mLock) {
 // NOTE: This changes slightly to include UPDATE_PERMISSIONS_ALL regardless of the size of pkg.permissions
             mPermissionManager.updatePermissions(pkgName, pkg);
@@ -17341,6 +17420,11 @@ public class PackageManagerService extends IPackageManager.Stub
                     // on the device; we should replace it.
                     replace = true;
                     if (DEBUG_INSTALL) Slog.d(TAG, "Replace existing pacakge: " + pkgName);
+                    acquireUxPerfLock(BoostFramework.UXE_EVENT_PKG_INSTALL, pkgName, 1);
+                    BoostFramework mPerf = new BoostFramework();
+                    if (mPerf != null) {
+                        mPerf.perfHint(BoostFramework.VENDOR_HINT_APP_UPDATE, pkgName, -1, 0);
+                    }
                 }
 
                 if (replace) {
@@ -18647,7 +18731,17 @@ public class PackageManagerService extends IPackageManager.Stub
             }
         }
 
+        if (res && packageName != null) {
+            acquireUxPerfLock(BoostFramework.UXE_EVENT_PKG_UNINSTALL, packageName, userId);
+        }
         return res ? PackageManager.DELETE_SUCCEEDED : PackageManager.DELETE_FAILED_INTERNAL_ERROR;
+    }
+
+    private void acquireUxPerfLock(int opcode, String pkgName, int dat) {
+        BoostFramework ux_perf = new BoostFramework();
+        if (ux_perf != null) {
+            ux_perf.perfUXEngine_events(opcode, 0, pkgName, dat);
+        }
     }
 
     static class PackageRemovedInfo {
@@ -21636,6 +21730,7 @@ public class PackageManagerService extends IPackageManager.Stub
         }, overlayFilter);
 
         mModuleInfoProvider.systemReady();
+        new BoostFramework(mContext, true);
 
         // Installer service might attempt to install some packages that have been staged for
         // installation on reboot. Make sure this is the last component to be call since the
@@ -22569,7 +22664,7 @@ public class PackageManagerService extends IPackageManager.Stub
         final StorageManager sm = mInjector.getStorageManager();
         UserManagerInternal umInternal = mInjector.getUserManagerInternal();
         for (UserInfo user : mUserManager.getUsers(false /* includeDying */)) {
-            final int flags;
+            int flags = 0;
             if (umInternal.isUserUnlockingOrUnlocked(user.id)) {
                 flags = StorageManager.FLAG_STORAGE_DE | StorageManager.FLAG_STORAGE_CE;
             } else if (umInternal.isUserRunning(user.id)) {
@@ -22577,9 +22672,12 @@ public class PackageManagerService extends IPackageManager.Stub
             } else {
                 continue;
             }
-
+            if ((vol.disk.flags & DiskInfo.FLAG_UFS_CARD) == DiskInfo.FLAG_UFS_CARD) {
+                flags = flags | DiskInfo.FLAG_UFS_CARD;
+            }
+            final int pflags = flags;
             try {
-                sm.prepareUserStorage(volumeUuid, user.id, user.serialNumber, flags);
+                sm.prepareUserStorage(volumeUuid, user.id, user.serialNumber, pflags);
                 synchronized (mInstallLock) {
                     reconcileAppsDataLI(volumeUuid, user.id, flags, true /* migrateAppData */);
                 }

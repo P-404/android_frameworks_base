@@ -639,6 +639,7 @@ public class LocationManager {
     @RequiresPermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
     @Nullable
     public Location getLastKnownLocation(@NonNull String provider) {
+        android.util.SeempLog.record(46);
         Preconditions.checkArgument(provider != null, "invalid null provider");
 
         LocationRequest request = LocationRequest.createFromDeprecatedProvider(
@@ -765,6 +766,7 @@ public class LocationManager {
     @RequiresPermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
     public void requestSingleUpdate(
             @NonNull String provider, @NonNull LocationListener listener, @Nullable Looper looper) {
+        android.util.SeempLog.record(64);
         Preconditions.checkArgument(provider != null, "invalid null provider");
         Preconditions.checkArgument(listener != null, "invalid null listener");
 
@@ -797,6 +799,7 @@ public class LocationManager {
             @NonNull Criteria criteria,
             @NonNull LocationListener listener,
             @Nullable Looper looper) {
+        android.util.SeempLog.record(64);
         Preconditions.checkArgument(criteria != null, "invalid null criteria");
         Preconditions.checkArgument(listener != null, "invalid null listener");
 
@@ -825,6 +828,7 @@ public class LocationManager {
     @RequiresPermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
     public void requestSingleUpdate(@NonNull String provider,
             @NonNull PendingIntent pendingIntent) {
+        android.util.SeempLog.record(64);
         Preconditions.checkArgument(provider != null, "invalid null provider");
 
         LocationRequest request = LocationRequest.createFromDeprecatedProvider(
@@ -853,6 +857,7 @@ public class LocationManager {
     @RequiresPermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
     public void requestSingleUpdate(@NonNull Criteria criteria,
             @NonNull PendingIntent pendingIntent) {
+        android.util.SeempLog.record(64);
         Preconditions.checkArgument(criteria != null, "invalid null criteria");
 
         LocationRequest request = LocationRequest.createFromDeprecatedCriteria(
@@ -923,6 +928,7 @@ public class LocationManager {
     @RequiresPermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
     public void requestLocationUpdates(@NonNull String provider, long minTimeMs, float minDistanceM,
             @NonNull LocationListener listener) {
+        android.util.SeempLog.record(47);
         Preconditions.checkArgument(provider != null, "invalid null provider");
         Preconditions.checkArgument(listener != null, "invalid null listener");
 
@@ -952,6 +958,7 @@ public class LocationManager {
     @RequiresPermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
     public void requestLocationUpdates(@NonNull String provider, long minTimeMs, float minDistanceM,
             @NonNull LocationListener listener, @Nullable Looper looper) {
+        android.util.SeempLog.record(47);
         Preconditions.checkArgument(provider != null, "invalid null provider");
         Preconditions.checkArgument(listener != null, "invalid null listener");
 
@@ -985,6 +992,7 @@ public class LocationManager {
             float minDistanceM,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull LocationListener listener) {
+        android.util.SeempLog.record(47);
         LocationRequest request = LocationRequest.createFromDeprecatedProvider(
                 provider, minTimeMs, minDistanceM, false);
         requestLocationUpdates(request, executor, listener);
@@ -1010,6 +1018,7 @@ public class LocationManager {
     public void requestLocationUpdates(long minTimeMs, float minDistanceM,
             @NonNull Criteria criteria, @NonNull LocationListener listener,
             @Nullable Looper looper) {
+        android.util.SeempLog.record(47);
         Preconditions.checkArgument(criteria != null, "invalid null criteria");
         Preconditions.checkArgument(listener != null, "invalid null listener");
 
@@ -1043,6 +1052,7 @@ public class LocationManager {
             @NonNull Criteria criteria,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull LocationListener listener) {
+        android.util.SeempLog.record(47);
         LocationRequest request = LocationRequest.createFromDeprecatedCriteria(
                 criteria, minTimeMs, minDistanceM, false);
         requestLocationUpdates(request, executor, listener);
@@ -1073,6 +1083,7 @@ public class LocationManager {
     @RequiresPermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
     public void requestLocationUpdates(@NonNull String provider, long minTimeMs, float minDistanceM,
             @NonNull PendingIntent pendingIntent) {
+        android.util.SeempLog.record(47);
         Preconditions.checkArgument(provider != null, "invalid null provider");
 
         LocationRequest request = LocationRequest.createFromDeprecatedProvider(
@@ -1099,6 +1110,7 @@ public class LocationManager {
     @RequiresPermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
     public void requestLocationUpdates(long minTimeMs, float minDistanceM,
             @NonNull Criteria criteria, @NonNull PendingIntent pendingIntent) {
+        android.util.SeempLog.record(47);
         Preconditions.checkArgument(criteria != null, "invalid null criteria");
 
         LocationRequest request = LocationRequest.createFromDeprecatedCriteria(
@@ -1135,6 +1147,7 @@ public class LocationManager {
             @Nullable LocationRequest locationRequest,
             @NonNull LocationListener listener,
             @Nullable Looper looper) {
+        android.util.SeempLog.record(47);
         Handler handler = looper == null ? new Handler() : new Handler(looper);
         requestLocationUpdates(locationRequest, new HandlerExecutor(handler), listener);
     }
@@ -1163,6 +1176,7 @@ public class LocationManager {
             @Nullable LocationRequest locationRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull LocationListener listener) {
+        android.util.SeempLog.record(47);
         synchronized (mListeners) {
             LocationListenerTransport transport = mListeners.get(listener);
             if (transport != null) {
@@ -1213,6 +1227,7 @@ public class LocationManager {
     public void requestLocationUpdates(
             @Nullable LocationRequest locationRequest,
             @NonNull PendingIntent pendingIntent) {
+        android.util.SeempLog.record(47);
         Preconditions.checkArgument(locationRequest != null, "invalid null location request");
         Preconditions.checkArgument(pendingIntent != null, "invalid null pending intent");
         if (Compatibility.isChangeEnabled(TARGETED_PENDING_INTENT)) {
@@ -1470,6 +1485,7 @@ public class LocationManager {
      */
     public boolean sendExtraCommand(
             @NonNull String provider, @NonNull String command, @Nullable Bundle extras) {
+        android.util.SeempLog.record(48);
         Preconditions.checkArgument(provider != null, "invalid null provider");
         Preconditions.checkArgument(command != null, "invalid null command");
 
@@ -1689,6 +1705,7 @@ public class LocationManager {
     @RequiresPermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
     public void addProximityAlert(double latitude, double longitude, float radius, long expiration,
             @NonNull PendingIntent intent) {
+        android.util.SeempLog.record(45);
         Preconditions.checkArgument(intent != null, "invalid null pending intent");
         if (Compatibility.isChangeEnabled(TARGETED_PENDING_INTENT)) {
             Preconditions.checkArgument(intent.isTargetedToPackage(),
@@ -1949,6 +1966,7 @@ public class LocationManager {
     @Deprecated
     @RequiresPermission(ACCESS_FINE_LOCATION)
     public boolean addGpsStatusListener(GpsStatus.Listener listener) {
+        android.util.SeempLog.record(43);
         if (Compatibility.isChangeEnabled(GPS_STATUS_USAGE)) {
             throw new UnsupportedOperationException(
                     "GpsStatus APIs not supported, please use GnssStatus APIs instead");
@@ -2068,6 +2086,7 @@ public class LocationManager {
     @Deprecated
     @RequiresPermission(ACCESS_FINE_LOCATION)
     public boolean addNmeaListener(@NonNull GpsStatus.NmeaListener listener) {
+        android.util.SeempLog.record(44);
         return false;
     }
 

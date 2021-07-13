@@ -107,6 +107,10 @@ public class ScreenDecorations extends SystemUI implements Tunable {
     public static final String PADDING = "sysui_rounded_content_padding";
     private static final boolean DEBUG_SCREENSHOT_ROUNDED_CORNERS =
             SystemProperties.getBoolean("debug.screenshot_rounded_corners", false);
+
+    private static int mDisableRoundedCorner =
+            SystemProperties.getInt("vendor.display.disable_rounded_corner", 0);
+
     private static final boolean VERBOSE = false;
     private static final boolean DEBUG_COLOR = DEBUG_SCREENSHOT_ROUNDED_CORNERS;
 
@@ -616,8 +620,11 @@ public class ScreenDecorations extends SystemUI implements Tunable {
         // upgrading all of the configs to contain (width, height) pairs. Instead assume that a
         // device configured using the single integer config value is okay with drawing the corners
         // as a square
-        final int newRoundedDefault = mContext.getResources().getDimensionPixelSize(
+        int newRoundedDefault = mContext.getResources().getDimensionPixelSize(
                 com.android.internal.R.dimen.rounded_corner_radius);
+        if (mDisableRoundedCorner == 1) {
+            newRoundedDefault = 0;
+        }
         final int newRoundedDefaultTop = mContext.getResources().getDimensionPixelSize(
                 com.android.internal.R.dimen.rounded_corner_radius_top);
         final int newRoundedDefaultBottom = mContext.getResources().getDimensionPixelSize(
@@ -736,6 +743,10 @@ public class ScreenDecorations extends SystemUI implements Tunable {
     }
 
     static boolean shouldDrawCutout(Context context) {
+        if (mDisableRoundedCorner == 1) {
+           return false;
+        }
+
         return context.getResources().getBoolean(
                 com.android.internal.R.bool.config_fillMainBuiltInDisplayCutout);
     }

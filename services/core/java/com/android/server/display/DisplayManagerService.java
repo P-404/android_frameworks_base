@@ -94,6 +94,7 @@ import android.util.SparseArray;
 import android.util.Spline;
 import android.view.Display;
 import android.view.DisplayInfo;
+import android.view.DisplayAddress;
 import android.view.Surface;
 import android.view.SurfaceControl;
 
@@ -226,6 +227,7 @@ public final class DisplayManagerService extends SystemService {
     private final SparseArray<LogicalDisplay> mLogicalDisplays =
             new SparseArray<LogicalDisplay>();
     private int mNextNonDefaultDisplayId = Display.DEFAULT_DISPLAY + 1;
+    private int mNextBuiltInDisplayId = 4096;
 
     // List of all display transaction listeners.
     private final CopyOnWriteArrayList<DisplayTransactionListener> mDisplayTransactionListeners =
@@ -322,6 +324,13 @@ public final class DisplayManagerService extends SystemService {
     // Receives notifications about changes to Settings.
     private SettingsObserver mSettingsObserver;
 
+    // The synchronization root for the display dumpsys.
+    private final SyncRoot mSyncDump = new SyncRoot();
+
+    // Whether dump is inprogress or not.
+    @GuardedBy("mSyncDump")
+    private boolean mDumpInProgress;
+
     public DisplayManagerService(Context context) {
         this(context, new Injector());
     }
@@ -355,6 +364,7 @@ public final class DisplayManagerService extends SystemService {
         mWideColorSpace = colorSpaces[1];
 
         mSystemReady = false;
+        mDumpInProgress = false;
     }
 
     public void setupSchedulerPolicies() {
@@ -1080,7 +1090,7 @@ public final class DisplayManagerService extends SystemService {
             return null;
         }
 
-        final int displayId = assignDisplayIdLocked(isDefault);
+        final int displayId = assignDisplayIdLocked(isDefault, deviceInfo.address);
         final int layerStack = assignLayerStackLocked(displayId);
 
         LogicalDisplay display = new LogicalDisplay(displayId, layerStack, device);
@@ -1112,6 +1122,19 @@ public final class DisplayManagerService extends SystemService {
 
     private int assignDisplayIdLocked(boolean isDefault) {
         return isDefault ? Display.DEFAULT_DISPLAY : mNextNonDefaultDisplayId++;
+    }
+
+    private int assignDisplayIdLocked(boolean isDefault, DisplayAddress address) {
+        boolean isDisplayBuiltIn = false;
+        if (address instanceof DisplayAddress.Physical) {
+          isDisplayBuiltIn =
+                   (((DisplayAddress.Physical) address).getPort() < 0);
+        }
+        if (!isDefault && isDisplayBuiltIn) {
+            return mNextBuiltInDisplayId++;
+        }
+
+        return assignDisplayIdLocked(isDefault);
     }
 
     private int assignLayerStackLocked(int displayId) {
@@ -1691,6 +1714,14 @@ public final class DisplayManagerService extends SystemService {
     }
 
     private void dumpInternal(PrintWriter pw) {
+        synchronized (mSyncDump) {
+            if (mDumpInProgress) {
+                pw.println("One dump is in service already.");
+                return;
+            }
+            mDumpInProgress = true;
+        }
+
         pw.println("DISPLAY MANAGER (dumpsys display)");
 
         synchronized (mSyncRoot) {
@@ -1751,6 +1782,9 @@ public final class DisplayManagerService extends SystemService {
 
             pw.println();
             mPersistentDataStore.dump(pw);
+        }
+        synchronized (mSyncDump) {
+            mDumpInProgress = false;
         }
     }
 

@@ -1173,6 +1173,7 @@ public class DisplayModeDirector {
         // changeable and low power mode off. After initialization, these states will
         // be updated from the same handler thread.
         private int mDefaultDisplayState = Display.STATE_UNKNOWN;
+        private boolean mIsDeviceActive = false;
         private boolean mRefreshRateChangeable = false;
         private boolean mLowPowerModeEnabled = false;
 
@@ -1362,6 +1363,7 @@ public class DisplayModeDirector {
             pw.println("    mAmbientLux: " + mAmbientLux);
             pw.println("    mBrightness: " + mBrightness);
             pw.println("    mDefaultDisplayState: " + mDefaultDisplayState);
+            pw.println("    mIsDeviceActive: " + mIsDeviceActive);
             pw.println("    mLowPowerModeEnabled: " + mLowPowerModeEnabled);
             pw.println("    mRefreshRateChangeable: " + mRefreshRateChangeable);
             pw.println("    mShouldObserveDisplayLowChange: " + mShouldObserveDisplayLowChange);
@@ -1568,8 +1570,8 @@ public class DisplayModeDirector {
             }
 
             if (mLoggingEnabled) {
-                Slog.d(TAG, "Display brightness " + mBrightness + ", ambient lux " +  mAmbientLux
-                        + ", Vote " + vote);
+                Slog.d(TAG, "Display brightness " + mBrightness + ", ambient lux " +  mAmbientLux +
+                        ", Vote " + vote);
             }
             updateVoteLocked(Vote.PRIORITY_FLICKER, vote);
         }
@@ -1596,11 +1598,6 @@ public class DisplayModeDirector {
 
         @VisibleForTesting
         public void setDefaultDisplayState(int state) {
-            if (mLoggingEnabled) {
-                Slog.d(TAG, "setDefaultDisplayState: mDefaultDisplayState = "
-                        + mDefaultDisplayState + ", state = " + state);
-            }
-
             if (mDefaultDisplayState != state) {
                 mDefaultDisplayState = state;
                 updateSensorStatus();
@@ -1612,28 +1609,13 @@ public class DisplayModeDirector {
                 return;
             }
 
-            if (mLoggingEnabled) {
-                Slog.d(TAG, "updateSensorStatus: mShouldObserveAmbientLowChange = "
-                        + mShouldObserveAmbientLowChange + ", mShouldObserveAmbientHighChange = "
-                        + mShouldObserveAmbientHighChange);
-                Slog.d(TAG, "updateSensorStatus: mLowPowerModeEnabled = "
-                        + mLowPowerModeEnabled + ", mRefreshRateChangeable = "
-                        + mRefreshRateChangeable);
-            }
-
             if ((mShouldObserveAmbientLowChange || mShouldObserveAmbientHighChange)
                      && isDeviceActive() && !mLowPowerModeEnabled && mRefreshRateChangeable) {
                 mSensorManager.registerListener(mLightSensorListener,
                         mLightSensor, LIGHT_SENSOR_RATE_MS * 1000, mHandler);
-                if (mLoggingEnabled) {
-                    Slog.d(TAG, "updateSensorStatus: registerListener");
-                }
             } else {
                 mLightSensorListener.removeCallbacks();
                 mSensorManager.unregisterListener(mLightSensorListener);
-                if (mLoggingEnabled) {
-                    Slog.d(TAG, "updateSensorStatus: unregisterListener");
-                }
             }
         }
 
@@ -1651,7 +1633,6 @@ public class DisplayModeDirector {
                 pw.println("    mLastSensorData: " + mLastSensorData);
                 pw.println("    mTimestamp: " + formatTimestamp(mTimestamp));
             }
-
 
             public void setLoggingEnabled(boolean loggingEnabled) {
                 if (mLoggingEnabled == loggingEnabled) {
@@ -1912,6 +1893,7 @@ public class DisplayModeDirector {
 
         void registerPeakRefreshRateObserver(@NonNull ContentResolver cr,
                 @NonNull ContentObserver observer);
+
     }
 
     @VisibleForTesting
@@ -1942,6 +1924,7 @@ public class DisplayModeDirector {
             cr.registerContentObserver(PEAK_REFRESH_RATE_URI, false /*notifyDescendants*/,
                     observer, UserHandle.USER_SYSTEM);
         }
+
     }
 
 }

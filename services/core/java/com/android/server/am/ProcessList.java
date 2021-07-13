@@ -104,6 +104,7 @@ import android.util.Pair;
 import android.util.Slog;
 import android.util.SparseArray;
 import android.util.SparseBooleanArray;
+import android.util.BoostFramework;
 import android.view.Display;
 
 import com.android.internal.annotations.GuardedBy;
@@ -508,6 +509,11 @@ public final class ProcessList {
      * The buffer to be used to receive the SIGCHLD data, it includes pid/uid/status.
      */
     private final int[] mZygoteSigChldMessage = new int[3];
+
+    /**
+     * BoostFramework Object
+     */
+    public static BoostFramework mPerfServiceStartHint = new BoostFramework();
 
     final class IsolatedUidRange {
         @VisibleForTesting
@@ -2301,6 +2307,16 @@ public final class ProcessList {
                         whitelistedAppDataInfoMap, bindMountAppsData, bindMountAppStorageDirs,
                         new String[]{PROC_START_SEQ_IDENT + app.startSeq});
             }
+            if (mPerfServiceStartHint != null) {
+                if ((hostingRecord.getType() != null)
+                       && (hostingRecord.getType().equals("activity")
+                               || hostingRecord.getType().equals("pre-top-activity"))) {
+                                   //TODO: not acting on pre-activity
+                    if (startResult != null) {
+                        mPerfServiceStartHint.perfHint(BoostFramework.VENDOR_HINT_FIRST_LAUNCH_BOOST, app.processName, startResult.pid, BoostFramework.Launch.TYPE_START_PROC);
+                    }
+                }
+            }
             checkSlow(startTime, "startProcess: returned from zygote!");
             return startResult;
         } finally {
@@ -2336,7 +2352,7 @@ public final class ProcessList {
             if ((intentFlags & Intent.FLAG_FROM_BACKGROUND) != 0) {
                 // If we are in the background, then check to see if this process
                 // is bad.  If so, we will just silently fail.
-                if (mService.mAppErrors.isBadProcessLocked(info)) {
+                if (mService.mAppErrors.isBadProcess(info.processName, info.uid)) {
                     if (DEBUG_PROCESSES) Slog.v(TAG, "Bad process: " + info.uid
                             + "/" + info.processName);
                     return null;
@@ -2349,11 +2365,11 @@ public final class ProcessList {
                 if (DEBUG_PROCESSES) Slog.v(TAG, "Clearing bad process: " + info.uid
                         + "/" + info.processName);
                 mService.mAppErrors.resetProcessCrashTimeLocked(info);
-                if (mService.mAppErrors.isBadProcessLocked(info)) {
+                if (mService.mAppErrors.isBadProcess(info.processName, info.uid)) {
                     EventLog.writeEvent(EventLogTags.AM_PROC_GOOD,
                             UserHandle.getUserId(info.uid), info.uid,
                             info.processName);
-                    mService.mAppErrors.clearBadProcessLocked(info);
+                    mService.mAppErrors.clearBadProcess(info.processName, info.uid);
                     if (app != null) {
                         app.bad = false;
                     }

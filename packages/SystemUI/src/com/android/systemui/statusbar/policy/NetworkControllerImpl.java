@@ -40,6 +40,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.PersistableBundle;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.telephony.CarrierConfigManager;
 import android.telephony.CellSignalStrength;
@@ -56,6 +57,7 @@ import android.util.SparseArray;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.telephony.TelephonyIntents;
 import com.android.settingslib.net.DataUsageController;
 import com.android.systemui.DemoMode;
 import com.android.systemui.Dumpable;
@@ -160,6 +162,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
     private boolean mSimDetected;
     private boolean mForceCellularValidated;
 
+    @VisibleForTesting
+    FiveGServiceClient mFiveGServiceClient;
+
     private ConfigurationController.ConfigurationListener mConfigurationListener =
             new ConfigurationController.ConfigurationListener() {
                 @Override
@@ -254,7 +259,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
                         deviceProvisionedController.getCurrentUser()));
             }
         });
-
+        mFiveGServiceClient = FiveGServiceClient.getInstance(context);
         ConnectivityManager.NetworkCallback callback = new ConnectivityManager.NetworkCallback(){
             private Network mLastNetwork;
             private NetworkCapabilities mLastNetworkCapabilities;
@@ -334,6 +339,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
         for (int i = 0; i < mMobileSignalControllers.size(); i++) {
             MobileSignalController mobileSignalController = mMobileSignalControllers.valueAt(i);
             mobileSignalController.registerListener();
+            mobileSignalController.registerFiveGStateListener(mFiveGServiceClient);
         }
         if (mSubscriptionListener == null) {
             mSubscriptionListener = new SubListener();
@@ -355,6 +361,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
         filter.addAction(ConnectivityManager.INET_CONDITION_ACTION);
         filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
         filter.addAction(CarrierConfigManager.ACTION_CARRIER_CONFIG_CHANGED);
+        filter.addAction(TelephonyIntents.ACTION_ANY_DATA_CONNECTION_STATE_CHANGED);
         mBroadcastDispatcher.registerReceiverWithHandler(this, filter, mReceiverHandler);
         mListening = true;
 
@@ -389,6 +396,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
         for (int i = 0; i < mMobileSignalControllers.size(); i++) {
             MobileSignalController mobileSignalController = mMobileSignalControllers.valueAt(i);
             mobileSignalController.unregisterListener();
+            mobileSignalController.unregisterFiveGStateListener(mFiveGServiceClient);
         }
         mSubscriptionManager.removeOnSubscriptionsChangedListener(mSubscriptionListener);
         mBroadcastDispatcher.unregisterReceiver(this);
@@ -749,6 +757,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
                 }
                 if (mListening) {
                     controller.registerListener();
+                    controller.registerFiveGStateListener(mFiveGServiceClient);
                 }
             }
         }
@@ -759,6 +768,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
                     mDefaultSignalController = null;
                 }
                 cachedControllers.get(key).unregisterListener();
+                cachedControllers.get(key).unregisterFiveGStateListener(mFiveGServiceClient);
             }
         }
         mCallbackHandler.setSubs(subscriptions);
@@ -1199,6 +1209,14 @@ public class NetworkControllerImpl extends BroadcastReceiver
         boolean inflateSignalStrengths = false;
         boolean alwaysShowDataRatIcon = false;
 
+        boolean showRsrpSignalLevelforLTE = false;
+        boolean hideNoInternetState = false;
+        boolean showVolteIcon = false;
+        boolean alwaysShowNetworkTypeIcon = false;
+        boolean enableRatIconEnhancement = false;
+        boolean showVowifiIcon = false;
+        boolean enableDdsRatIconEnhancement = false;
+
         static Config readConfig(Context context) {
             Config config = new Config();
             Resources res = context.getResources();
@@ -1210,6 +1228,13 @@ public class NetworkControllerImpl extends BroadcastReceiver
                     res.getBoolean(R.bool.config_hspa_data_distinguishable);
             config.inflateSignalStrengths = res.getBoolean(
                     com.android.internal.R.bool.config_inflateSignalStrength);
+
+            config.alwaysShowNetworkTypeIcon =
+                    context.getResources().getBoolean(R.bool.config_alwaysShowTypeIcon);
+            config.showRsrpSignalLevelforLTE =
+                    res.getBoolean(R.bool.config_showRsrpSignalLevelforLTE);
+            config.hideNoInternetState = res.getBoolean(R.bool.config_hideNoInternetState);
+            config.showVolteIcon = res.getBoolean(R.bool.config_display_volte);
 
             CarrierConfigManager configMgr = (CarrierConfigManager)
                     context.getSystemService(Context.CARRIER_CONFIG_SERVICE);
@@ -1228,6 +1253,14 @@ public class NetworkControllerImpl extends BroadcastReceiver
                         CarrierConfigManager.KEY_HIDE_LTE_PLUS_DATA_ICON_BOOL);
             }
 
+            config.enableRatIconEnhancement =
+                    SystemProperties.getBoolean("persist.sysui.rat_icon_enhancement", false);
+            config.showVowifiIcon = res.getBoolean(R.bool.config_display_vowifi);
+            config.enableDdsRatIconEnhancement =
+                    SystemProperties.getBoolean("persist.sysui.dds_rat_icon_enhancement", false);
+            if ( config.alwaysShowNetworkTypeIcon ) {
+                config.hideLtePlus = false;
+            }
             return config;
         }
     }

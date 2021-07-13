@@ -131,6 +131,8 @@ public class UsbDeviceManager implements ActivityTaskManagerInternal.ScreenObser
 
     private static final String USB_STATE_MATCH =
             "DEVPATH=/devices/virtual/android_usb/android0";
+    private static final String USB_STATE_MATCH_SEC =
+            "DEVPATH=/devices/virtual/android_usb/android1";
     private static final String ACCESSORY_START_MATCH =
             "DEVPATH=/devices/virtual/misc/usb_accessory";
     private static final String FUNCTIONS_PATH =
@@ -170,7 +172,10 @@ public class UsbDeviceManager implements ActivityTaskManagerInternal.ScreenObser
     // Delay for debouncing USB disconnects.
     // We often get rapid connect/disconnect events when enabling USB functions,
     // which need debouncing.
-    private static final int UPDATE_DELAY = 1000;
+    private static final int DEVICE_STATE_UPDATE_DELAY = 3000;
+
+    // Delay for debouncing USB disconnects on Type-C ports in host mode
+    private static final int HOST_STATE_UPDATE_DELAY = 1000;
 
     // Timeout for entering USB request mode.
     // Request is cancelled if host does not configure device within 10 seconds.
@@ -356,6 +361,7 @@ public class UsbDeviceManager implements ActivityTaskManagerInternal.ScreenObser
         // Watch for USB configuration changes
         mUEventObserver = new UsbUEventObserver();
         mUEventObserver.startObserving(USB_STATE_MATCH);
+        mUEventObserver.startObserving(USB_STATE_MATCH_SEC);
         mUEventObserver.startObserving(ACCESSORY_START_MATCH);
     }
 
@@ -583,7 +589,7 @@ public class UsbDeviceManager implements ActivityTaskManagerInternal.ScreenObser
             msg.arg1 = connected;
             msg.arg2 = configured;
             // debounce disconnects to avoid problems bringing up USB tethering
-            sendMessageDelayed(msg, (connected == 0) ? UPDATE_DELAY : 0);
+            sendMessageDelayed(msg, (connected == 0) ? DEVICE_STATE_UPDATE_DELAY : 0);
         }
 
         public void updateHostState(UsbPort port, UsbPortStatus status) {
@@ -598,7 +604,7 @@ public class UsbDeviceManager implements ActivityTaskManagerInternal.ScreenObser
             removeMessages(MSG_UPDATE_PORT_STATE);
             Message msg = obtainMessage(MSG_UPDATE_PORT_STATE, args);
             // debounce rapid transitions of connect/disconnect on type-c ports
-            sendMessageDelayed(msg, UPDATE_DELAY);
+            sendMessageDelayed(msg, HOST_STATE_UPDATE_DELAY);
         }
 
         private void setAdbEnabled(boolean enable) {
@@ -834,20 +840,31 @@ public class UsbDeviceManager implements ActivityTaskManagerInternal.ScreenObser
                     boolean prevHostConnected = mHostConnected;
                     UsbPort port = (UsbPort) args.arg1;
                     UsbPortStatus status = (UsbPortStatus) args.arg2;
-                    mHostConnected = status.getCurrentDataRole() == DATA_ROLE_HOST;
-                    mSourcePower = status.getCurrentPowerRole() == POWER_ROLE_SOURCE;
-                    mSinkPower = status.getCurrentPowerRole() == POWER_ROLE_SINK;
-                    mAudioAccessoryConnected = (status.getCurrentMode() == MODE_AUDIO_ACCESSORY);
+
+                    if (status != null) {
+                        mHostConnected = status.getCurrentDataRole() == DATA_ROLE_HOST;
+                        mSourcePower = status.getCurrentPowerRole() == POWER_ROLE_SOURCE;
+                        mSinkPower = status.getCurrentPowerRole() == POWER_ROLE_SINK;
+                        mAudioAccessoryConnected = (status.getCurrentMode() == MODE_AUDIO_ACCESSORY);
+
+                        // Ideally we want to see if PR_SWAP and DR_SWAP is supported.
+                        // But, this should be suffice, since, all four combinations are only supported
+                        // when PR_SWAP and DR_SWAP are supported.
+                        mSupportsAllCombinations = status.isRoleCombinationSupported(
+                                POWER_ROLE_SOURCE, DATA_ROLE_HOST)
+                                && status.isRoleCombinationSupported(POWER_ROLE_SINK, DATA_ROLE_HOST)
+                                && status.isRoleCombinationSupported(POWER_ROLE_SOURCE,
+                                DATA_ROLE_DEVICE)
+                                && status.isRoleCombinationSupported(POWER_ROLE_SINK, DATA_ROLE_DEVICE);
+                    } else {
+                        mHostConnected = false;
+                        mSourcePower = false;
+                        mSinkPower = false;
+                        mAudioAccessoryConnected = false;
+                        mSupportsAllCombinations = false;
+                    }
+
                     mAudioAccessorySupported = port.isModeSupported(MODE_AUDIO_ACCESSORY);
-                    // Ideally we want to see if PR_SWAP and DR_SWAP is supported.
-                    // But, this should be suffice, since, all four combinations are only supported
-                    // when PR_SWAP and DR_SWAP are supported.
-                    mSupportsAllCombinations = status.isRoleCombinationSupported(
-                            POWER_ROLE_SOURCE, DATA_ROLE_HOST)
-                            && status.isRoleCombinationSupported(POWER_ROLE_SINK, DATA_ROLE_HOST)
-                            && status.isRoleCombinationSupported(POWER_ROLE_SOURCE,
-                            DATA_ROLE_DEVICE)
-                            && status.isRoleCombinationSupported(POWER_ROLE_SINK, DATA_ROLE_DEVICE);
 
                     args.recycle();
                     updateUsbNotification(false);
@@ -1536,6 +1553,10 @@ public class UsbDeviceManager implements ActivityTaskManagerInternal.ScreenObser
             mCurrentFunctions = usbFunctions;
             if (functions == null || applyAdbFunction(functions)
                     .equals(UsbManager.USB_FUNCTION_NONE)) {
+                functions = getSystemProperty(getPersistProp(true),
+                            UsbManager.USB_FUNCTION_NONE);
+
+                if (functions.equals(UsbManager.USB_FUNCTION_NONE))
                 functions = UsbManager.usbFunctionsToString(getChargingFunctions());
             }
             functions = applyAdbFunction(functions);

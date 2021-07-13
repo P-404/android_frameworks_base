@@ -207,6 +207,12 @@ public class Process {
     public static final int SE_UID = 1068;
 
     /**
+     * Defines the UID/GID for the iorapd.
+     * @hide
+     */
+    public static final int IORAPD_UID = 1071;
+
+    /**
      * Defines the UID/GID for the NetworkStack app.
      * @hide
      */
@@ -936,6 +942,31 @@ public class Process {
      */
     @UnsupportedAppUsage
     public static final native void setProcessGroup(int pid, int group)
+            throws IllegalArgumentException, SecurityException;
+
+    /**
+     * Sets the scheduling group for processes in the same cgroup.procs of uid and pid
+     * @hide
+     * @param uid The user identifier of the process to change.
+     * @param pid The identifier of the process to change.
+     * @param group The target group for this process from THREAD_GROUP_*.
+     * @param dex2oat_only is the cgroup apply for all or for dex2oat only.
+     *
+     * @throws IllegalArgumentException Throws IllegalArgumentException if
+     * <var>tid</var> does not exist.
+     * @throws SecurityException Throws SecurityException if your process does
+     * not have permission to modify the given thread, or to use the given
+     * priority.
+     *
+     * group == THREAD_GROUP_DEFAULT means to move all non-background priority
+     * threads to the foreground scheduling group, but to leave background
+     * priority threads alone.  group == THREAD_GROUP_BG_NONINTERACTIVE moves all
+     * threads, regardless of priority, to the background scheduling group.
+     * group == THREAD_GROUP_FOREGROUND is not allowed.
+     *
+     * Always sets cpusets.
+     */
+    public static final native void setCgroupProcsProcessGroup(int uid, int pid, int group, boolean dex2oat_only)
             throws IllegalArgumentException, SecurityException;
 
     /**

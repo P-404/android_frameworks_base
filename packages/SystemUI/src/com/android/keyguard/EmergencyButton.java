@@ -28,10 +28,14 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.UserHandle;
 import android.telecom.TelecomManager;
+import android.telephony.CellInfo;
+import android.telephony.ServiceState;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Slog;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -42,7 +46,10 @@ import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 import com.android.internal.util.EmergencyAffordanceManager;
 import com.android.internal.widget.LockPatternUtils;
 import com.android.systemui.Dependency;
+import com.android.systemui.R;
 import com.android.systemui.util.EmergencyDialerConstants;
+
+import java.util.List;
 
 /**
  * This class implements a smart emergency button that updates itself based
@@ -61,11 +68,20 @@ public class EmergencyButton extends Button {
 
         @Override
         public void onSimStateChanged(int subId, int slotId, int simState) {
+            requestCellInfoUpdate();
             updateEmergencyCallButton();
         }
 
         @Override
         public void onPhoneStateChanged(int phoneState) {
+            requestCellInfoUpdate();
+            updateEmergencyCallButton();
+        }
+
+        @Override
+        public void onServiceStateChanged(int subId, ServiceState state) {
+            mServiceState = state;
+            requestCellInfoUpdate();
             updateEmergencyCallButton();
         }
     };
@@ -81,6 +97,8 @@ public class EmergencyButton extends Button {
 
     private final boolean mIsVoiceCapable;
     private final boolean mEnableEmergencyCallWhileSimLocked;
+    private boolean mIsCellAvailable;
+    private ServiceState mServiceState;
 
     public EmergencyButton(Context context) {
         this(context, null);
@@ -102,6 +120,7 @@ public class EmergencyButton extends Button {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         Dependency.get(KeyguardUpdateMonitor.class).registerCallback(mInfoCallback);
+        requestCellInfoUpdate();
     }
 
     @Override
@@ -126,6 +145,7 @@ public class EmergencyButton extends Button {
                 return false;
             });
         }
+        requestCellInfoUpdate();
         whitelistIpcs(this::updateEmergencyCallButton);
     }
 
@@ -156,6 +176,7 @@ public class EmergencyButton extends Button {
     @Override
     protected void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        requestCellInfoUpdate();
         updateEmergencyCallButton();
     }
 
@@ -203,7 +224,7 @@ public class EmergencyButton extends Button {
         }
     }
 
-    private void updateEmergencyCallButton() {
+    public void updateEmergencyCallButton() {
         boolean visible = false;
         if (mIsVoiceCapable) {
             // Emergency calling requires voice capability.
@@ -216,8 +237,13 @@ public class EmergencyButton extends Button {
                     // Some countries can't handle emergency calls while SIM is locked.
                     visible = mEnableEmergencyCallWhileSimLocked;
                 } else {
-                    // Only show if there is a secure screen (pin/pattern/SIM pin/SIM puk);
-                    visible = mLockPatternUtils.isSecure(KeyguardUpdateMonitor.getCurrentUser());
+                    // Show if there is a secure screen (pin/pattern/SIM pin/SIM puk) or config set
+                    visible = mLockPatternUtils.isSecure(KeyguardUpdateMonitor.getCurrentUser()) ||
+                            mContext.getResources().getBoolean(R.bool.config_showEmergencyButton);
+                }
+
+                if (mContext.getResources().getBoolean(R.bool.kg_hide_emgcy_btn_when_oos)) {
+                    visible = visible && isEmergencyCapable();
                 }
             }
         }
@@ -256,5 +282,30 @@ public class EmergencyButton extends Button {
 
     private TelecomManager getTelecommManager() {
         return (TelecomManager) mContext.getSystemService(Context.TELECOM_SERVICE);
+    }
+
+    private void requestCellInfoUpdate(){
+        TelephonyManager tmWithoutSim = getTelephonyManager()
+                .createForSubscriptionId(SubscriptionManager.INVALID_SUBSCRIPTION_ID);
+        tmWithoutSim.requestCellInfoUpdate(mContext.getMainExecutor(),
+                new TelephonyManager.CellInfoCallback() {
+            @Override
+            public void onCellInfo(List<CellInfo> cellInfos) {
+                if ( cellInfos == null || cellInfos.isEmpty()) {
+                    Log.d(LOG_TAG, "requestCellInfoUpdate.onCellInfo is null or empty");
+                    mIsCellAvailable = false;
+                }else{
+                    mIsCellAvailable = true;
+                }
+                updateEmergencyCallButton();
+            }
+        });
+    }
+
+    private boolean isEmergencyCapable() {
+        KeyguardUpdateMonitor monitor = Dependency.get(KeyguardUpdateMonitor.class);
+        return (!monitor.isOOS()
+                || mIsCellAvailable
+                || (mServiceState !=null && mServiceState.isEmergencyOnly()));
     }
 }
