@@ -83,8 +83,8 @@ public class QSContainerImpl extends FrameLayout {
         mQSPanelContainer = findViewById(R.id.expanded_qs_scroll_view);
         mQSDetail = findViewById(R.id.qs_detail);
         mHeader = findViewById(R.id.header);
-        mQSCustomizer = findViewById(R.id.qs_customize);
         mDragHandle = findViewById(R.id.qs_drag_handle_view);
+        mQSCustomizer = findViewById(R.id.qs_customize);
         mBackground = findViewById(R.id.quick_settings_background);
         updateResources();
         mHeader.getHeaderQsPanel().setMediaVisibilityChangedListener((visible) -> {

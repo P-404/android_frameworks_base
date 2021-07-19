@@ -59,9 +59,24 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:orientation="horizontal"
-        android:gravity="center_vertical|end" >
+        android:gravity="center_vertical|end"
+        android:theme="@style/QQSHeaderTheme" >
 
-    <include layout="@layout/ongoing_privacy_chip" />
+        <com.android.systemui.statusbar.phone.StatusIconContainer
+            android:id="@+id/statusIcons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingEnd="@dimen/signal_cluster_battery_padding" />
+
+        <com.android.systemui.BatteryMeterView
+            android:id="@+id/batteryRemainingIcon"
+            android:layout_toEndOf="@id/statusIcons"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            systemui:textAppearance="@style/TextAppearance.QS.Header" />
+
+        <include layout="@layout/ongoing_privacy_chip" />
 
     </LinearLayout>
 </LinearLayout>

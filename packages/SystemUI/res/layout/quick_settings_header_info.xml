@@ -57,37 +57,6 @@
                     android:visibility="gone"/>
             </LinearLayout>
 
-            <View
-                android:id="@+id/status_separator"
-                android:layout_width="@dimen/qs_header_separator_width"
-                android:layout_height="match_parent"
-                android:visibility="gone"/>
-
-            <LinearLayout
-                android:id = "@+id/ringer_container"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:focusable="true"
-                android:clickable="true">
-
-                <ImageView
-                    android:id="@+id/ringer_mode_icon"
-                    android:layout_width="@dimen/qs_header_alarm_icon_size"
-                    android:layout_height="@dimen/qs_header_alarm_icon_size"
-                    android:visibility="gone"/>
-
-                <com.android.systemui.util.AutoMarqueeTextView
-                    android:id="@+id/ringer_mode_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:singleLine="true"
-                    android:ellipsize="marquee"
-                    android:marqueeRepeatLimit="marquee_forever"
-                    android:layout_marginStart="@dimen/qs_header_alarm_text_margin_start"
-                    android:textAppearance="@style/TextAppearance.QS.Status"
-                    android:visibility="gone"/>
-            </LinearLayout>
         </com.android.systemui.qs.QSHeaderInfoLayout>
 
         <include layout="@layout/qs_carrier_group"

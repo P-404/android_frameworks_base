@@ -67,5 +67,4 @@
             android:background="@drawable/qs_footer_drag_handle" />
     </FrameLayout>
 
-
 </com.android.systemui.qs.QSContainerImpl>
