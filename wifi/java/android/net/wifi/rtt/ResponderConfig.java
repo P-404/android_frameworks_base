@@ -325,7 +325,7 @@ public final class ResponderConfig implements Parcelable {
                 }
             }
 
-            if (heCapabilitiesPresent) {
+            if (heCapabilitiesPresent && ScanResult.is6GHz(frequency)) {
                 preamble = PREAMBLE_HE;
             } else if (vhtCapabilitiesPresent) {
                 preamble = PREAMBLE_VHT;

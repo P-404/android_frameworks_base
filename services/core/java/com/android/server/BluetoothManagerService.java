@@ -1949,14 +1949,21 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
                         if (mBluetooth != null) {
                             int state = mBluetooth.getState();
                             if (state == BluetoothAdapter.STATE_BLE_ON) {
-                                Slog.w(TAG, "BT Enable in BLE_ON State, going to ON");
-                                mBluetooth.updateQuietModeStatus(mQuietEnable);
-                                mBluetooth.onLeServiceUp();
+                                if (isBluetoothPersistedStateOnBluetooth() ||
+                                    mEnableExternal) {
+                                    Slog.w(TAG, "BLE_ON State:Enable from Settings or" +
+                                                "BT on persisted, going to ON");
+                                    mBluetooth.updateQuietModeStatus(mQuietEnable);
+                                    mBluetooth.onLeServiceUp();
 
-                                // waive WRITE_SECURE_SETTINGS permission check
-                                long callingIdentity = Binder.clearCallingIdentity();
-                                persistBluetoothSetting(BLUETOOTH_ON_BLUETOOTH);
-                                Binder.restoreCallingIdentity(callingIdentity);
+                                    // waive WRITE_SECURE_SETTINGS permission check
+                                    long callingIdentity = Binder.clearCallingIdentity();
+                                    persistBluetoothSetting(BLUETOOTH_ON_BLUETOOTH);
+                                    Binder.restoreCallingIdentity(callingIdentity);
+                                } else {
+                                    Slog.w(TAG, "BLE_ON State:Queued enable from ble app," +
+                                                " stay in ble on");
+                                }
                                 break;
                             }
                         }
