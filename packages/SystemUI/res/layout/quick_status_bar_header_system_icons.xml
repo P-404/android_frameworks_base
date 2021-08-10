@@ -73,15 +73,16 @@
             android:layout_toEndOf="@id/statusIcons"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_gravity="center_vertical"
-            systemui:textAppearance="@style/TextAppearance.QS.Header" />
+            android:layout_gravity="center_vertical|start"
+            systemui:textAppearance="@style/TextAppearance.QS.Status" />
 
         <com.android.systemui.statusbar.policy.NetworkTraffic
             android:id="@+id/network_traffic"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:gravity="center_vertical|end"
-            android:layout_gravity="center_vertical|end"
+            android:gravity="center_vertical|start"
+            android:layout_gravity="end|center_vertical"
+            systemui:textAppearance="@style/TextAppearance.QS.Status"
             android:visibility="gone" />
 
         <include layout="@layout/ongoing_privacy_chip" />
