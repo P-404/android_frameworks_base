@@ -118,6 +118,11 @@ public class AndroidSClockController implements ClockPlugin {
     private final ViewPreviewer mRenderer = new ViewPreviewer();
 
     /**
+     * Helper to extract colors from wallpaper palette for clock face.
+     */
+    private final ClockPalette mPalette = new ClockPalette();
+
+    /**
      * Root view of clock.
      */
     private ClockLayout mView;
@@ -227,8 +232,15 @@ public class AndroidSClockController implements ClockPlugin {
 
         View previewView = mLayoutInflater.inflate(R.layout.android_s_clock, null);
         TextClock previewClock = mView.findViewById(R.id.clock);
+        TextView previewTitle = mView.findViewById(R.id.title);
         previewClock.setFormat12Hour("hh\nmm");
         previewClock.setFormat24Hour("kk\nmm");
+        onTimeTick();
+        previewClock.setTextColor(Color.WHITE);
+        previewTitle.setTextColor(Color.WHITE);
+        ColorExtractor.GradientColors colors = mColorExtractor.getColors(
+                WallpaperManager.FLAG_LOCK);
+        setColorPalette(colors.supportsDarkText(), colors.getColorPalette());
 
         return mRenderer.createPreview(previewView, width, height);
     }
@@ -256,11 +268,14 @@ public class AndroidSClockController implements ClockPlugin {
 
     @Override
     public void setTextColor(int color) {
-        mClock.setTextColor(color);
+        updateTextColors();
     }
 
     @Override
-    public void setColorPalette(boolean supportsDarkText, int[] colorPalette) {}
+    public void setColorPalette(boolean supportsDarkText, int[] colorPalette) {
+        mPalette.setColorPalette(supportsDarkText, colorPalette);
+        updateTextColors();
+    }
 
     @Override
     public void setSlice(Slice slice) {
@@ -452,6 +467,8 @@ public class AndroidSClockController implements ClockPlugin {
     @Override
     public void onTimeTick() {
         animate();
+        mView.onTimeChanged();
+        mClock.refreshTime();
     }
 
     @Override
@@ -479,15 +496,16 @@ public class AndroidSClockController implements ClockPlugin {
     }
 
     private void updateTextColors() {
-        final int blendedColor = getTextColor();
-        mTitle.setTextColor(blendedColor);
+        final int secondary = mPalette.getSecondaryColor();
+        mTitle.setTextColor(secondary);
         int childCount = mRow.getChildCount();
         for (int i = 0; i < childCount; i++) {
             View v = mRow.getChildAt(i);
             if (v instanceof TextView) {
-                ((TextView) v).setTextColor(blendedColor);
+                ((TextView) v).setTextColor(secondary);
             }
         }
+        mClock.setTextColor(secondary);
     }
 
     int getTextColor() {

@@ -19,6 +19,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginRight="18dp"
     android:layout_gravity="center_horizontal|top">
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clock_view"
@@ -44,7 +45,6 @@
             app:layout_constraintBottom_toTopOf="@id/row"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/clock"
-            android:theme="@style/TextAppearance.Keyguard"
         />
         <view class="com.android.keyguard.KeyguardSliceView$Row"
             android:id="@+id/row"
@@ -73,7 +73,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1"
-            android:theme="@style/TextAppearance.Keyguard"
         />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.android.keyguard.clock.ClockLayout>
