@@ -46,10 +46,6 @@ import android.util.ArraySet;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-import android.database.ContentObserver;
-import android.content.ContentResolver;
-import android.os.Handler;
-import android.provider.Settings;
 
 import com.android.internal.config.sysui.SystemUiDeviceConfigFlags;
 import com.android.internal.statusbar.NotificationVisibility;
@@ -148,36 +144,6 @@ public class NotificationMediaManager implements Dumpable {
     private BackDropView mBackdrop;
     private ImageView mBackdropFront;
     private ImageView mBackdropBack;
-
-    private boolean mLockscreenArt;
-
-    class SettingsObserver extends ContentObserver {
-        SettingsObserver(Handler handler) {
-            super(handler);
-        }
-
-        void observe() {
-            ContentResolver resolver = mContext.getContentResolver();
-            // Observe all users' changes
-            resolver.registerContentObserver(Settings.System.getUriFor(
-                    Settings.System.LOCKSCREEN_MEDIA_ART), false, this,
-                    UserHandle.USER_ALL);
-            updateSettings();
-        }
-
-        @Override 
-        public void onChange(boolean selfChange) {
-            updateSettings();
-        }
-    }
-
-    public void updateSettings() {
-        ContentResolver resolver = mContext.getContentResolver();
-        mLockscreenArt =  Settings.System.getIntForUser(resolver,
-                Settings.System.LOCKSCREEN_MEDIA_ART, 1,
-                UserHandle.USER_CURRENT) == 1;
-        
-    }
 
     private boolean mShowCompactMediaSeekbar;
     private final DeviceConfig.OnPropertiesChangedListener mPropertiesChangedListener =
@@ -318,9 +284,6 @@ public class NotificationMediaManager implements Dumpable {
         deviceConfig.addOnPropertiesChangedListener(DeviceConfig.NAMESPACE_SYSTEMUI,
                 mContext.getMainExecutor(),
                 mPropertiesChangedListener);
-        Handler mHandler = new Handler();
-        SettingsObserver settingsObserver = new SettingsObserver(mHandler);
-        settingsObserver.observe();
     }
 
     private void removeEntry(NotificationEntry entry) {
@@ -624,7 +587,7 @@ public class NotificationMediaManager implements Dumpable {
             }
             mProcessArtworkTasks.clear();
         }
-        if (artworkBitmap != null && mLockscreenArt) {
+        if (artworkBitmap != null && !Utils.useQsMediaPlayer(mContext)) {
             mProcessArtworkTasks.add(new ProcessArtworkTask(this, metaDataChanged,
                     allowEnterAnimation).execute(artworkBitmap));
         } else {
@@ -637,13 +600,11 @@ public class NotificationMediaManager implements Dumpable {
     private void finishUpdateMediaMetaData(boolean metaDataChanged, boolean allowEnterAnimation,
             @Nullable Bitmap bmp) {
         Drawable artworkDrawable = null;
-        // set media artwork as lockscreen wallpaper if player is playing
-        if (bmp != null && PlaybackState.STATE_PLAYING == getMediaControllerPlaybackState(mMediaController)) {
+        if (bmp != null) {
             artworkDrawable = new BitmapDrawable(mBackdropBack.getResources(), bmp);
         }
         boolean hasMediaArtwork = artworkDrawable != null;
         boolean allowWhenShade = false;
-        // if no media artwork, show normal lockscreen wallpaper
         if (ENABLE_LOCKSCREEN_WALLPAPER && artworkDrawable == null) {
             Bitmap lockWallpaper =
                     mLockscreenWallpaper != null ? mLockscreenWallpaper.getBitmap() : null;
@@ -666,7 +627,9 @@ public class NotificationMediaManager implements Dumpable {
             mScrimController.setHasBackdrop(hasArtwork);
         }
 
-        if ((hasArtwork || DEBUG_MEDIA_FAKE_ARTWORK)
+        // show artwork only if the media is playing
+        if (PlaybackState.STATE_PLAYING == getMediaControllerPlaybackState(mMediaController)
+                && (hasArtwork || DEBUG_MEDIA_FAKE_ARTWORK)
                 && (mStatusBarStateController.getState() != StatusBarState.SHADE || allowWhenShade)
                 &&  mBiometricUnlockController != null && mBiometricUnlockController.getMode()
                         != BiometricUnlockController.MODE_WAKE_AND_UNLOCK_PULSING

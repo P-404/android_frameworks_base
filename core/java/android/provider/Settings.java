@@ -4853,11 +4853,6 @@ public final class Settings {
         public static final String[] LEGACY_RESTORE_SETTINGS = {
         };
 
-        /**
-         * @hide
-         */
-        public static final String LOCKSCREEN_MEDIA_ART = "lockscreen_media_art";
-
         /** Whether to pulse ambient on new music tracks
          *
          * @hide
@@ -5123,7 +5118,6 @@ public final class Settings {
             PRIVATE_SETTINGS.add(QS_SHOW_BATTERY_PERCENT);
             PRIVATE_SETTINGS.add(DISPLAY_COLOR_MODE);
             PRIVATE_SETTINGS.add(CALL_CONNECTED_TONE_ENABLED);
-            PRIVATE_SETTINGS.add(LOCKSCREEN_MEDIA_ART);
             PRIVATE_SETTINGS.add(AMBIENT_NOTIFICATION_LIGHT);
             PRIVATE_SETTINGS.add(AMBIENT_NOTIFICATION_LIGHT_AUTOMATIC);
             PRIVATE_SETTINGS.add(STATUSBAR_CLOCK);
