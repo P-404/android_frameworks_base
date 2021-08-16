@@ -18,6 +18,7 @@ package com.android.systemui.biometrics;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.atLeast;
 
@@ -46,6 +47,7 @@ import com.android.systemui.statusbar.phone.StatusBarKeyguardViewManager;
 import com.android.systemui.statusbar.policy.ConfigurationController;
 import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.util.concurrency.DelayableExecutor;
+import com.android.systemui.util.time.FakeSystemClock;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -89,6 +91,7 @@ public class UdfpsKeyguardViewControllerTest extends SysuiTestCase {
     private ConfigurationController mConfigurationController;
     @Mock
     private UdfpsController mUdfpsController;
+    private FakeSystemClock mSystemClock = new FakeSystemClock();
 
     private UdfpsKeyguardViewController mController;
 
@@ -124,6 +127,7 @@ public class UdfpsKeyguardViewControllerTest extends SysuiTestCase {
                 mKeyguardViewMediator,
                 mLockscreenShadeTransitionController,
                 mConfigurationController,
+                mSystemClock,
                 mKeyguardStateController,
                 mUdfpsController);
     }
@@ -364,6 +368,59 @@ public class UdfpsKeyguardViewControllerTest extends SysuiTestCase {
 
         // THEN alpha is 255 (b/c udfps bouncer is requested)
         verify(mView).setUnpausedAlpha(255);
+    }
+
+    @Test
+    public void testHiddenUdfpsBouncerOnTouchOutside_nothingHappens() {
+        // GIVEN view is attached
+        mController.onViewAttached();
+        captureAltAuthInterceptor();
+
+        // GIVEN udfps bouncer isn't showing
+        mAltAuthInterceptor.hideAlternateAuthBouncer();
+
+        // WHEN touch is observed outside the view
+        mController.onTouchOutsideView();
+
+        // THEN bouncer / alt auth methods are never called
+        verify(mStatusBarKeyguardViewManager, never()).showBouncer(anyBoolean());
+        verify(mStatusBarKeyguardViewManager, never()).resetAlternateAuth(anyBoolean());
+    }
+
+    @Test
+    public void testShowingUdfpsBouncerOnTouchOutsideWithinThreshold_nothingHappens() {
+        // GIVEN view is attached
+        mController.onViewAttached();
+        captureAltAuthInterceptor();
+
+        // GIVEN udfps bouncer is showing
+        mAltAuthInterceptor.showAlternateAuthBouncer();
+
+        // WHEN touch is observed outside the view 200ms later (just within threshold)
+        mSystemClock.advanceTime(200);
+        mController.onTouchOutsideView();
+
+        // THEN bouncer / alt auth methods are never called because not enough time has passed
+        verify(mStatusBarKeyguardViewManager, never()).showBouncer(anyBoolean());
+        verify(mStatusBarKeyguardViewManager, never()).resetAlternateAuth(anyBoolean());
+    }
+
+    @Test
+    public void testShowingUdfpsBouncerOnTouchOutsideAboveThreshold_showInputBouncer() {
+        // GIVEN view is attached
+        mController.onViewAttached();
+        captureAltAuthInterceptor();
+
+        // GIVEN udfps bouncer is showing
+        mAltAuthInterceptor.showAlternateAuthBouncer();
+
+        // WHEN touch is observed outside the view 205ms later
+        mSystemClock.advanceTime(205);
+        mController.onTouchOutsideView();
+
+        // THEN show the bouncer and reset alt auth
+        verify(mStatusBarKeyguardViewManager).showBouncer(eq(true));
+        verify(mStatusBarKeyguardViewManager).resetAlternateAuth(anyBoolean());
     }
 
     private void sendStatusBarStateChanged(int statusBarState) {
