@@ -44,6 +44,7 @@ import com.android.systemui.statusbar.LockscreenShadeTransitionController;
 import com.android.systemui.statusbar.StatusBarState;
 import com.android.systemui.statusbar.phone.StatusBar;
 import com.android.systemui.statusbar.phone.StatusBarKeyguardViewManager;
+import com.android.systemui.statusbar.phone.UnlockedScreenOffAnimationController;
 import com.android.systemui.statusbar.policy.ConfigurationController;
 import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.util.concurrency.DelayableExecutor;
@@ -90,6 +91,8 @@ public class UdfpsKeyguardViewControllerTest extends SysuiTestCase {
     @Mock
     private ConfigurationController mConfigurationController;
     @Mock
+    private UnlockedScreenOffAnimationController mUnlockedScreenOffAnimationController;
+    @Mock
     private UdfpsController mUdfpsController;
     private FakeSystemClock mSystemClock = new FakeSystemClock();
 
@@ -122,13 +125,12 @@ public class UdfpsKeyguardViewControllerTest extends SysuiTestCase {
                 mStatusBar,
                 mStatusBarKeyguardViewManager,
                 mKeyguardUpdateMonitor,
-                mExecutor,
                 mDumpManager,
-                mKeyguardViewMediator,
                 mLockscreenShadeTransitionController,
                 mConfigurationController,
                 mSystemClock,
                 mKeyguardStateController,
+                mUnlockedScreenOffAnimationController,
                 mUdfpsController);
     }
 
