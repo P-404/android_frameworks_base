@@ -28,4 +28,9 @@
     <string name="accessibility_quick_settings_caffeine_off">Caffeine off</string>
     <string name="accessibility_quick_settings_caffeine_on">Caffeine on</string>
 
+    <style name="TriStateUiText">
+       <item name="android:textSize">14.0sp</item>
+       <item name="android:fontFamily">@*android:string/config_headlineFontFamilyMedium</item>
+    </style>
+
 </resources>
