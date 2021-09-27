@@ -212,6 +212,9 @@ public final class ActiveServices {
 
     private IServicetracker mServicetracker;
 
+    private final boolean isLowRamDevice =
+             SystemProperties.getBoolean("ro.config.low_ram", false);
+
     String mLastAnrDump;
 
     AppWidgetManagerInternal mAppWidgetManagerInternal;
@@ -2188,28 +2191,30 @@ public final class ActiveServices {
             }
             clist.add(c);
 
-            ServiceData sData = new ServiceData();
-            sData.packageName = s.packageName;
-            sData.processName = s.shortInstanceName;
-            sData.lastActivity = s.lastActivity;
-            if (s.app != null) {
-                sData.pid = s.app.pid;
-                sData.serviceB = s.app.serviceb;
-            } else {
-                 sData.pid = -1;
-                 sData.serviceB = false;
-            }
-
-            ClientData cData = new ClientData();
-            cData.processName = callerApp.processName;
-            cData.pid = callerApp.pid;
-            try {
-                if (getServicetrackerInstance()) {
-                   mServicetracker.bindService(sData, cData);
+            if (!isLowRamDevice) {
+                ServiceData sData = new ServiceData();
+                sData.packageName = s.packageName;
+                sData.processName = s.shortInstanceName;
+                sData.lastActivity = s.lastActivity;
+                if (s.app != null) {
+                    sData.pid = s.app.pid;
+                    sData.serviceB = s.app.serviceb;
+                } else {
+                     sData.pid = -1;
+                     sData.serviceB = false;
                 }
-            } catch (RemoteException e) {
-                Slog.e(TAG, "Failed to send bind details to servicetracker HAL", e);
-                mServicetracker = null;
+
+                ClientData cData = new ClientData();
+                cData.processName = callerApp.processName;
+                cData.pid = callerApp.pid;
+                try {
+                    if (getServicetrackerInstance()) {
+                        mServicetracker.bindService(sData, cData);
+                    }
+                } catch (RemoteException e) {
+                    Slog.e(TAG, "Failed to send bind details to servicetracker HAL", e);
+                    mServicetracker = null;
+                }
             }
 
             if ((flags&Context.BIND_AUTO_CREATE) != 0) {
@@ -2385,28 +2390,30 @@ public final class ActiveServices {
         try {
             while (clist.size() > 0) {
                 ConnectionRecord r = clist.get(0);
-                ServiceData sData = new ServiceData();
-                sData.packageName = r.binding.service.packageName;
-                sData.processName = r.binding.service.shortInstanceName;
-                sData.lastActivity = r.binding.service.lastActivity;
-                if(r.binding.service.app != null) {
-                    sData.pid = r.binding.service.app.pid;
-                    sData.serviceB = r.binding.service.app.serviceb;
-                } else {
-                    sData.pid = -1;
-                    sData.serviceB = false;
-                }
-
-                ClientData cData = new ClientData();
-                cData.processName = r.binding.client.processName;
-                cData.pid = r.binding.client.pid;
-                try {
-                    if (getServicetrackerInstance()) {
-                        mServicetracker.unbindService(sData, cData);
+                if (!isLowRamDevice) {
+                    ServiceData sData = new ServiceData();
+                    sData.packageName = r.binding.service.packageName;
+                    sData.processName = r.binding.service.shortInstanceName;
+                    sData.lastActivity = r.binding.service.lastActivity;
+                    if(r.binding.service.app != null) {
+                        sData.pid = r.binding.service.app.pid;
+                        sData.serviceB = r.binding.service.app.serviceb;
+                    } else {
+                        sData.pid = -1;
+                        sData.serviceB = false;
                     }
-                } catch (RemoteException e) {
-                    Slog.e(TAG, "Failed to send unbind details to servicetracker HAL", e);
-                    mServicetracker = null;
+
+                    ClientData cData = new ClientData();
+                    cData.processName = r.binding.client.processName;
+                    cData.pid = r.binding.client.pid;
+                    try {
+                        if (getServicetrackerInstance()) {
+                            mServicetracker.unbindService(sData, cData);
+                        }
+                    } catch (RemoteException e) {
+                        Slog.e(TAG, "Failed to send unbind details to servicetracker HAL", e);
+                        mServicetracker = null;
+                    }
                 }
                 removeConnectionLocked(r, null, null);
                 if (clist.size() > 0 && clist.get(0) == r) {
@@ -3269,20 +3276,22 @@ public final class ActiveServices {
             r.postNotification();
             created = true;
 
-            ServiceData sData = new ServiceData();
-            sData.packageName = r.packageName;
-            sData.processName = r.shortInstanceName;
-            sData.pid = r.app.pid;
-            sData.lastActivity = r.lastActivity;
-            sData.serviceB = r.app.serviceb;
+            if (!isLowRamDevice) {
+                ServiceData sData = new ServiceData();
+                sData.packageName = r.packageName;
+                sData.processName = r.shortInstanceName;
+                sData.pid = r.app.pid;
+                sData.lastActivity = r.lastActivity;
+                sData.serviceB = r.app.serviceb;
 
-            try {
-                if (getServicetrackerInstance()) {
-                    mServicetracker.startService(sData);
+                try {
+                    if (getServicetrackerInstance()) {
+                        mServicetracker.startService(sData);
+                    }
+                } catch (RemoteException e) {
+                    Slog.e(TAG, "Failed to send start details to servicetracker HAL", e);
+                    mServicetracker = null;
                 }
-            } catch (RemoteException e) {
-                Slog.e(TAG, "Failed to send start details to servicetracker HAL", e);
-                mServicetracker = null;
             }
         } catch (DeadObjectException e) {
             Slog.w(TAG, "Application dead when creating service " + r);
@@ -3481,24 +3490,26 @@ public final class ActiveServices {
     private final void bringDownServiceLocked(ServiceRecord r) {
         //Slog.i(TAG, "Bring down service:");
         //r.dump("  ");
-        ServiceData sData = new ServiceData();
-        sData.packageName = r.packageName;
-        sData.processName = r.shortInstanceName;
-        sData.lastActivity = r.lastActivity;
-        if (r.app != null) {
-            sData.pid = r.app.pid;
-        } else {
-            sData.pid = -1;
-            sData.serviceB = false;
-        }
-
-        try {
-            if (getServicetrackerInstance()) {
-                mServicetracker.destroyService(sData);
+        if (!isLowRamDevice) {
+            ServiceData sData = new ServiceData();
+            sData.packageName = r.packageName;
+            sData.processName = r.shortInstanceName;
+            sData.lastActivity = r.lastActivity;
+            if (r.app != null) {
+                sData.pid = r.app.pid;
+            } else {
+                sData.pid = -1;
+                sData.serviceB = false;
             }
-        } catch (RemoteException e) {
-            Slog.e(TAG, "Failed to send destroy details to servicetracker HAL", e);
-            mServicetracker = null;
+
+            try {
+                if (getServicetrackerInstance()) {
+                    mServicetracker.destroyService(sData);
+                }
+            } catch (RemoteException e) {
+                Slog.e(TAG, "Failed to send destroy details to servicetracker HAL", e);
+                mServicetracker = null;
+            }
         }
         // Report to all of the connections that the service is no longer
         // available.
@@ -4168,7 +4179,7 @@ public final class ActiveServices {
         }
 
         try {
-            if (getServicetrackerInstance()) {
+            if (!isLowRamDevice && getServicetrackerInstance()) {
                 mServicetracker.killProcess(app.pid);
             }
         } catch (RemoteException e) {
