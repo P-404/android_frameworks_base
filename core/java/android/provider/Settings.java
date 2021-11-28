@@ -10416,6 +10416,13 @@ public final class Settings {
         public static final String TIMEOUT_TO_USER_ZERO = "timeout_to_user_zero";
 
         /**
+         * Whether the Lockdown button should be shown in the power menu.
+         * @hide
+        */
+        @Readable
+        public static final String LOCKDOWN_IN_POWER_MENU = "lockdown_in_power_menu";
+
+        /**
          * Backup manager behavioral parameters.
          * This is encoded as a key=value list, separated by commas. Ex:
          *
