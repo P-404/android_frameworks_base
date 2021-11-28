@@ -2230,6 +2230,9 @@ class SettingsProtoDumpUtil {
                 Settings.Secure.LOCK_TO_APP_EXIT_LOCKED,
                 SecureSettingsProto.LOCK_TO_APP_EXIT_LOCKED);
         dumpSetting(s, p,
+                Settings.Secure.LOCKDOWN_IN_POWER_MENU,
+                SecureSettingsProto.LOCKDOWN_IN_POWER_MENU);
+        dumpSetting(s, p,
                 Settings.Secure.LONG_PRESS_TIMEOUT,
                 SecureSettingsProto.LONG_PRESS_TIMEOUT);
 
