@@ -16,6 +16,7 @@
 package com.android.internal.util.p404;
 
 import android.os.Build;
+import android.os.SystemProperties;
 import android.util.Log;
 
 import java.lang.reflect.Field;
@@ -28,6 +29,7 @@ import java.util.Map;
 public class PixelPropsUtils {
 
     public static final String PACKAGE_GMS = "com.google.android.gms";
+    private static final String DEVICE = "org.pixelexperience.device";
     private static final String TAG = PixelPropsUtils.class.getSimpleName();
     private static final boolean DEBUG = false;
 
@@ -49,6 +51,22 @@ public class PixelPropsUtils {
     private static final String[] extraPackagesToChange = {
             "com.android.vending",
             "com.breel.wallpapers20"
+    };
+
+    // Codenames for currently supported Pixels by Google
+    private static final String[] pixelCodenames = {
+            "oriole",
+            "raven",
+            "redfin",
+            "barbet",
+            "bramble",
+            "sunfish",
+            "coral",
+            "flame",
+            "bonito",
+            "sargo",
+            "crosshatch",
+            "blueline"
     };
 
     private static ArrayList<String> allProps = new ArrayList<>(Arrays.asList("BRAND", "MANUFACTURER", "DEVICE", "PRODUCT", "MODEL", "FINGERPRINT"));
@@ -86,6 +104,7 @@ public class PixelPropsUtils {
         if (packageName == null) {
             return;
         }
+        if (Arrays.asList(pixelCodenames).contains(SystemProperties.get(DEVICE))) return;
         if (packageName.equals(PACKAGE_GMS)) {
             sIsGms = true;
         }
