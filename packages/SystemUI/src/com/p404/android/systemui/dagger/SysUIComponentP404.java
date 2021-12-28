@@ -7,6 +7,9 @@ import com.android.systemui.dagger.SystemUIBinder;
 import com.android.systemui.dagger.SysUIComponent;
 import com.android.systemui.dagger.SystemUIModule;
 
+import com.p404.android.systemui.keyguard.KeyguardSliceProviderP404;
+import com.p404.android.systemui.smartspace.KeyguardSmartspaceController;
+
 import dagger.Subcomponent;
 
 @SysUISingleton
@@ -22,4 +25,12 @@ public interface SysUIComponentP404 extends SysUIComponent {
     interface Builder extends SysUIComponent.Builder {
         SysUIComponentP404 build();
     }
+
+    /**
+     * Member injection into the supplied argument.
+     */
+    void inject(KeyguardSliceProviderP404 keyguardSliceProviderP404);
+
+    @SysUISingleton
+    KeyguardSmartspaceController createKeyguardSmartspaceController();
 }
