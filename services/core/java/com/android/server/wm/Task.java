@@ -5154,7 +5154,7 @@ class Task extends WindowContainer<WindowContainer> {
     /**
      * @return true if the task is currently focused.
      */
-    private boolean isFocused() {
+    boolean isFocused() {
         if (mDisplayContent == null || mDisplayContent.mCurrentFocus == null) {
             return false;
         }
