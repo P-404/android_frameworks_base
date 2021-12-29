@@ -1058,7 +1058,10 @@ public final class BluetoothAdapter {
                 @SuppressLint("AndroidFrameworkRequiresPermission")
                 protected Integer recompute(Void query) {
                     try {
-                        return mService.getState();
+                        if (mService != null) {
+                            return mService.getState();
+                        }
+                        return BluetoothAdapter.STATE_OFF;
                     } catch (RemoteException e) {
                         throw e.rethrowFromSystemServer();
                     }
@@ -2014,12 +2017,12 @@ public final class BluetoothAdapter {
         return false;
     }
     /** @hide */
-    @RequiresPermission(android.Manifest.permission.BLUETOOTH)
+    @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
     public boolean isBroadcastActive() {
         try {
             mServiceLock.readLock().lock();
             if (mService != null) {
-                return mService.isBroadcastActive();
+                return mService.isBroadcastActive(mAttributionSource);
             }
         } catch (RemoteException e) {
             Log.e(TAG, "", e);
