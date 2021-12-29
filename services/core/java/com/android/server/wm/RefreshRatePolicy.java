@@ -97,7 +97,7 @@ class RefreshRatePolicy {
             return 0;
         }
 
-        // If app is forced to specified refresh rate, return the specified refresh rate
+        // If app is forced to specified refresh rate, return the corresponding mode id.
         int forceRefreshRateId = mForceList.getForceRefreshRateId(w.getOwningPackage());
         if(forceRefreshRateId > 0) {
             return forceRefreshRateId;
@@ -135,6 +135,12 @@ class RefreshRatePolicy {
         // to run in default refresh rate.
         if (w.isAnimating(TRANSITION | PARENTS)) {
             return 0;
+        }
+
+        // If app is forced to specified refresh rate, return the specified refresh rate.
+        float forceRefreshRate = mForceList.getForceRefreshRate(w.getOwningPackage());
+        if(forceRefreshRate > 0) {
+            return forceRefreshRate;
         }
 
         // If the app set a preferredDisplayModeId, the preferred refresh rate is the refresh rate

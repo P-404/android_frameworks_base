@@ -91,21 +91,34 @@ class ForceRefreshRatePackageList {
         synchronized (mLock) {
             if(mForcedPackageList.containsKey(packageName)) {
                 float refreshRate = mForcedPackageList.get(packageName).floatValue();
-                return findModeByRefreshRate(refreshRate);
+                Display.Mode mode = findModeByRefreshRate(refreshRate);
+                return mode != null ? mode.getModeId() : 0;
             }else {
                 return 0;
             }
         }
     }
 
-    int findModeByRefreshRate(float refreshRate) {
+    float getForceRefreshRate(String packageName) {
+        synchronized (mLock) {
+            if(mForcedPackageList.containsKey(packageName)) {
+                float refreshRate = mForcedPackageList.get(packageName).floatValue();
+                Display.Mode mode = findModeByRefreshRate(refreshRate);
+                return mode != null ? mode.getRefreshRate() : 0;
+            }else {
+                return 0;
+            }
+        }
+    }
+
+    private Display.Mode findModeByRefreshRate(float refreshRate) {
         Display.Mode[] modes = mDisplayInfo.supportedModes;
         for (int i = 0; i < modes.length; i++) {
             if (Math.abs(modes[i].getRefreshRate() - refreshRate) < REFRESH_RATE_EPSILON) {
-                return modes[i].getModeId();
+                return modes[i];
             }
         }
-        return 0;
+        return null;
     }
 
     private class SettingsObserver extends ContentObserver {
