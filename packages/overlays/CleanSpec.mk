@@ -46,6 +46,7 @@
 
 $(call add-clean-step, rm -rf $(PRODUCT_OUT)/vendor/overlay/DisplayCutout*)
 $(call add-clean-step, rm -rf $(PRODUCT_OUT)/vendor/overlay/IconPack*)
+$(call add-clean-step, rm -rf $(PRODUCT_OUT)/vendor/overlay/IconShape*)
 
 # ************************************************
 # NEWER CLEAN STEPS MUST BE AT THE END OF THE LIST
