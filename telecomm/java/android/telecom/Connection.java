@@ -791,6 +791,21 @@ public abstract class Connection extends Conferenceable {
             "android.telecom.extra.REMOTE_PHONE_ACCOUNT_HANDLE";
 
     /**
+     * The Telecom call ID of the conference an existing connection should be added to.  This is
+     * required when {@link com.android.services.telephony.TelephonyConnectionService} adds a
+     * {@link Conference} to Telecom using the
+     * {@link ConnectionService#addExistingConnection(PhoneAccountHandle, Connection, Conference)}
+     * API.  That API specifies a parent conference associated with the new existing connection
+     * being added, and there is no equivalent as part of the {@link RemoteConnectionService} API.
+     * This extra key is used to stack the ID of the conference to which the existing connection
+     * will be added so that Telecom can link it up correctly when the {@link RemoteConference}
+     * is added to Telecom by the connection manager.
+     * @hide
+     */
+    public static final String EXTRA_ADD_TO_CONFERENCE_ID =
+            "android.telecom.extra.ADD_TO_CONFERENCE_ID";
+
+    /**
      * Extra key set from a {@link ConnectionService} when using the remote connection APIs
      * (e.g. {@link RemoteConnectionService#createRemoteConnection(PhoneAccountHandle,
      * ConnectionRequest, boolean)}) to create a remote connection.  Provides the receiving
@@ -838,6 +853,14 @@ public abstract class Connection extends Conferenceable {
      */
     public static final String EXTRA_IS_DEVICE_TO_DEVICE_COMMUNICATION_AVAILABLE =
             "android.telecom.extra.IS_DEVICE_TO_DEVICE_COMMUNICATION_AVAILABLE";
+
+    /**
+     * Boolean connection extra key set on a {@link Connection} to indicate that swapping
+     * the call is not allowed.
+     * @hide
+     */
+    public static final String EXTRA_DISABLE_SWAP_CALL =
+            "android.telecom.extra.DISABLE_SWAP_CALL";
 
     /**
      * Connection event used to inform Telecom that it should play the on hold tone.  This is used

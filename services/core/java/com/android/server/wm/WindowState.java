@@ -26,7 +26,6 @@ import static android.app.WindowConfiguration.isSplitScreenWindowingMode;
 import static android.content.res.Configuration.ORIENTATION_LANDSCAPE;
 import static android.graphics.GraphicsProtos.dumpPointProto;
 import static android.hardware.display.DisplayManager.SWITCHING_TYPE_NONE;
-import static android.hardware.input.InputManager.BLOCK_UNTRUSTED_TOUCHES;
 import static android.os.InputConstants.DEFAULT_DISPATCHING_TIMEOUT_MILLIS;
 import static android.os.PowerManager.DRAW_WAKE_LOCK;
 import static android.os.Trace.TRACE_TAG_WINDOW_MANAGER;
@@ -194,7 +193,6 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.AppOpsManager;
 import android.app.admin.DevicePolicyCache;
-import android.app.compat.CompatChanges;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Matrix;
@@ -1156,9 +1154,6 @@ class WindowState extends WindowContainer<WindowState> implements WindowManagerP
     }
 
     int getTouchOcclusionMode() {
-        if (!CompatChanges.isChangeEnabled(BLOCK_UNTRUSTED_TOUCHES, mOwnerUid)) {
-            return TouchOcclusionMode.ALLOW;
-        }
         if (WindowManager.LayoutParams.isSystemAlertWindowType(mAttrs.type)) {
             return TouchOcclusionMode.USE_OPACITY;
         }
@@ -2180,11 +2175,18 @@ class WindowState extends WindowContainer<WindowState> implements WindowManagerP
         }
     }
 
-    boolean onSetAppExiting() {
+    boolean onSetAppExiting(boolean animateExit) {
         final DisplayContent displayContent = getDisplayContent();
         boolean changed = false;
 
-        if (isVisibleNow()) {
+        if (!animateExit) {
+            // Hide the window permanently if no window exist animation is performed, so we can
+            // avoid the window surface becoming visible again unexpectedly during the next
+            // relayout.
+            mPermanentlyHidden = true;
+            hide(false /* doAnimation */, false /* requestAnim */);
+        }
+        if (isVisibleNow() && animateExit) {
             mWinAnimator.applyAnimationLocked(TRANSIT_EXIT, false);
             if (mWmService.mAccessibilityController != null) {
                 mWmService.mAccessibilityController.onWindowTransition(this, TRANSIT_EXIT);
@@ -2197,7 +2199,7 @@ class WindowState extends WindowContainer<WindowState> implements WindowManagerP
 
         for (int i = mChildren.size() - 1; i >= 0; --i) {
             final WindowState c = mChildren.get(i);
-            changed |= c.onSetAppExiting();
+            changed |= c.onSetAppExiting(animateExit);
         }
 
         return changed;

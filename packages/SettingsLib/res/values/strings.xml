@@ -677,8 +677,6 @@
     <string name="wifi_enhanced_mac_randomization">Wi\u2011Fi non\u2011persistent MAC randomization</string>
     <!-- Setting Checkbox title whether to always keep mobile data active. [CHAR LIMIT=80] -->
     <string name="mobile_data_always_on">Mobile data always active</string>
-    <!-- Setting Checkbox title whether to allow smart DDS switch. [CHAR LIMIT=80] -->
-    <string name="smart_dds_switch">Smart DDS switch</string>
     <!-- Setting Checkbox title whether to enable hardware acceleration for tethering. [CHAR LIMIT=80] -->
     <string name="tethering_hardware_offload">Tethering hardware acceleration</string>
     <!-- Setting Checkbox title for showing Bluetooth devices without names -->
@@ -776,7 +774,6 @@
     <!-- Setting Checkbox title whether to enable view attribute inspection -->
     <string name="debug_view_attributes">Enable view attribute inspection</string>
     <string name="mobile_data_always_on_summary">Always keep mobile data active, even when Wi\u2011Fi is active (for fast network switching).</string>
-    <string name="smart_dds_switch_summary">Allow modem to intelligently switch the DDS.</string>
     <string name="tethering_hardware_offload_summary">Use tethering hardware acceleration if available</string>
     <!-- Title of warning dialog about the implications of enabling USB debugging -->
     <string name="adb_warning_title">Allow USB debugging?</string>

@@ -520,9 +520,10 @@ interface IWindowManager
     void unregisterDisplayFoldListener(IDisplayFoldListener listener);
 
     /**
-     * Registers an IDisplayContainerListener
+     * Registers an IDisplayContainerListener, and returns the set of existing display ids. The
+     * listener's onDisplayAdded() will not be called for the displays returned.
      */
-    void registerDisplayWindowListener(IDisplayWindowListener listener);
+    int[] registerDisplayWindowListener(IDisplayWindowListener listener);
 
     /**
      * Unregisters an IDisplayContainerListener.
@@ -814,9 +815,10 @@ interface IWindowManager
      * @param displayId The display associated with the window context
      * @param options A bundle used to pass window-related options and choose the right DisplayArea
      *
-     * @return {@code true} if the WindowContext is attached to the DisplayArea successfully.
+     * @return the DisplayArea's {@link android.app.res.Configuration} if the WindowContext is
+     * attached to the DisplayArea successfully. {@code null}, otherwise.
      */
-    boolean attachWindowContextToDisplayArea(IBinder clientToken, int type, int displayId,
+    Configuration attachWindowContextToDisplayArea(IBinder clientToken, int type, int displayId,
             in Bundle options);
 
     /**

@@ -25,9 +25,9 @@ import static android.os.PowerExemptionManager.TEMPORARY_ALLOW_LIST_TYPE_FOREGRO
 import static android.os.UserHandle.USER_SYSTEM;
 
 import android.Manifest;
+import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.SuppressLint;
-import android.annotation.NonNull;
 import android.app.ActivityManager;
 import android.app.AppGlobals;
 import android.app.AppOpsManager;
@@ -189,8 +189,6 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
     private boolean mBinding;
     private int mBindingUserID;
     private boolean mUnbinding;
-    private int mWaitForEnableRetry;
-    private int mWaitForDisableRetry;
     private boolean mTryBindOnBindTimeout = false;
 
     private BluetoothModeChangeHelper mBluetoothModeChangeHelper;
@@ -1022,14 +1020,15 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
         if (mState == BluetoothAdapter.STATE_ON
                 || mState == BluetoothAdapter.STATE_BLE_ON
                 || mState == BluetoothAdapter.STATE_TURNING_ON
-                || mState == BluetoothAdapter.STATE_TURNING_OFF) {
-            Log.d(TAG, "enableBLE(): Bluetooth already enabled");
+                || mState == BluetoothAdapter.STATE_TURNING_OFF
+                || mState == BluetoothAdapter.STATE_BLE_TURNING_ON) {
+            Log.d(TAG, "enableBLE(): Bluetooth is already enabled or is turning on");
             return true;
         }
         synchronized (mReceiver) {
             // waive WRITE_SECURE_SETTINGS permission check
-            sendEnableMsg(false,
-                    BluetoothProtoEnums.ENABLE_DISABLE_REASON_APPLICATION_REQUEST, packageName);
+            sendEnableMsg(false, BluetoothProtoEnums.ENABLE_DISABLE_REASON_APPLICATION_REQUEST,
+                    packageName, true);
         }
         return true;
     }
@@ -1981,6 +1980,8 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
 
     private class BluetoothHandler extends Handler {
         boolean mGetNameAddressOnly = false;
+        private int mWaitForEnableRetry;
+        private int mWaitForDisableRetry;
 
         BluetoothHandler(Looper looper) {
             super(looper);
@@ -2033,6 +2034,7 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
 
                 case MESSAGE_ENABLE:
                     int quietEnable = msg.arg1;
+                    int isBle  = msg.arg2;
                     if (mHandler.hasMessages(MESSAGE_HANDLE_DISABLE_DELAYED)
                             || mHandler.hasMessages(MESSAGE_HANDLE_ENABLE_DELAYED)) {
                         if (msg.arg2 == 0) {
@@ -2082,26 +2084,28 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
                     try {
                         mBluetoothLock.readLock().lock();
                         if (mBluetooth != null) {
+                            boolean isHandled = true;
                             int state = mBluetooth.getState();
-                            if (state == BluetoothAdapter.STATE_BLE_ON) {
-                                if (isBluetoothPersistedStateOnBluetooth() ||
-                                    mEnableExternal) {
-                                    Slog.w(TAG, "BLE_ON State:Enable from Settings or" +
-                                                "BT on persisted, going to ON");
-                                    mBluetooth.updateQuietModeStatus(mQuietEnable,
-                                            mContext.getAttributionSource());
-                                    mBluetooth.onLeServiceUp(mContext.getAttributionSource());
-
-                                    // waive WRITE_SECURE_SETTINGS permission check
-                                    long callingIdentity = Binder.clearCallingIdentity();
-                                    persistBluetoothSetting(BLUETOOTH_ON_BLUETOOTH);
-                                    Binder.restoreCallingIdentity(callingIdentity);
-                                } else {
-                                    Slog.w(TAG, "BLE_ON State:Queued enable from ble app," +
-                                                " stay in ble on");
-                                }
-                                break;
+                            switch (state) {
+                                case BluetoothAdapter.STATE_BLE_ON:
+                                    if (isBle == 1) {
+                                        Slog.i(TAG, "Already at BLE_ON State");
+                                    } else {
+                                        Slog.w(TAG, "BT Enable in BLE_ON State, going to ON");
+                                        mBluetooth.onLeServiceUp(mContext.getAttributionSource());
+                                        persistBluetoothSetting(BLUETOOTH_ON_BLUETOOTH);
+                                    }
+                                    break;
+                                case BluetoothAdapter.STATE_BLE_TURNING_ON:
+                                case BluetoothAdapter.STATE_TURNING_ON:
+                                case BluetoothAdapter.STATE_ON:
+                                    Slog.i(TAG, "MESSAGE_ENABLE: already enabled");
+                                    break;
+                                default:
+                                    isHandled = false;
+                                    break;
                             }
+                            if (isHandled) break;
                         }
                     } catch (RemoteException e) {
                         Slog.e(TAG, "", e);
@@ -2898,7 +2902,8 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
         try {
             foregroundUser = ActivityManager.getCurrentUser();
             valid = (callingUser == foregroundUser) || parentUser == foregroundUser
-                    || callingAppId == Process.NFC_UID || callingAppId == mSystemUiUid;
+                    || callingAppId == Process.NFC_UID || callingAppId == mSystemUiUid
+                    || callingAppId == Process.SHELL_UID;
             if (DBG && !valid) {
                 Slog.d(TAG, "checkIfCallerIsForegroundUser: valid=" + valid + " callingUser="
                         + callingUser + " parentUser=" + parentUser + " foregroundUser="
@@ -3110,7 +3115,12 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
     }
 
     private void sendEnableMsg(boolean quietMode, int reason, String packageName) {
-        mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_ENABLE, quietMode ? 1 : 0, 0));
+        sendEnableMsg(quietMode, reason, packageName, false);
+    }
+
+    private void sendEnableMsg(boolean quietMode, int reason, String packageName, boolean isBle) {
+        mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_ENABLE, quietMode ? 1 : 0,
+                  isBle ? 1 : 0));
         addActiveLog(reason, packageName, true);
         mLastEnabledTime = SystemClock.elapsedRealtime();
     }

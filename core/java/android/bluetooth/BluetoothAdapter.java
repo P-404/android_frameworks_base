@@ -3466,7 +3466,6 @@ public final class BluetoothAdapter {
                         }
                     }
                 }
-
                 public void onBluetoothServiceDown() {
                     synchronized (mServiceLock.writeLock()) {
                         mService = null;
@@ -3482,7 +3481,6 @@ public final class BluetoothAdapter {
                     }
                     Log.d(TAG, "onBluetoothServiceDown: Finished sending callbacks to registered clients");
                 }
-
                 public void onBrEdrDown() {
                 }
             };

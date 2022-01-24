@@ -68,7 +68,10 @@ public class DisplayController {
         mChangeController = new DisplayChangeController(mWmService, mainExecutor);
         mDisplayContainerListener = new DisplayWindowListenerImpl();
         try {
-            mWmService.registerDisplayWindowListener(mDisplayContainerListener);
+            int[] displayIds = mWmService.registerDisplayWindowListener(mDisplayContainerListener);
+            for (int i = 0; i < displayIds.length; i++) {
+                onDisplayAdded(displayIds[i]);
+            }
         } catch (RemoteException e) {
             throw new RuntimeException("Unable to register hierarchy listener");
         }

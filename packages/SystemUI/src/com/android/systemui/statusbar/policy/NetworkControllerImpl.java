@@ -70,9 +70,12 @@ import com.android.systemui.R;
 import com.android.systemui.broadcast.BroadcastDispatcher;
 import com.android.systemui.dagger.SysUISingleton;
 import com.android.systemui.dagger.qualifiers.Background;
+import com.android.systemui.dagger.qualifiers.Main;
 import com.android.systemui.demomode.DemoMode;
 import com.android.systemui.demomode.DemoModeController;
 import com.android.systemui.dump.DumpManager;
+import com.android.systemui.qs.tiles.dialog.InternetDialogFactory;
+import com.android.systemui.qs.tiles.dialog.InternetDialogUtil;
 import com.android.systemui.settings.CurrentUserTracker;
 import com.android.systemui.statusbar.FeatureFlags;
 import com.android.systemui.statusbar.policy.DeviceProvisionedController.DeviceProvisionedListener;
@@ -193,6 +196,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
     private boolean mUserSetup;
     private boolean mSimDetected;
     private boolean mForceCellularValidated;
+    private InternetDialogFactory mInternetDialogFactory;
+    private Handler mMainHandler;
 
     @VisibleForTesting
     FiveGServiceClient mFiveGServiceClient;
@@ -226,7 +231,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
             DemoModeController demoModeController,
             CarrierConfigTracker carrierConfigTracker,
             FeatureFlags featureFlags,
-            DumpManager dumpManager) {
+            DumpManager dumpManager,
+            @Main Handler handler,
+            InternetDialogFactory internetDialogFactory) {
         this(context, connectivityManager,
                 telephonyManager,
                 telephonyListenerManager,
@@ -247,6 +254,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
                 featureFlags,
                 dumpManager);
         mReceiverHandler.post(mRegisterListeners);
+        mMainHandler = handler;
+        mInternetDialogFactory = internetDialogFactory;
     }
 
     @VisibleForTesting
@@ -488,6 +497,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
         filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
         filter.addAction(CarrierConfigManager.ACTION_CARRIER_CONFIG_CHANGED);
+        if (InternetDialogUtil.isProviderModelEnabled(mContext)) {
+            filter.addAction(Settings.Panel.ACTION_INTERNET_CONNECTIVITY);
+        }
         filter.addAction(TelephonyIntents.ACTION_ANY_DATA_CONNECTION_STATE_CHANGED);
         mBroadcastDispatcher.registerReceiverWithHandler(this, filter, mReceiverHandler);
         mListening = true;
@@ -797,6 +809,10 @@ public class NetworkControllerImpl extends BroadcastReceiver
             case CarrierConfigManager.ACTION_CARRIER_CONFIG_CHANGED:
                 mConfig = Config.readConfig(mContext);
                 mReceiverHandler.post(this::handleConfigurationChanged);
+                break;
+            case Settings.Panel.ACTION_INTERNET_CONNECTIVITY:
+                mMainHandler.post(() -> mInternetDialogFactory.create(true,
+                        mAccessPoints.canConfigMobileData(), mAccessPoints.canConfigWifi()));
                 break;
             default:
                 int subId = intent.getIntExtra(SubscriptionManager.EXTRA_SUBSCRIPTION_INDEX,

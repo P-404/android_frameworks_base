@@ -137,24 +137,11 @@ public class StartingSurfaceDrawer {
     private final SparseArray<SurfaceControlViewHost> mAnimatedSplashScreenSurfaceHosts =
             new SparseArray<>(1);
 
-    /** Obtain proper context for showing splash screen on the provided display. */
-    private Context getDisplayContext(Context context, int displayId) {
-        if (displayId == DEFAULT_DISPLAY) {
-            // The default context fits.
-            return context;
-        }
-
-        final Display targetDisplay = mDisplayManager.getDisplay(displayId);
-        if (targetDisplay == null) {
-            // Failed to obtain the non-default display where splash screen should be shown,
-            // lets not show at all.
-            return null;
-        }
-
-        return context.createDisplayContext(targetDisplay);
+    private Display getDisplay(int displayId) {
+        return mDisplayManager.getDisplay(displayId);
     }
 
-    private int getSplashScreenTheme(int splashScreenThemeResId, ActivityInfo activityInfo) {
+    int getSplashScreenTheme(int splashScreenThemeResId, ActivityInfo activityInfo) {
         return splashScreenThemeResId != 0
                 ? splashScreenThemeResId
                 : activityInfo.getThemeResource() != 0 ? activityInfo.getThemeResource()
@@ -177,7 +164,7 @@ public class StartingSurfaceDrawer {
 
         final int displayId = taskInfo.displayId;
         final int taskId = taskInfo.taskId;
-        Context context = mContext;
+
         // replace with the default theme if the application didn't set
         final int theme = getSplashScreenTheme(windowInfo.splashScreenThemeResId, activityInfo);
         if (DEBUG_SPLASH_SCREEN) {
@@ -186,13 +173,16 @@ public class StartingSurfaceDrawer {
                     + " suggestType=" + suggestType);
         }
 
-        // Obtain proper context to launch on the right display.
-        final Context displayContext = getDisplayContext(context, displayId);
-        if (displayContext == null) {
+        final Display display = getDisplay(displayId);
+        if (display == null) {
             // Can't show splash screen on requested display, so skip showing at all.
             return;
         }
-        context = displayContext;
+        Context context = displayId == DEFAULT_DISPLAY
+                ? mContext : mContext.createDisplayContext(display);
+        if (context == null) {
+            return;
+        }
         if (theme != context.getThemeResId()) {
             try {
                 context = context.createPackageContextAsUser(activityInfo.packageName,
@@ -303,7 +293,8 @@ public class StartingSurfaceDrawer {
         // Record whether create splash screen view success, notify to current thread after
         // create splash screen view finished.
         final SplashScreenViewSupplier viewSupplier = new SplashScreenViewSupplier();
-        final FrameLayout rootLayout = new FrameLayout(context);
+        final FrameLayout rootLayout = new FrameLayout(
+                mSplashscreenContentDrawer.createViewContextWrapper(context));
         rootLayout.setPadding(0, 0, 0, 0);
         rootLayout.setFitsSystemWindows(false);
         final Runnable setViewSynchronized = () -> {
@@ -545,6 +536,15 @@ public class StartingSurfaceDrawer {
         removeWindowSynced(taskId, null, null, false);
     }
 
+    void onImeDrawnOnTask(int taskId) {
+        final StartingWindowRecord record = mStartingWindowRecords.get(taskId);
+        if (record != null && record.mTaskSnapshotWindow != null
+                && record.mTaskSnapshotWindow.hasImeSurface()) {
+            record.mTaskSnapshotWindow.removeImmediately();
+        }
+        mStartingWindowRecords.remove(taskId);
+    }
+
     protected void removeWindowSynced(int taskId, SurfaceControl leash, Rect frame,
             boolean playRevealAnimation) {
         final StartingWindowRecord record = mStartingWindowRecords.get(taskId);
@@ -572,14 +572,15 @@ public class StartingSurfaceDrawer {
                     Slog.e(TAG, "Found empty splash screen, remove!");
                     removeWindowInner(record.mDecorView, false);
                 }
+                mStartingWindowRecords.remove(taskId);
             }
             if (record.mTaskSnapshotWindow != null) {
                 if (DEBUG_TASK_SNAPSHOT) {
                     Slog.v(TAG, "Removing task snapshot window for " + taskId);
                 }
-                record.mTaskSnapshotWindow.remove();
+                record.mTaskSnapshotWindow.scheduleRemove(
+                        () -> mStartingWindowRecords.remove(taskId));
             }
-            mStartingWindowRecords.remove(taskId);
         }
     }
 
