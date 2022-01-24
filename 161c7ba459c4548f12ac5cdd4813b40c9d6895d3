@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8b67fabb_85c85d88",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1019766
+      },
+      "writtenOn": "2022-01-24T11:36:26Z",
+      "side": 1,
+      "message": "* LGTM, some realme devices have broken screen recorder, this patch fixes it.",
+      "revId": "161c7ba459c4548f12ac5cdd4813b40c9d6895d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
