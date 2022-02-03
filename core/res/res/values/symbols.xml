@@ -4824,4 +4824,7 @@
 
   <java-symbol type="dimen" name="status_bar_height_default" />
   <java-symbol type="integer" name="config_maximumDelayTimeToDeactivateDataCall" />
+
+ <!-- Whether to cleanup fingerprints upon connection to the daemon and when  user switches -->
+  <java-symbol type="bool" name="config_cleanupUnusedFingerprints" />
 </resources>
