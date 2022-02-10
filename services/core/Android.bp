@@ -166,6 +166,7 @@ java_library_static {
         "com.android.sysprop.watchdog",
         "vendor.qti.hardware.servicetracker-V1.0-java",
         "vendor.qti.hardware.servicetracker-V1.2-java",
+        "faceunlock_framework",
     ],
     javac_shard_size: 50,
 }
