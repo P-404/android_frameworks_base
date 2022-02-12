@@ -43,4 +43,8 @@
     <string name="global_action_reboot_recovery">Recovery</string>
     <string name="global_action_reboot_bootloader">Bootloader</string>
     <string name="global_action_settings">Settings</string>
+
+    <!-- Face Unlock -->
+    <string name="face_unlock_recognizing">Recognizing face...</string>
+
 </resources>
