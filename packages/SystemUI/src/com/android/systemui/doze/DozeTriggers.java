@@ -38,12 +38,12 @@ import com.android.internal.logging.UiEvent;
 import com.android.internal.logging.UiEventLogger;
 import com.android.internal.logging.UiEventLoggerImpl;
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
-import com.android.internal.util.IndentingPrintWriter;
 import com.android.systemui.Dependency;
 import com.android.systemui.broadcast.BroadcastDispatcher;
 import com.android.systemui.dock.DockManager;
 import com.android.systemui.statusbar.phone.DozeParameters;
 import com.android.systemui.util.Assert;
+import com.android.systemui.util.concurrency.DelayableExecutor;
 import com.android.systemui.util.sensors.AsyncSensorManager;
 import com.android.systemui.util.sensors.ProximitySensor;
 import com.android.systemui.util.wakelock.WakeLock;
@@ -157,8 +157,8 @@ public class DozeTriggers implements DozeMachine.Part {
     public DozeTriggers(Context context, DozeMachine machine, DozeHost dozeHost,
             AlarmManager alarmManager, AmbientDisplayConfiguration config,
             DozeParameters dozeParameters, AsyncSensorManager sensorManager,
-            WakeLock wakeLock, boolean allowPulseTriggers, DockManager dockManager,
-            ProximitySensor proximitySensor, ProximitySensor.ProximityCheck proxCheck,
+            DelayableExecutor delayableExecutor, WakeLock wakeLock, boolean allowPulseTriggers,
+            DockManager dockManager, ProximitySensor proximitySensor,
             DozeLog dozeLog, BroadcastDispatcher broadcastDispatcher) {
         mContext = context;
         mMachine = machine;
@@ -172,7 +172,7 @@ public class DozeTriggers implements DozeMachine.Part {
                 config, wakeLock, this::onSensor, this::onProximityFar, dozeLog, proximitySensor);
         mUiModeManager = mContext.getSystemService(UiModeManager.class);
         mDockManager = dockManager;
-        mProxCheck = proxCheck;
+        mProxCheck = new ProximitySensor.ProximityCheck(proximitySensor, delayableExecutor);
         mDozeLog = dozeLog;
         mBroadcastDispatcher = broadcastDispatcher;
     }
@@ -400,38 +400,39 @@ public class DozeTriggers implements DozeMachine.Part {
                 break;
             case DOZE_PULSING:
             case DOZE_PULSING_BRIGHT:
-                mWantProx = true;
-                mWantTouchScreenSensors = false;
-                break;
             case DOZE_AOD_DOCKED:
-                mWantProx = false;
+                mWantProx = true;
                 mWantTouchScreenSensors = false;
                 break;
             case DOZE_PULSE_DONE:
                 mDozeSensors.requestTemporaryDisable();
+                // A pulse will temporarily disable sensors that require a touch screen.
+                // Let's make sure that they are re-enabled when the pulse is over.
+                mDozeSensors.updateListening();
                 break;
             case FINISH:
                 mBroadcastReceiver.unregister(mBroadcastDispatcher);
                 mDozeHost.removeCallback(mHostCallback);
                 mDockManager.removeListener(mDockEventListener);
-                mDozeSensors.setListening(false, false);
+                mDozeSensors.setListening(false);
                 mDozeSensors.setProxListening(false);
-                mWantSensors = false;
-                mWantProx = false;
-                mWantTouchScreenSensors = false;
                 break;
             default:
         }
-        mDozeSensors.setListening(mWantSensors, mWantTouchScreenSensors);
     }
 
     @Override
     public void onScreenState(int state) {
         mDozeSensors.onScreenState(state);
-        mDozeSensors.setProxListening(mWantProx && (state == Display.STATE_DOZE
-                || state == Display.STATE_DOZE_SUSPEND
-                || state == Display.STATE_OFF));
-        mDozeSensors.setListening(mWantSensors, mWantTouchScreenSensors);
+        if (state == Display.STATE_DOZE || state == Display.STATE_DOZE_SUSPEND
+                || state == Display.STATE_OFF) {
+            mDozeSensors.setProxListening(mWantProx);
+            mDozeSensors.setListening(mWantSensors);
+            mDozeSensors.setTouchscreenSensorsListening(mWantTouchScreenSensors);
+        } else {
+            mDozeSensors.setProxListening(false);
+            mDozeSensors.setListening(false);
+        }
     }
 
     private void checkTriggersAtInit() {
@@ -507,9 +508,7 @@ public class DozeTriggers implements DozeMachine.Part {
 
         pw.println(" pulsePending=" + mPulsePending);
         pw.println("DozeSensors:");
-        IndentingPrintWriter idpw = new IndentingPrintWriter(pw, "  ");
-        idpw.increaseIndent();
-        mDozeSensors.dump(idpw);
+        mDozeSensors.dump(pw);
     }
 
     private class TriggerReceiver extends BroadcastReceiver {
