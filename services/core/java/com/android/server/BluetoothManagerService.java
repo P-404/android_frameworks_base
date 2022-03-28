@@ -2107,6 +2107,7 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
                                 if (mBluetooth != null) {
                                     mBluetooth.updateQuietModeStatus(mQuietEnable);
                                     mBluetooth.onLeServiceUp();
+                                    persistBluetoothSetting(BLUETOOTH_ON_BLUETOOTH);
                                 }
                            } catch (RemoteException e) {
                                 Slog.e(TAG, "", e);
