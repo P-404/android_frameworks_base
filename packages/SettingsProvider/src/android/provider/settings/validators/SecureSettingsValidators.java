@@ -318,5 +318,6 @@ public class SecureSettingsValidators {
             return true;
         });
         VALIDATORS.put(Secure.FACE_UNLOCK_METHOD, BOOLEAN_VALIDATOR);
+        VALIDATORS.put(Secure.TETHERING_ALLOW_VPN_UPSTREAMS, BOOLEAN_VALIDATOR);
     }
 }
