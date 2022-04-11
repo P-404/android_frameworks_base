@@ -1527,7 +1527,6 @@ public final class ActiveServices {
                         final long delayMs = SystemClock.elapsedRealtime() -
                                 r.mLastSetFgsRestrictionTime;
                         if (delayMs > mAm.mConstants.mFgsStartForegroundTimeoutMs) {
-                            resetFgsRestrictionLocked(r);
                             setFgsRestrictionLocked(r.serviceInfo.packageName, r.app.pid,
                                     r.appInfo.uid, r, false);
                             EventLog.writeEvent(0x534e4554, "183147114", r.appInfo.uid,
@@ -5244,5 +5243,6 @@ public final class ActiveServices {
 
     private void resetFgsRestrictionLocked(ServiceRecord r) {
         r.mAllowWhileInUsePermissionInFgs = false;
+        r.mLastSetFgsRestrictionTime = 0;
     }
 }
