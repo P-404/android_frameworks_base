@@ -19,4 +19,7 @@
     <!-- Auth ripple animation duration
          AOSP default is 1533 -->
     <item name="auth_ripple_animation_duration" format="float" type="dimen">766.5</item>
+
+    <!-- Allow devices override audio panel location to the left side -->
+    <bool name="config_audioPanelOnLeftSide">false</bool>
 </resources>
