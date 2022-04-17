@@ -48,6 +48,7 @@ import android.os.Trace;
 import android.os.UserHandle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.provider.Settings;
 import android.util.BoostFramework;
 import android.util.Log;
 import android.view.Gravity;
@@ -168,6 +169,9 @@ public class UdfpsController implements DozeReceiver {
     private boolean mOnFingerDown;
     private boolean mAttemptedToDismissKeyguard;
     private Set<Callback> mCallbacks = new HashSet<>();
+    private boolean mNightDisplayEnabled;
+    private boolean mFrameworkDimming;
+    private int[][] mBrightnessAlphaArray;
     private final int mUdfpsVendorCode;
 
     // Boostframework for UDFPS
@@ -641,6 +645,11 @@ public class UdfpsController implements DozeReceiver {
         mCoreLayoutParams.layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
         mCoreLayoutParams.privateFlags = WindowManager.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY;
+        mCoreLayoutParams.dimAmount = 0;
+
+        mFrameworkDimming = mContext.getResources().getBoolean(R.bool.config_udfpsFrameworkDimming);
+
+        parseBrightnessAlphaArray();
 
         mFingerprintManager.setUdfpsOverlayController(new UdfpsOverlayController());
 
@@ -734,6 +743,7 @@ public class UdfpsController implements DozeReceiver {
         final int paddingY = animation != null ? animation.getPaddingY() : 0;
 
         mCoreLayoutParams.flags = Utils.FINGERPRINT_OVERLAY_LAYOUT_PARAM_FLAGS
+                | WindowManager.LayoutParams.FLAG_DIM_BEHIND
                 | WindowManager.LayoutParams.FLAG_SPLIT_TOUCH;
         if (animation != null && animation.listenForTouchesOutsideView()) {
             mCoreLayoutParams.flags |= WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
@@ -1023,6 +1033,8 @@ public class UdfpsController implements DozeReceiver {
             return;
         }
 
+        updateViewDimAmount(true);
+
         if (mView.getAnimationViewController() instanceof UdfpsKeyguardViewController
                 && !mStatusBarStateController.isDozing()) {
             mKeyguardBypassController.setUserHasDeviceEntryIntent(true);
@@ -1071,6 +1083,7 @@ public class UdfpsController implements DozeReceiver {
             mPerf.perfLockRelease();
             mIsPerfLockAcquired = false;
         }
+        updateViewDimAmount(false);
     }
 
     private void updateTouchListener() {
@@ -1084,6 +1097,49 @@ public class UdfpsController implements DozeReceiver {
         } else {
             mView.setOnHoverListener(null);
             mView.setOnTouchListener(mOnTouchListener);
+        }
+    }
+
+    private static int interpolate(int x, int xa, int xb, int ya, int yb) {
+        return ya - (ya - yb) * (x - xa) / (xb - xa);
+    }
+
+    private void updateViewDimAmount(boolean pressed) {
+        if (mFrameworkDimming) {
+            if (pressed) {
+                int curBrightness = Settings.System.getInt(mContext.getContentResolver(),
+                        Settings.System.SCREEN_BRIGHTNESS, 100);
+                int i, dimAmount;
+                for (i = 0; i < mBrightnessAlphaArray.length; i++) {
+                    if (mBrightnessAlphaArray[i][0] >= curBrightness) break;
+                }
+                if (i == 0) {
+                    dimAmount = mBrightnessAlphaArray[i][1];
+                } else if (i == mBrightnessAlphaArray.length) {
+                    dimAmount = mBrightnessAlphaArray[i-1][1];
+                } else {
+                    dimAmount = interpolate(curBrightness,
+                            mBrightnessAlphaArray[i][0], mBrightnessAlphaArray[i-1][0],
+                            mBrightnessAlphaArray[i][1], mBrightnessAlphaArray[i-1][1]);
+                }
+                mCoreLayoutParams.dimAmount = dimAmount / 255.0f;
+            } else {
+                mCoreLayoutParams.dimAmount = 0;
+            }
+            mWindowManager.updateViewLayout(mView, mCoreLayoutParams);
+        }
+    }
+
+    private void parseBrightnessAlphaArray() {
+        if (mFrameworkDimming) {
+            String[] array = mContext.getResources().getStringArray(
+                    R.array.config_udfpsDimmingBrightnessAlphaArray);
+            mBrightnessAlphaArray = new int[array.length][2];
+            for (int i = 0; i < array.length; i++) {
+                String[] s = array[i].split(",");
+                mBrightnessAlphaArray[i][0] = Integer.parseInt(s[0]);
+                mBrightnessAlphaArray[i][1] = Integer.parseInt(s[1]);
+            }
         }
     }
 
