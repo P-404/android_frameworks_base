@@ -82,6 +82,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.BoostFramework;
 import android.util.DisplayMetrics;
 import android.util.Slog;
 import android.util.proto.ProtoOutputStream;
@@ -93,6 +94,7 @@ import android.window.TaskFragmentInfo;
 import android.window.TaskFragmentOrganizerToken;
 
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.app.ActivityTrigger;
 import com.android.internal.protolog.common.ProtoLog;
 import com.android.internal.util.function.pooled.PooledFunction;
 import com.android.internal.util.function.pooled.PooledLambda;
@@ -239,6 +241,12 @@ class TaskFragment extends WindowContainer<WindowContainer> {
     /** Client assigned unique token for this TaskFragment if this is created by an organizer. */
     @Nullable
     private IBinder mFragmentToken;
+
+    //Perf
+    public BoostFramework mPerf = null;
+
+    //ActivityTrigger
+    static final ActivityTrigger mActivityTrigger = new ActivityTrigger();
 
     /**
      * Whether to delay the last activity of TaskFragment being immediately removed while finishing.
@@ -1048,14 +1056,14 @@ class TaskFragment extends WindowContainer<WindowContainer> {
 
         if (DEBUG_SWITCH) Slog.v(TAG_SWITCH, "Resuming " + next);
 
-        // TODO(b/223439401) adjust the value-add
-        // //Trigger Activity Resume
-        // if (mActivityTrigger != null) {
-        //     mActivityTrigger.activityResumeTrigger(next.intent, next.info,
-        //                                            next.info.applicationInfo,
-        //                                            next.occludesParent());
-        // }
+         //Trigger Activity Resume
+         if (mActivityTrigger != null) {
+             mActivityTrigger.activityResumeTrigger(next.intent, next.info,
+                                                    next.info.applicationInfo,
+                                                    next.occludesParent());
+         }
 
+        // TODO(b/223439401) adjust the value-add
         // if (mActivityPluginDelegate != null && getWindowingMode() != WINDOWING_MODE_UNDEFINED) {
         //     mActivityPluginDelegate.activityInvokeNotification
         //         (next.info.packageName, getWindowingMode() == WINDOWING_MODE_FULLSCREEN);
@@ -1162,10 +1170,9 @@ class TaskFragment extends WindowContainer<WindowContainer> {
         // to ignore it when computing the desired screen orientation.
         boolean anim = true;
         final DisplayContent dc = taskDisplayArea.mDisplayContent;
-        // TODO(b/223439401) adjust the value-add
-        // if (mPerf == null) {
-        //     mPerf = new BoostFramework();
-        // }
+        if (mPerf == null) {
+            mPerf = new BoostFramework();
+        }
         if (prev != null) {
             if (prev.finishing) {
                 if (DEBUG_TRANSITION) {
@@ -1175,11 +1182,10 @@ class TaskFragment extends WindowContainer<WindowContainer> {
                     anim = false;
                     dc.prepareAppTransition(TRANSIT_NONE);
                 } else {
-                    // TODO(b/223439401) adjust the value-add
-                    // if(prev.getTask() != next.getTask() && mPerf != null) {
-                    //    mPerf.perfHint(BoostFramework.VENDOR_HINT_ANIM_BOOST,
-                    //        next.packageName);
-                    // }
+                    if(prev.getTask() != next.getTask() && mPerf != null) {
+                       mPerf.perfHint(BoostFramework.VENDOR_HINT_ANIM_BOOST,
+                           next.packageName);
+                    }
                     dc.prepareAppTransition(TRANSIT_CLOSE);
                 }
                 prev.setVisibility(false);
@@ -1191,11 +1197,10 @@ class TaskFragment extends WindowContainer<WindowContainer> {
                     anim = false;
                     dc.prepareAppTransition(TRANSIT_NONE);
                 } else {
-                    // TODO(b/223439401) adjust the value-add
-                    // if(prev.getTask() != next.getTask() && mPerf != null) {
-                    //    mPerf.perfHint(BoostFramework.VENDOR_HINT_ANIM_BOOST,
-                    //        next.packageName);
-                    // }
+                     if(prev.getTask() != next.getTask() && mPerf != null) {
+                        mPerf.perfHint(BoostFramework.VENDOR_HINT_ANIM_BOOST,
+                            next.packageName);
+                     }
                     dc.prepareAppTransition(TRANSIT_OPEN,
                             next.mLaunchTaskBehind ? TRANSIT_FLAG_OPEN_BEHIND : 0);
                 }
@@ -1458,13 +1463,13 @@ class TaskFragment extends WindowContainer<WindowContainer> {
             return false;
         }
 
-        // TODO(b/223439401) adjust the value-add
-        // //Trigger Activity Pause
-        // if (mActivityTrigger != null) {
-        //     mActivityTrigger.activityPauseTrigger(prev.intent, prev.info,
-        //                                           prev.info.applicationInfo);
-        // }
+        //Trigger Activity Pause
+        if (mActivityTrigger != null) {
+            mActivityTrigger.activityPauseTrigger(prev.intent, prev.info,
+                                                  prev.info.applicationInfo);
+        }
 
+        // TODO(b/223439401) adjust the value-add
         // if (mActivityPluginDelegate != null && getWindowingMode() != WINDOWING_MODE_UNDEFINED) {
         //     mActivityPluginDelegate.activitySuspendNotification
         //         (prev.info.packageName, getWindowingMode() == WINDOWING_MODE_FULLSCREEN, true);
