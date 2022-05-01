@@ -190,10 +190,9 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
         }
         mMobileTypeSpace.setVisibility(mState.typeSpacerVisible ? View.VISIBLE : View.GONE);
         mMobile.setVisibility(mState.showTriangle ? View.VISIBLE : View.GONE);
-        mIn.setVisibility(mState.activityIn ? View.VISIBLE : View.GONE);
-        mOut.setVisibility(mState.activityOut ? View.VISIBLE : View.GONE);
-        mInoutContainer.setVisibility((mState.activityIn || mState.activityOut)
-                ? View.VISIBLE : View.GONE);
+        mIn.setVisibility(View.GONE);
+        mOut.setVisibility(View.GONE);
+        mInoutContainer.setVisibility(View.GONE);
         if (mState.volteId > 0 ) {
             mVolte.setImageResource(mState.volteId);
             mVolte.setVisibility(View.VISIBLE);
@@ -233,10 +232,9 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
         }
         mMobileTypeSpace.setVisibility(state.typeSpacerVisible ? View.VISIBLE : View.GONE);
         mMobile.setVisibility(state.showTriangle ? View.VISIBLE : View.GONE);
-        mIn.setVisibility(state.activityIn ? View.VISIBLE : View.GONE);
-        mOut.setVisibility(state.activityOut ? View.VISIBLE : View.GONE);
-        mInoutContainer.setVisibility((state.activityIn || state.activityOut)
-                ? View.VISIBLE : View.GONE);
+        mIn.setVisibility(View.GONE);
+        mOut.setVisibility(View.GONE);
+        mInoutContainer.setVisibility(View.GONE);
 
         if (mState.volteId != state.volteId) {
             if (state.volteId != 0) {
