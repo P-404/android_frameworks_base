@@ -2987,7 +2987,7 @@ class ContextImpl extends Context {
         // WindowContainer. We should detach from WindowContainer when the Context is finalized
         // if this Context is not a WindowContext. WindowContext finalization is handled in
         // WindowContext class.
-        if (mToken instanceof WindowTokenClient && mContextType != CONTEXT_TYPE_WINDOW_CONTEXT) {
+        if (mToken instanceof WindowTokenClient && mOwnsToken) {
             ((WindowTokenClient) mToken).detachFromWindowContainerIfNeeded();
         }
         super.finalize();

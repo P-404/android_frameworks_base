@@ -635,9 +635,6 @@ public final class SurfaceControl implements Parcelable {
      */
     public static final int DISPLAY_RECEIVES_INPUT = 0x01;
 
-    /* built-in physical display ids (keep in sync with ISurfaceComposer.h)
-     * these are different from the logical display ids used elsewhere in the framework */
-
     // Display power modes.
     /**
      * Display power mode off: used while blanking the screen.
