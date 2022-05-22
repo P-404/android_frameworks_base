@@ -1989,7 +1989,7 @@ public class CentralSurfacesImpl extends CoreStartable implements
         mState = state;
     }
 
-    private CustomSettingsObserver mCustomSettingsObserver = new CustomSettingsObserver(mHandler);
+    private CustomSettingsObserver mCustomSettingsObserver = new CustomSettingsObserver(mMainHandler);
     private class CustomSettingsObserver extends ContentObserver {
 
         CustomSettingsObserver(Handler handler) {
