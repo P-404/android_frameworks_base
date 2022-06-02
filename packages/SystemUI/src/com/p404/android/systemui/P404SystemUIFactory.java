@@ -9,10 +9,7 @@ import com.p404.android.systemui.dagger.P404SysUIComponent;
 
 import com.android.systemui.SystemUIFactory;
 import com.android.systemui.dagger.GlobalRootComponent;
-import com.android.systemui.navigationbar.gestural.BackGestureTfClassifierProvider;
 import com.android.systemui.screenshot.ScreenshotNotificationSmartActionsProvider;
-
-import com.google.android.systemui.gesture.BackGestureTfClassifierProviderGoogle;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -23,11 +20,6 @@ public class P404SystemUIFactory extends SystemUIFactory {
         return DaggerP404GlobalRootComponent.builder()
                 .context(context)
                 .build();
-    }
-
-    @Override
-    public BackGestureTfClassifierProvider createBackGestureTfClassifierProvider(AssetManager am, String modelName) {
-        return new BackGestureTfClassifierProviderGoogle(am, modelName);
     }
 
     @Override
