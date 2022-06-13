@@ -3,7 +3,6 @@
     <style name="EnhancedSmartspaceTextSubtitle" parent="@style/EnhancedSmartspaceTextTitle">
         <item name="android:textSize">@dimen/enhanced_smartspace_subtitle_size</item>
         <item name="android:textColor">?android:textColorSecondary</item>
-        <item name="android:fontFamily">google-sans-text</item>
         <item name="android:letterSpacing">@dimen/smartspaceLetterSpacing</item>
         <item name="android:lineHeight">20.0sp</item>
     </style>
@@ -15,7 +14,6 @@
         <item name="android:maxLines">1</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:drawablePadding">@dimen/enhanced_smartspace_icon_margin</item>
-        <item name="android:fontFamily">google-sans</item>
         <item name="android:lineHeight">24.0sp</item>
     </style>
 </resources>
