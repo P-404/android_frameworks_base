@@ -896,6 +896,13 @@ public class PackageManagerService extends IPackageManager.Stub
     final private HashMap<String, String> mPackagesToBeDisabled = new HashMap<>();
 
     /**
+     * Tracks packages that need to be disabled for QSPA enabled taregts.
+     * List of packages path on the file system.
+     */
+    final private List<String> mPackagesPathToBeDisabledForQSPA = new ArrayList<String>();
+    final private boolean mQspaEnabled = SystemProperties.getBoolean("ro.config.qspa.apps", false);
+
+    /**
      * Tracks new system packages [received in an OTA] that we expect to
      * find updated user-installed versions. Keys are package name, values
      * are package location.
@@ -7402,6 +7409,12 @@ public class PackageManagerService extends IPackageManager.Stub
         readListOfPackagesToBeDisabled();
         t.traceEnd();
 
+        mPackagesPathToBeDisabledForQSPA.add("/system_ext/priv-app/SystemUI");
+        mPackagesPathToBeDisabledForQSPA.add("/system_ext/priv-app/Launcher3QuickStep");
+        mPackagesPathToBeDisabledForQSPA.add("/system/app/PrintSpooler");
+        mPackagesPathToBeDisabledForQSPA.add("/system/priv-app/StatementService");
+        mPackagesPathToBeDisabledForQSPA.add("/product/app/Calendar");
+
         // Create sub-components that provide services / data. Order here is important.
         t.traceBegin("createSubComponents");
 
@@ -12095,6 +12108,15 @@ public class PackageManagerService extends IPackageManager.Stub
             if (!isPackage) {
                 // Ignore entries which are not packages
                 continue;
+            }
+
+            if (mQspaEnabled) {
+                if (mPackagesPathToBeDisabledForQSPA != null &&
+                        mPackagesPathToBeDisabledForQSPA.contains(file.toString())) {
+                    // Ignore entries contained in {@link #mPackagesPathToBeDisabledForQSPA}
+                    Slog.d(TAG, "QSPA enabled ignoring package for install : " + file);
+                    continue;
+                }
             }
 
             if (mPackagesToBeDisabled.values() != null &&
