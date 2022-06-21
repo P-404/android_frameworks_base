@@ -46,9 +46,9 @@
     <string name="global_action_settings">Settings</string>
 
     <!-- OnTheSpot: Action denial button text. [CHAR LIMIT=NONE] -->
-    <string name="on_the_spot_deny">NO THANKS</string>
+    <string name="on_the_spot_deny">No Thanks</string>
     <!-- OnTheSpot: Action confirmation button text. [CHAR LIMIT=NONE] -->
-    <string name="on_the_spot_confirm">OKAY</string>
+    <string name="on_the_spot_confirm">Okay</string>
 
     <!-- OnTheSpot: Quick Settings quick pull-down feature description message. [CHAR LIMIT=NONE] -->
     <string name="quick_settings_quick_pull_down">Would you like the right side of the status bar to quickly pull down the Quick Settings panel?</string>
