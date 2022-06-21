@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright 2016 ParanoidAndroid Project
+     Copyright 2022 Project 404
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -29,7 +30,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/shadow"
-        android:background="?android:attr/colorBackgroundFloating">
+        android:orientation="vertical"
+        android:background="@drawable/ots_rounded_bg">
 
         <TextView
             android:id="@+id/description"
@@ -40,7 +42,7 @@
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             android:textColor="?android:attr/textColorPrimary"
-            android:fontFamily="sans-serif"
+            android:fontFamily="@*android:string/config_bodyFontFamily"
             android:textStyle="normal" />
 
         <Button
@@ -54,9 +56,9 @@
             android:layout_marginLeft="16dp"
             android:minWidth="0dp"
             android:minHeight="0dp"
-            android:background="@null"
-            android:textColor="@color/on_the_spot_deny_text"
-            android:fontFamily="sans-serif-medium"
+            android:background="@drawable/ots_button_background_outline"
+            android:textColor="?android:textColorPrimary"
+            android:fontFamily="@*android:string/config_bodyFontFamily"
             android:textStyle="normal"
             android:text="@string/on_the_spot_deny" />
 
@@ -71,9 +73,9 @@
             android:layout_marginRight="16dp"
             android:minWidth="0dp"
             android:minHeight="0dp"
-            android:background="@null"
-            android:textColor="?android:attr/colorAccent"
-            android:fontFamily="sans-serif-medium"
+            android:background="@drawable/ots_button_background_solid"
+            android:textColor="@*android:color/system_neutral1_900"
+            android:fontFamily="@*android:string/config_bodyFontFamily"
             android:textStyle="normal"
             android:text="@string/on_the_spot_confirm" />
 
