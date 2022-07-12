@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- [CHAR LIMIT=25] Manage applications, text for when an application is hidden. -->
+    <string name="hidden">Hidden</string>
+</resources>
