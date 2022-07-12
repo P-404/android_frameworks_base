@@ -284,6 +284,7 @@ import android.os.PersistableBundle;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.os.SystemProperties;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.service.contentcapture.ActivityEvent;
@@ -612,6 +613,9 @@ public final class ActivityRecord extends WindowToken implements WindowManagerSe
 
     public BoostFramework mPerf = null;
     public BoostFramework mPerf_iop = null;
+
+    private final boolean isLowRamDevice =
+            SystemProperties.getBoolean("ro.config.low_ram", false);
 
     boolean mVoiceInteraction;
 
@@ -5278,18 +5282,21 @@ public final class ActivityRecord extends WindowToken implements WindowManagerSe
                 aState = ActivityStates.RESTARTING_PROCESS;
                 break;
         }
-        if(DEBUG_SERVICETRACKER) {
-            Slog.v(TAG, "Calling mServicetracker.OnActivityStateChange with flag " + early_notify + " state " + state);
-        }
-        try {
-            mServicetracker = mAtmService.mTaskSupervisor.getServicetrackerInstance();
-            if (mServicetracker != null)
-                mServicetracker.OnActivityStateChange(aState, aDetails, aStats, early_notify);
-            else
-                Slog.e(TAG, "Unable to get servicetracker HAL instance");
-        } catch (RemoteException e) {
-                Slog.e(TAG, "Failed to send activity state change details to servicetracker HAL", e);
-                mAtmService.mTaskSupervisor.destroyServicetrackerInstance();
+        if (!isLowRamDevice) {
+            if(DEBUG_SERVICETRACKER) {
+                Slog.v(TAG, "Calling mServicetracker.OnActivityStateChange with flag "
+                        + early_notify + " state " + state);
+            }
+            try {
+                mServicetracker = mAtmService.mTaskSupervisor.getServicetrackerInstance();
+                if (mServicetracker != null)
+                    mServicetracker.OnActivityStateChange(aState, aDetails, aStats, early_notify);
+                else
+                    Slog.e(TAG, "Unable to get servicetracker HAL instance");
+            } catch (RemoteException e) {
+                    Slog.e(TAG, "Failed to send activity state change details to servicetracker HAL", e);
+                    mAtmService.mTaskSupervisor.destroyServicetrackerInstance();
+            }
         }
 
     }

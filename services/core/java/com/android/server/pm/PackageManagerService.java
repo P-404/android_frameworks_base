@@ -900,7 +900,8 @@ public class PackageManagerService extends IPackageManager.Stub
      * List of packages path on the file system.
      */
     final private List<String> mPackagesPathToBeDisabledForQSPA = new ArrayList<String>();
-    final private boolean mQspaEnabled = SystemProperties.getBoolean("ro.config.qspa.apps", false);
+    final private boolean mQspaEnabled = SystemProperties.getBoolean(
+                                                "ro.vendor.config.qspa.apps", false);
 
     /**
      * Tracks new system packages [received in an OTA] that we expect to
