@@ -125,6 +125,7 @@ android_library {
         "jsr330",
         "lottie",
         "LowLightDreamLib",
+        "bcsmartspace-google",
     ],
     manifest: "AndroidManifest.xml",
     defaults: [
