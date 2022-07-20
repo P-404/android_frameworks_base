@@ -12,3 +12,25 @@ android_library {
 
     resource_dirs: ["res"],
 }
+
+android_library {
+    name: "bcsmartspace-google",
+    srcs: [
+        "src/**/*.kt",
+        "src/**/*.java",
+        "src/**/I*.aidl",
+    ],
+    static_libs: [
+        "bcsmartspace-res",
+        "smartspace-proto-java",
+        "SystemUIPluginLib",
+        "SystemUISharedLib",
+        "SystemUI-statsd",
+        "iconloader_base",
+    ],
+    manifest: "AndroidManifest.xml",
+
+    kotlincflags: ["-Xjvm-default=enable"],
+
+    plugins: ["dagger2-compiler"],
+}
