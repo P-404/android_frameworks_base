@@ -50,6 +50,9 @@ public class P404KeyguardSliceProvider extends KeyguardSliceProvider implements 
         if (!super.onCreateSliceProvider()) {
             return false;
         }
+        if (mSmartSpaceController == null) {
+            return false;
+        }
         mSmartSpaceData = new SmartSpaceData();
         mSmartSpaceController.addListener(this);
         return true;
