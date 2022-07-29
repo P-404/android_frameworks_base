@@ -165,11 +165,7 @@ public class QSPanelController extends QSPanelControllerBase<QSPanel> {
 
         // Set the listening as soon as the QS fragment starts listening regardless of the
         //expansion, so it will update the current brightness before the slider is visible.
-        if (listening) {
-            mBrightnessController.registerCallbacks();
-        } else {
-            mBrightnessController.unregisterCallbacks();
-        }
+        mBrightnessController.registerCallbacks();
     }
 
     public void setBrightnessMirror(BrightnessMirrorController brightnessMirrorController) {
