@@ -306,12 +306,8 @@ public class QSPanel extends LinearLayout implements Tunable {
     @Override
     public void onTuningChanged(String key, String newValue) {
         if (QS_SHOW_BRIGHTNESS.equals(key) && mBrightnessView != null) {
-            updateViewVisibilityForTuningValue(mBrightnessView, newValue);
+            mBrightnessView.setVisibility(VISIBLE);
         }
-    }
-
-    private void updateViewVisibilityForTuningValue(View view, @Nullable String newValue) {
-        view.setVisibility(TunerService.parseIntegerSwitch(newValue, true) ? VISIBLE : GONE);
     }
 
 
