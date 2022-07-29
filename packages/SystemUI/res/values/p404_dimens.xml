@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- QuickQS BrightnessBar -->
+    <dimen name="p404_qqs_brightness_margin_top">8dp</dimen>
+
+</resources>
