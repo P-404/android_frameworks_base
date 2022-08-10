@@ -91,7 +91,6 @@ genrule {
 java_library_static {
     name: "services.core.unboosted",
     defaults: [
-        "framework-wifi-vendor-hide-access-defaults",
         "platform_service_defaults",
     ],
     srcs: [

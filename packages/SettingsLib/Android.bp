@@ -34,7 +34,6 @@ android_library {
 
     defaults: [
         "SettingsLibDependenciesWithoutWifiTracker",
-        "framework-wifi-vendor-hide-access-defaults",
         "btadva_settings_lib_java_defaults",
     ],
 

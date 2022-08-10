@@ -125,7 +125,6 @@ android_library {
     ],
     manifest: "AndroidManifest.xml",
     defaults: [
-       "framework-wifi-vendor-hide-access-defaults",
     ],
     libs: [
         "android.car",
@@ -167,7 +166,6 @@ android_library {
     additional_manifests: ["tests/AndroidManifest.xml"],
 
     defaults: [
-       "framework-wifi-vendor-hide-access-defaults",
     ],
     resource_dirs: [
         "tests/res",

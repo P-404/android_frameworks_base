@@ -72,30 +72,6 @@ public class WifiUtils {
             R.drawable.ic_no_internet_wifi_signal_4
     };
 
-    static final int[] WIFI_4_PIE = {
-            com.android.internal.R.drawable.ic_wifi_4_signal_0,
-            com.android.internal.R.drawable.ic_wifi_4_signal_1,
-            com.android.internal.R.drawable.ic_wifi_4_signal_2,
-            com.android.internal.R.drawable.ic_wifi_4_signal_3,
-            com.android.internal.R.drawable.ic_wifi_4_signal_4
-    };
-
-    static final int[] WIFI_5_PIE = {
-            com.android.internal.R.drawable.ic_wifi_5_signal_0,
-            com.android.internal.R.drawable.ic_wifi_5_signal_1,
-            com.android.internal.R.drawable.ic_wifi_5_signal_2,
-            com.android.internal.R.drawable.ic_wifi_5_signal_3,
-            com.android.internal.R.drawable.ic_wifi_5_signal_4
-    };
-
-    static final int[] WIFI_6_PIE = {
-            com.android.internal.R.drawable.ic_wifi_6_signal_0,
-            com.android.internal.R.drawable.ic_wifi_6_signal_1,
-            com.android.internal.R.drawable.ic_wifi_6_signal_2,
-            com.android.internal.R.drawable.ic_wifi_6_signal_3,
-            com.android.internal.R.drawable.ic_wifi_6_signal_4
-    };
-
     public static String buildLoggingSummary(AccessPoint accessPoint, WifiConfiguration config) {
         final StringBuilder summary = new StringBuilder();
         final WifiInfo info = accessPoint.getInfo();
@@ -154,7 +130,6 @@ public class WifiUtils {
         StringBuilder scans24GHz = new StringBuilder();
         StringBuilder scans5GHz = new StringBuilder();
         StringBuilder scans60GHz = new StringBuilder();
-        StringBuilder scans6GHz = new StringBuilder();
         String bssid = null;
 
         if (accessPoint.isActive() && info != null) {
@@ -175,12 +150,10 @@ public class WifiUtils {
             visibility.append(String.format("rx=%.1f", info.getSuccessfulRxPacketsPerSecond()));
         }
 
-        int maxRssi6 = INVALID_RSSI;
         int maxRssi5 = INVALID_RSSI;
         int maxRssi24 = INVALID_RSSI;
         int maxRssi60 = INVALID_RSSI;
         final int maxDisplayedScans = 4;
-        int num6 = 0; // number of scanned BSSID on 6GHz band
         int num5 = 0; // number of scanned BSSID on 5GHz band
         int num24 = 0; // number of scanned BSSID on 2.4Ghz band
         int num60 = 0; // number of scanned BSSID on 60Ghz band
@@ -192,19 +165,7 @@ public class WifiUtils {
             if (result == null) {
                 continue;
             }
-            if (result.frequency >= AccessPoint.LOWER_FREQ_6GHZ
-                    && result.frequency <= AccessPoint.HIGHER_FREQ_6GHZ) {
-                num6++;
-
-                if (result.level > maxRssi6) {
-                    maxRssi6 = result.level;
-                }
-                if (num6 <= maxDisplayedScans) {
-                    scans6GHz.append(
-                            verboseScanResultSummary(accessPoint, result, bssid,
-                                    nowMs));
-                }
-            } else if (result.frequency >= AccessPoint.LOWER_FREQ_5GHZ
+            if (result.frequency >= AccessPoint.LOWER_FREQ_5GHZ
                     && result.frequency <= AccessPoint.HIGHER_FREQ_5GHZ) {
                 // Strictly speaking: [4915, 5825]
                 num5++;
@@ -269,14 +230,6 @@ public class WifiUtils {
             }
             visibility.append(scans60GHz.toString());
         }
-        visibility.append(";");
-        if (num6 > 0) {
-            visibility.append("(").append(num6).append(")");
-            if (num6 > maxDisplayedScans) {
-                visibility.append("max=").append(maxRssi6).append(",");
-            }
-            visibility.append(scans6GHz.toString());
-        }
         if (numBlockListed > 0) {
             visibility.append("!").append(numBlockListed);
         }
@@ -336,35 +289,10 @@ public class WifiUtils {
      * @throws IllegalArgumentException if an invalid RSSI level is given.
      */
     public static int getInternetIconResource(int level, boolean noInternet) {
-        return getInternetIconResource(level, noInternet, 0 /* standard */, false /* isReady */);
-    }
-
-    /**
-     * Returns the Internet icon resource for a given RSSI level.
-     *
-     * @param level The number of bars to show (0-4)
-     * @param noInternet True if a connected Wi-Fi network cannot access the Internet
-     * @throws IllegalArgumentException if an invalid RSSI level is given.
-     */
-    public static int getInternetIconResource(int level, boolean noInternet, int standard, boolean isReady) {
         if (level < 0 || level >= WIFI_PIE.length) {
             throw new IllegalArgumentException("No Wifi icon found for level: " + level);
         }
-        if (noInternet) return NO_INTERNET_WIFI_PIE[level];
-        switch (standard) {
-            case 4:
-                return WIFI_4_PIE[level];
-            case 5:
-                if (isReady) {
-                    return WIFI_6_PIE[level];
-                } else {
-                    return WIFI_5_PIE[level];
-                }
-            case 6:
-                return WIFI_6_PIE[level];
-            default:
-                return WIFI_PIE[level];
-       }
+        return noInternet ? NO_INTERNET_WIFI_PIE[level] : WIFI_PIE[level];
     }
 
     /**
