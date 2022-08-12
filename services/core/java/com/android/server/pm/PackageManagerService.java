@@ -7410,12 +7410,16 @@ public class PackageManagerService extends IPackageManager.Stub
         readListOfPackagesToBeDisabled();
         t.traceEnd();
 
-        mPackagesPathToBeDisabledForQSPA.add("/system_ext/priv-app/SystemUI");
-        mPackagesPathToBeDisabledForQSPA.add("/system_ext/priv-app/Launcher3QuickStep");
-        mPackagesPathToBeDisabledForQSPA.add("/system/app/PrintSpooler");
-        mPackagesPathToBeDisabledForQSPA.add("/system/priv-app/StatementService");
-        mPackagesPathToBeDisabledForQSPA.add("/product/app/Calendar");
-
+        if (mQspaEnabled) {
+            mPackagesPathToBeDisabledForQSPA.add("/system_ext/priv-app/SystemUI");
+            mPackagesPathToBeDisabledForQSPA.add("/system_ext/priv-app/Launcher3QuickStep");
+            mPackagesPathToBeDisabledForQSPA.add("/system_ext/priv-app/Launcher3Go");
+            mPackagesPathToBeDisabledForQSPA.add("/system/app/PrintSpooler");
+            mPackagesPathToBeDisabledForQSPA.add("/system/priv-app/StatementService");
+            mPackagesPathToBeDisabledForQSPA.add("/product/app/Calendar");
+        } else {
+            mPackagesPathToBeDisabledForQSPA.add("/system_ext/app/HeadlessLauncher");
+        }
         // Create sub-components that provide services / data. Order here is important.
         t.traceBegin("createSubComponents");
 
@@ -12111,13 +12115,11 @@ public class PackageManagerService extends IPackageManager.Stub
                 continue;
             }
 
-            if (mQspaEnabled) {
-                if (mPackagesPathToBeDisabledForQSPA != null &&
-                        mPackagesPathToBeDisabledForQSPA.contains(file.toString())) {
-                    // Ignore entries contained in {@link #mPackagesPathToBeDisabledForQSPA}
-                    Slog.d(TAG, "QSPA enabled ignoring package for install : " + file);
-                    continue;
-                }
+            if (mPackagesPathToBeDisabledForQSPA != null &&
+                    mPackagesPathToBeDisabledForQSPA.contains(file.toString())) {
+                // Ignore entries contained in {@link #mPackagesPathToBeDisabledForQSPA}
+                Slog.d(TAG, "QSPA enabled ignoring package for install : " + file);
+                continue;
             }
 
             if (mPackagesToBeDisabled.values() != null &&

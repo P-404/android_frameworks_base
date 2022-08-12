@@ -367,7 +367,6 @@ public class NetworkControllerImpl extends BroadcastReceiver
             mWifiManager.registerScanResultsCallback(mReceiverHandler::post, scanResultsCallback);
         }
 
-        mFiveGServiceClient = FiveGServiceClient.getInstance(context);
 
         NetworkCallback callback =
                 new NetworkCallback(NetworkCallback.FLAG_INCLUDE_LOCATION_INFO){
@@ -484,7 +483,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
         for (int i = 0; i < mMobileSignalControllers.size(); i++) {
             MobileSignalController mobileSignalController = mMobileSignalControllers.valueAt(i);
             mobileSignalController.registerListener();
-            mobileSignalController.registerFiveGStateListener(mFiveGServiceClient);
+            mobileSignalController.registerFiveGStateListener(getFiveGServiceClient());
         }
         if (mSubscriptionListener == null) {
             mSubscriptionListener = new SubListener(mBgLooper);
@@ -540,7 +539,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
         for (int i = 0; i < mMobileSignalControllers.size(); i++) {
             MobileSignalController mobileSignalController = mMobileSignalControllers.valueAt(i);
             mobileSignalController.unregisterListener();
-            mobileSignalController.unregisterFiveGStateListener(mFiveGServiceClient);
+            mobileSignalController.unregisterFiveGStateListener(getFiveGServiceClient());
         }
         mSubscriptionManager.removeOnSubscriptionsChangedListener(mSubscriptionListener);
         mBroadcastDispatcher.unregisterReceiver(this);
@@ -548,6 +547,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
 
     @VisibleForTesting
     public FiveGServiceClient getFiveGServiceClient() {
+        if (mFiveGServiceClient == null) {
+            mFiveGServiceClient = FiveGServiceClient.getInstance(mContext);
+        }
         return mFiveGServiceClient;
     }
 
@@ -984,7 +986,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
                 }
                 if (mListening) {
                     controller.registerListener();
-                    controller.registerFiveGStateListener(mFiveGServiceClient);
+                    controller.registerFiveGStateListener(getFiveGServiceClient());
                 }
             }
         }
@@ -995,7 +997,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
                     mDefaultSignalController = null;
                 }
                 cachedControllers.get(key).unregisterListener();
-                cachedControllers.get(key).unregisterFiveGStateListener(mFiveGServiceClient);
+                cachedControllers.get(key).unregisterFiveGStateListener(getFiveGServiceClient());
             }
         }
         mCallbackHandler.setSubs(subscriptions);
