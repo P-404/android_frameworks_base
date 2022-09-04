@@ -170,7 +170,8 @@ public class WifiSignalController extends SignalController<WifiState, IconGroup>
                 mCurrentState.enabled, statusIcon, qsIcon,
                 ssidPresent && mCurrentState.activityIn,
                 ssidPresent && mCurrentState.activityOut,
-                wifiDesc, mCurrentState.isTransient, mCurrentState.statusLabel, isDefault
+                wifiDesc, mCurrentState.isTransient, mCurrentState.statusLabel, isDefault, mCurrentState.wifiStandard
+
         );
         callback.setWifiIndicators(wifiIndicators);
     }
@@ -230,19 +231,6 @@ public class WifiSignalController extends SignalController<WifiState, IconGroup>
         return getCurrentIconIdForCarrierWifi();
     }
 
-
-    private void updateIconGroup() {
-	if (mCurrentState.wifiStandard == 4) {
-            mCurrentState.iconGroup = mWifi4IconGroup;
-        } else if (mCurrentState.wifiStandard == 5) {
-            mCurrentState.iconGroup = mWifi5IconGroup;
-        } else if (mCurrentState.wifiStandard == 6) {
-            mCurrentState.iconGroup = mWifi6IconGroup;
-        } else {
-            mCurrentState.iconGroup = mDefaultWifiIconGroup;
-        }
-
-    }
     /**
      * Fetches wifi initial state replacing the initial sticky broadcast.
      */
@@ -296,7 +284,7 @@ public class WifiSignalController extends SignalController<WifiState, IconGroup>
         mCurrentState.isCarrierMerged = mWifiTracker.isCarrierMerged;
         mCurrentState.subId = mWifiTracker.subId;
         mCurrentState.wifiStandard = mWifiTracker.wifiStandard;
-        updateIconGroup();
+        mCurrentState.iconGroup = mDefaultWifiIconGroup;
 
     }
 
