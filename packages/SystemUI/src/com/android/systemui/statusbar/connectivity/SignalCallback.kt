@@ -123,7 +123,8 @@ data class WifiIndicators(
     @JvmField val description: String?,
     @JvmField val isTransient: Boolean,
     @JvmField val statusLabel: String?,
-    @JvmField val isDefault: Boolean
+    @JvmField val isDefault: Boolean,
+    @JvmField val wifiStandard: Int
 ) {
     override fun toString(): String {
         return StringBuilder("WifiIndicators[")
