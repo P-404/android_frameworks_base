@@ -204,7 +204,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
             newState.activityOut = out;
             newState.contentDescription = indicators.statusIcon.contentDescription;
             MobileIconState first = getFirstMobileState();
-            newState.signalSpacerVisible = first != null && first.typeId != 0;
+            newState.signalSpacerVisible = first != null && (first.typeId != 0 || first.volteId != 0);
         }
         newState.slot = mSlotWifi;
         newState.airplaneSpacerVisible = mIsAirplaneMode;
