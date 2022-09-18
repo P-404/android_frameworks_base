@@ -279,6 +279,9 @@ public class StatusBarSignalPolicy implements SignalCallback,
         state.activityIn = indicators.activityIn && mActivityEnabled;
         state.activityOut = indicators.activityOut && mActivityEnabled;
         state.volteId = indicators.volteIcon;
+        state.typeSpacerVisible = mMobileStates.size() > 1
+               && mMobileStates.get(1).subId == state.subId
+               && state.typeId != 0;
 
         if (DEBUG) {
             Log.d(TAG, "MobileIconStates: "
@@ -579,6 +582,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
         public boolean needsLeadingPadding;
         public CharSequence typeContentDescription;
         public int volteId;
+        public boolean typeSpacerVisible;
 
         private MobileIconState(int subId) {
             super();
@@ -601,7 +605,8 @@ public class StatusBarSignalPolicy implements SignalCallback,
                     && roaming == that.roaming
                     && needsLeadingPadding == that.needsLeadingPadding
                     && Objects.equals(typeContentDescription, that.typeContentDescription)
-                    && volteId == that.volteId;
+                    && volteId == that.volteId
+                    && typeSpacerVisible == that.typeSpacerVisible;
         }
 
         @Override
@@ -628,6 +633,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
             other.needsLeadingPadding = needsLeadingPadding;
             other.typeContentDescription = typeContentDescription;
             other.volteId = volteId;
+            other.typeSpacerVisible = typeSpacerVisible;
         }
 
         private static List<MobileIconState> copyStates(List<MobileIconState> inStates) {
@@ -645,6 +651,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
             return "MobileIconState(subId=" + subId + ", strengthId=" + strengthId
                     + ", showTriangle=" + showTriangle + ", roaming=" + roaming
                     + ", typeId=" + typeId + ", volteId=" + volteId
+                    + ", typeSpacerVisible=" + typeSpacerVisible
                     + ", visible=" + visible + ")";
         }
     }
