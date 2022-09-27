@@ -144,6 +144,8 @@ public class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> 
     private int mType = UNKNOWN;
     static final int PRIVATE_ADDR = 101;
 
+    private boolean mIsLeAudioEnabled = false;
+
 
     private final Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
@@ -599,7 +601,7 @@ public class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> 
         fetchActiveDevices();
         migratePhonebookPermissionChoice();
         migrateMessagePermissionChoice();
-
+        setLeAudioEnabled();
         dispatchAttributesChanged();
     }
 
@@ -1679,5 +1681,13 @@ public class CachedBluetoothDevice implements Comparable<CachedBluetoothDevice> 
 
     boolean getUnpairing() {
         return mUnpairing;
+    }
+
+    void setLeAudioEnabled(){
+        mIsLeAudioEnabled =  (mProfileManager.getLeAudioProfile() != null );
+    }
+
+    boolean isLeAudioEnabled(){
+        return mIsLeAudioEnabled;
     }
 }
