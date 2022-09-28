@@ -35,6 +35,8 @@ import com.android.systemui.plugins.ActivityStarter;
 import com.android.systemui.plugins.FalsingManager;
 import com.android.systemui.qs.dagger.QSScope;
 import com.android.systemui.settings.UserTracker;
+import com.android.systemui.statusbar.connectivity.NetworkController;
+import com.android.systemui.statusbar.connectivity.SignalCallback;
 import com.android.systemui.util.ViewController;
 
 import com.android.settingslib.wifi.WifiStatusTracker;
@@ -54,6 +56,7 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
     private final FalsingManager mFalsingManager;
     private final ActivityStarter mActivityStarter;
     private final WifiStatusTracker mWifiTracker;
+    private final NetworkController mNetworkController;
     private final Context mContext;
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -64,18 +67,27 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
         }
     };
 
+    private final SignalCallback mSignalCallback = new SignalCallback() {
+        @Override
+        public void setNoSims(boolean show, boolean simDetected) {
+            mView.setNoSims(show);
+         }
+    };
+
     @Inject
     QSFooterViewController(QSFooterView view,
             UserTracker userTracker,
             FalsingManager falsingManager,
             ActivityStarter activityStarter,
             QSPanelController qsPanelController,
+            NetworkController networkController,
             Context context) {
         super(view);
         mUserTracker = userTracker;
         mQsPanelController = qsPanelController;
         mFalsingManager = falsingManager;
         mActivityStarter = activityStarter;
+        mNetworkController = networkController;
         mContext = context;
         mPageIndicator = mView.findViewById(R.id.footer_page_indicator);
         mEditButton = mView.findViewById(android.R.id.edit);
@@ -103,11 +115,13 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
         mWifiTracker.fetchInitialState();
         mWifiTracker.setListening(true);
         onWifiStatusUpdated();
+        mNetworkController.addCallback(mSignalCallback);
     }
 
     @Override
     protected void onViewDetached() {
         mContext.unregisterReceiver(mReceiver);
+        mNetworkController.removeCallback(mSignalCallback);
     }
 
     @Override
