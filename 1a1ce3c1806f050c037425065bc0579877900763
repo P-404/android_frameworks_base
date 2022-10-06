@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0afd56e4_e0dca415",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000001
+      },
+      "writtenOn": "2022-10-06T13:16:41Z",
+      "side": 1,
+      "message": "can you please move overlays to vendor_overlays it will be a great +",
+      "revId": "1a1ce3c1806f050c037425065bc0579877900763",
+      "serverId": "c85314f7-38ff-4b73-93db-2637f3516207"
+    }
+  ]
+}
