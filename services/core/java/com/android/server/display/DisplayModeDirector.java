@@ -1577,8 +1577,8 @@ public class DisplayModeDirector {
             }
 
             if (mLoggingEnabled) {
-                Slog.d(TAG, "Display brightness " + mBrightness + ", ambient lux " +  mAmbientLux +
-                        ", Vote " + vote);
+                Slog.d(TAG, "Display brightness " + mBrightness + ", ambient lux " +  mAmbientLux
+                        + ", Vote " + vote);
             }
             updateVoteLocked(Vote.PRIORITY_FLICKER, vote);
         }
@@ -1616,13 +1616,28 @@ public class DisplayModeDirector {
                 return;
             }
 
+            if (mLoggingEnabled) {
+                Slog.d(TAG, "updateSensorStatus: mShouldObserveAmbientLowChange = "
+                        + mShouldObserveAmbientLowChange + ", mShouldObserveAmbientHighChange = "
+                        + mShouldObserveAmbientHighChange);
+                Slog.d(TAG, "updateSensorStatus: mLowPowerModeEnabled = "
+                        + mLowPowerModeEnabled + ", mRefreshRateChangeable = "
+                        + mRefreshRateChangeable);
+            }
+
             if ((mShouldObserveAmbientLowChange || mShouldObserveAmbientHighChange)
                      && isDeviceActive() && !mLowPowerModeEnabled && mRefreshRateChangeable) {
                 mSensorManager.registerListener(mLightSensorListener,
                         mLightSensor, LIGHT_SENSOR_RATE_MS * 1000, mHandler);
+                if (mLoggingEnabled) {
+                    Slog.d(TAG, "updateSensorStatus: registerListener");
+                }
             } else {
                 mLightSensorListener.removeCallbacks();
                 mSensorManager.unregisterListener(mLightSensorListener);
+                if (mLoggingEnabled) {
+                    Slog.d(TAG, "updateSensorStatus: unregisterListener");
+                }
             }
         }
 

@@ -46,7 +46,6 @@ import com.android.internal.logging.UiEvent;
 import com.android.internal.logging.UiEventLogger;
 import com.android.internal.logging.UiEventLoggerImpl;
 import com.android.internal.logging.nano.MetricsProto;
-import com.android.internal.util.IndentingPrintWriter;
 import com.android.systemui.plugins.SensorManagerPlugin;
 import com.android.systemui.statusbar.phone.DozeParameters;
 import com.android.systemui.util.sensors.AsyncSensorManager;
@@ -229,25 +228,22 @@ public class DozeSensors {
     /**
      * If sensors should be registered and sending signals.
      */
-    public void setListening(boolean listen, boolean includeTouchScreenSensors) {
-        if (mListening == listen && mListeningTouchScreenSensors == includeTouchScreenSensors) {
+    public void setListening(boolean listen) {
+        if (mListening == listen) {
             return;
         }
         mListening = listen;
-        mListeningTouchScreenSensors = includeTouchScreenSensors;
         updateListening();
     }
 
     /**
      * Registers/unregisters sensors based on internal state.
      */
-    private void updateListening() {
+    public void updateListening() {
         boolean anyListening = false;
         for (TriggerSensor s : mSensors) {
-            boolean listen = mListening
-                    && (!s.mRequiresTouchscreen || mListeningTouchScreenSensors);
-            s.setListening(listen);
-            if (listen) {
+            s.setListening(mListening);
+            if (mListening) {
                 anyListening = true;
             }
         }
@@ -319,12 +315,8 @@ public class DozeSensors {
 
     /** Dump current state */
     public void dump(PrintWriter pw) {
-        pw.println("mListening=" + mListening);
-        pw.println("mListeningTouchScreenSensors=" + mListeningTouchScreenSensors);
-        IndentingPrintWriter idpw = new IndentingPrintWriter(pw, "  ");
-        idpw.increaseIndent();
         for (TriggerSensor s : mSensors) {
-            idpw.println("Sensor: " + s.toString());
+            pw.println("  Sensor: " + s.toString());
         }
         if (mProximitySupported) // Useless
             idpw.println("  ProxSensor: " + mProximitySensor.toString());

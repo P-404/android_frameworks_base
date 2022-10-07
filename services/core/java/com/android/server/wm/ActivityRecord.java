@@ -265,6 +265,7 @@ import android.os.PersistableBundle;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.os.SystemProperties;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.os.storage.StorageManager;
@@ -556,6 +557,9 @@ public final class ActivityRecord extends WindowToken implements WindowManagerSe
 
     public BoostFramework mPerf = null;
     public BoostFramework mPerf_iop = null;
+
+    private final boolean isLowRamDevice =
+             SystemProperties.getBoolean("ro.config.low_ram", false);
 
     boolean mVoiceInteraction;
 
@@ -4470,6 +4474,80 @@ public final class ActivityRecord extends WindowToken implements WindowManagerSe
             mAtmService.updateActivityUsageStats(this, Event.ACTIVITY_STOPPED);
         } else if (state == DESTROYED) {
             mAtmService.updateActivityUsageStats(this, Event.ACTIVITY_DESTROYED);
+        }
+    }
+
+    void callServiceTrackeronActivityStatechange(ActivityState state, boolean early_notify) {
+        IServicetracker mServicetracker;
+        ActivityDetails aDetails = new ActivityDetails();
+        ActivityStats aStats = new ActivityStats();
+        int aState = ActivityStates.UNKNOWN;
+
+        aDetails.launchedFromPid = this.launchedFromPid;
+        aDetails.launchedFromUid = this.launchedFromUid;
+        aDetails.packageName = this.packageName;
+        aDetails.processName = (this.processName!= null)? this.processName:"none";
+        aDetails.intent = this.intent.getComponent().toString();
+        aDetails.className = this.intent.getComponent().getClassName();
+        aDetails.versioncode = this.info.applicationInfo.versionCode;
+
+        aStats.createTime = this.createTime;
+        aStats.lastVisibleTime = this.lastVisibleTime;
+        aStats.launchCount = this.launchCount;
+        aStats.lastLaunchTime = this.lastLaunchTime;
+
+        switch(state) {
+            case INITIALIZING :
+                aState = ActivityStates.INITIALIZING;
+                break;
+            case STARTED :
+                aState = ActivityStates.STARTED;
+                break;
+            case RESUMED :
+                aState = ActivityStates.RESUMED;
+                break;
+            case PAUSING :
+                aState = ActivityStates.PAUSING;
+                break;
+            case PAUSED :
+                aState = ActivityStates.PAUSED;
+                break;
+            case STOPPING :
+                aState = ActivityStates.STOPPING;
+                break;
+            case STOPPED:
+                aState = ActivityStates.STOPPED;
+                break;
+            case FINISHING :
+                aState = ActivityStates.FINISHING;
+                break;
+            case DESTROYING:
+                aState = ActivityStates.DESTROYING;
+                break;
+            case DESTROYED :
+                aState = ActivityStates.DESTROYED;
+                break;
+            case RESTARTING_PROCESS:
+                aState = ActivityStates.RESTARTING_PROCESS;
+                break;
+        }
+
+        if (!isLowRamDevice) {
+            if(DEBUG_SERVICETRACKER) {
+                Slog.v(TAG, "Calling mServicetracker.OnActivityStateChange with flag "
+                           + early_notify + " state " + state);
+            }
+            try {
+                mServicetracker = mAtmService.mStackSupervisor.getServicetrackerInstance();
+                if (mServicetracker != null)
+                    mServicetracker.OnActivityStateChange(aState, aDetails, aStats, early_notify);
+                else
+                    Slog.e(TAG, "Unable to get servicetracker HAL instance");
+            } catch (RemoteException e) {
+                    Slog.e(TAG,
+                         "Failed to send activity state change details to servicetracker HAL", e);
+                    mAtmService.mStackSupervisor.destroyServicetrackerInstance();
+            }
         }
     }
 

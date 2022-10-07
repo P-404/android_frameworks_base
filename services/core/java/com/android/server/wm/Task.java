@@ -119,6 +119,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Debug;
 import android.os.IBinder;
+import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.Trace;
@@ -226,6 +227,11 @@ class Task extends WindowContainer<WindowContainer> {
     static final int REPARENT_KEEP_STACK_AT_FRONT = 1;
     // Do not move the stack as a part of reparenting
     static final int REPARENT_LEAVE_STACK_IN_PLACE = 2;
+
+    /**
+     * Used to identify if the activity that is installed from device's system image.
+     */
+    boolean mIsEffectivelySystemApp;
 
     String affinity;        // The affinity name for this task, or null; may change identity.
     String rootAffinity;    // Initial base affinity, or null; does not change from initial root.
@@ -480,11 +486,24 @@ class Task extends WindowContainer<WindowContainer> {
 
             if (r.finishing) return false;
 
-            // Set this as the candidate root since it isn't finishing.
-            mRoot = r;
+            if (mRoot == null || mRoot.finishing) {
+                // Set this as the candidate root since it isn't finishing.
+                mRoot = r;
+            }
 
-            // Only end search if we are ignore relinquishing identity or we are not relinquishing.
-            return ignoreRelinquishIdentity || (r.info.flags & FLAG_RELINQUISH_TASK_IDENTITY) == 0;
+            final int uid = mRoot == r ? effectiveUid : r.info.applicationInfo.uid;
+            if (ignoreRelinquishIdentity
+                    || (mRoot.info.flags & FLAG_RELINQUISH_TASK_IDENTITY) == 0
+                    || (mRoot.info.applicationInfo.uid != Process.SYSTEM_UID
+                    && !mRoot.info.applicationInfo.isSystemApp()
+                    && mRoot.info.applicationInfo.uid != uid)) {
+                // No need to relinquish identity, end search.
+                return true;
+            }
+
+            // Relinquish to next activity
+            mRoot = r;
+            return false;
         }
     }
 
@@ -941,13 +960,13 @@ class Task extends WindowContainer<WindowContainer> {
         setIntent(intent != null ? intent : r.intent, info != null ? info : r.info);
         setLockTaskAuth(r);
 
-        final WindowContainer parent = getParent();
-        if (parent != null) {
-            final Task t = parent.asTask();
-            if (t != null) {
-                t.setIntent(r);
-            }
+        if (updateIdentity) {
+            mCallingUid = r.launchedFromUid;
+            mCallingPackage = r.launchedFromPackage;
+            mCallingFeatureId = r.launchedFromFeatureId;
+            setIntent(intent != null ? intent : r.intent, info != null ? info : r.info);
         }
+        setLockTaskAuth(r);
     }
 
     /** Sets the original intent, _without_ updating the calling uid or package. */
@@ -955,15 +974,14 @@ class Task extends WindowContainer<WindowContainer> {
         if(info != null){
             mPackageName = info.packageName;
         }
-        final boolean isLeaf = isLeafTask();
+        if (!isLeafTask()) return;
         if (intent == null) {
-            mNeverRelinquishIdentity =
-                    (info.flags & FLAG_RELINQUISH_TASK_IDENTITY) == 0;
-        } else if (mNeverRelinquishIdentity && isLeaf) {
+            mNeverRelinquishIdentity = (info.flags & FLAG_RELINQUISH_TASK_IDENTITY) == 0;
+        } else if (mNeverRelinquishIdentity) {
             return;
         }
 
-        affinity = isLeaf ? info.taskAffinity : null;
+        affinity = info.taskAffinity;
         if (intent == null) {
             // If this task already has an intent associated with it, don't set the root
             // affinity -- we don't want it changing after initially set, but the initially
@@ -971,6 +989,7 @@ class Task extends WindowContainer<WindowContainer> {
             rootAffinity = affinity;
         }
         effectiveUid = info.applicationInfo.uid;
+        mIsEffectivelySystemApp = info.applicationInfo.isSystemApp();
         stringName = null;
 
         if (info.targetActivity == null) {
@@ -3667,6 +3686,17 @@ class Task extends WindowContainer<WindowContainer> {
      */
     boolean shouldBeVisible(ActivityRecord starting) {
         return getVisibility(starting) != STACK_VISIBILITY_INVISIBLE;
+    }
+
+    /**
+     * Returns {@code true} is the activity in this Task can be resumed.
+     *
+     * @param starting The currently starting activity or {@code null} if there is none.
+     */
+    boolean canBeResumed(@Nullable ActivityRecord starting) {
+        // No need to resume activity in Task that is not visible.
+        return isTopActivityFocusable()
+                && getVisibility(starting) == STACK_VISIBILITY_VISIBLE;
     }
 
     /**
