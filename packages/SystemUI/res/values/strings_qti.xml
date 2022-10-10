@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * SPDX-License-Identifier: BSD-3-Clause-Clear
+ -->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string-array name="customization_carrier_name_list">
+        <item>46000:CHN-CMCC</item>
+        <item>46002:CHN-CMCC</item>
+        <item>46004:CHN-CMCC</item>
+        <item>46007:CHN-CMCC</item>
+        <item>46008:CHN-CMCC</item>
+        <item>46020:CHN-CMCC</item>
+        <item>46021:CHN-CMCC</item>
+        <item>46022:CHN-CMCC</item>
+
+        <item>46001:CHN-CU</item>
+        <item>46006:CHN-CU</item>
+        <item>46009:CHN-CU</item>
+        <item>46031:CHN-CU</item>
+        <item>46032:CHN-CU</item>
+
+        <item>46003:CHN-CT</item>
+        <item>46005:CHN-CT</item>
+        <item>46011:CHN-CT</item>
+        <item>46050:CHN-CT</item>
+        <item>46051:CHN-CT</item>
+
+        <item>46015:CHN-CBN</item>
+        <item>46060:CHN-CBN</item>
+        <item>46061:CHN-CBN</item>
+    </string-array>
+    <string name="connector" translatable="false">&#42649;</string>
+</resources>

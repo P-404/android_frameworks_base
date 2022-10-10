@@ -85,6 +85,7 @@ import com.android.systemui.statusbar.policy.LocationController;
 import com.android.systemui.toast.SystemUIToast;
 import com.android.systemui.toast.ToastFactory;
 import com.android.systemui.util.CarrierConfigTracker;
+import com.android.systemui.util.CarrierNameCustomization;
 import com.android.systemui.util.settings.GlobalSettings;
 import com.android.wifitrackerlib.MergedCarrierEntry;
 import com.android.wifitrackerlib.WifiEntry;
@@ -186,6 +187,7 @@ public class InternetDialogController implements AccessPointController.AccessPoi
     @VisibleForTesting
     protected ConnectedWifiInternetMonitor mConnectedWifiInternetMonitor;
 
+    private CarrierNameCustomization mCarrierNameCustomization;
     private final KeyguardUpdateMonitorCallback mKeyguardUpdateCallback =
             new KeyguardUpdateMonitorCallback() {
                 @Override
@@ -216,7 +218,8 @@ public class InternetDialogController implements AccessPointController.AccessPoi
             CarrierConfigTracker carrierConfigTracker,
             LocationController locationController,
             DialogLaunchAnimator dialogLaunchAnimator,
-            WifiStateWorker wifiStateWorker
+            WifiStateWorker wifiStateWorker,
+            CarrierNameCustomization carrierNameCustomization
     ) {
         if (DEBUG) {
             Log.d(TAG, "Init InternetDialogController");
@@ -250,6 +253,7 @@ public class InternetDialogController implements AccessPointController.AccessPoi
         mConnectedWifiInternetMonitor = new ConnectedWifiInternetMonitor();
         mWifiStateWorker = wifiStateWorker;
         mNonDdsCallStateCallbacksMap = new HashMap<Integer, NonDdsCallStateCallback>();
+        mCarrierNameCustomization = carrierNameCustomization;
     }
 
     void onStart(@NonNull InternetDialogCallback callback, boolean canConfigWifi) {
@@ -595,7 +599,12 @@ public class InternetDialogController implements AccessPointController.AccessPoi
     }
 
     CharSequence getMobileNetworkTitle() {
-        return getUniqueSubscriptionDisplayName(mDefaultDataSubId, mContext);
+        if (mCarrierNameCustomization.isRoamingCustomizationEnabled()
+                && mCarrierNameCustomization.isRoaming(mDefaultDataSubId)) {
+            return mCarrierNameCustomization.getRoamingCarrierName(mDefaultDataSubId);
+        } else {
+            return getUniqueSubscriptionDisplayName(mDefaultDataSubId, mContext);
+        }
     }
 
     String getMobileNetworkSummary() {
@@ -1028,6 +1037,18 @@ public class InternetDialogController implements AccessPointController.AccessPoi
 
         @Override
         public void onSubscriptionsChanged() {
+            List<SubscriptionInfo> subInfos = mSubscriptionManager.getActiveSubscriptionInfoList();
+            int numberOfActiveSubscriptions = subInfos.size();
+            /*
+             * When there is only one subscription, there is no nDDS sub, so call state of nDDS is
+             * idle by default. Ensure that call state of nDDS is correctly updated when number of
+             * subscriptions change at runtime.
+             */
+            if (numberOfActiveSubscriptions == 1){
+                Log.d(TAG, "Resetting call state of nDDS");
+                mNonDdsCallState = TelephonyManager.CALL_STATE_IDLE;
+            }
+
             updateListener();
         }
     }

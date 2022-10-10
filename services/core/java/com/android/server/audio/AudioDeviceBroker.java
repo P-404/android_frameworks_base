@@ -693,7 +693,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
      */
     /*package*/ void queueOnBluetoothActiveDeviceChanged(@NonNull BtDeviceChangedData data) {
         if (data.mInfo.getProfile() == BluetoothProfile.A2DP && data.mPreviousDevice != null
-                && data.mPreviousDevice.equals(data.mNewDevice)) {
+                && data.mNewDevice != null ) {
             final String name = TextUtils.emptyIfNull(data.mNewDevice.getName());
             new MediaMetrics.Item(MediaMetrics.Name.AUDIO_DEVICE + MediaMetrics.SEPARATOR
                     + "queueOnBluetoothActiveDeviceChanged_update")
@@ -702,7 +702,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
                     .record();
             synchronized (mDeviceStateLock) {
                 if (mDeviceInventory.isA2dpDeviceConnected(data.mPreviousDevice)) {
-                    postBluetoothA2dpDeviceConfigChange(data.mNewDevice);
+                    postBluetoothA2dpDeviceConfigChange(createBtDeviceInfo(data, data.mNewDevice,
+                                     BluetoothProfile.STATE_CONNECTED));
+
                 } else {
                     btMediaMetricRecord(data.mNewDevice, MediaMetrics.Value.CONNECTED, data);
                     sendLMsgNoDelay(MSG_L_BT_ACTIVE_DEVICE_CHANGE_EXT, SENDMSG_QUEUE,
@@ -787,6 +789,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
     /*package*/ void postBluetoothA2dpDeviceConfigChange(@NonNull BluetoothDevice device) {
         sendLMsgNoDelay(MSG_L_A2DP_DEVICE_CONFIG_CHANGE, SENDMSG_QUEUE, device);
+    }
+
+    /*package*/ void postBluetoothA2dpDeviceConfigChange(@NonNull BtDeviceInfo info) {
+        sendLMsgNoDelay(MSG_L_A2DP_DEVICE_CONFIG_CHANGE_SHO, SENDMSG_QUEUE, info);
     }
 
     /*package*/ void startBluetoothScoForClient(IBinder cb, int pid, int scoAudioMode,
@@ -1325,6 +1331,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
                                         BtHelper.EVENT_DEVICE_CONFIG_CHANGE);
                     }
                     break;
+                case MSG_L_A2DP_DEVICE_CONFIG_CHANGE_SHO:
+                    final BtDeviceInfo btDeviceInfo = (BtDeviceInfo) msg.obj;
+                    if (btDeviceInfo.mDevice == null) break;
+                    synchronized (mDeviceStateLock) {
+                        final int a2dpCodec = mBtHelper.getA2dpCodec(btDeviceInfo.mDevice);
+                        mDeviceInventory.onBluetoothA2dpDeviceConfigChange(
+                                new BtHelper.BluetoothA2dpDeviceInfo(btDeviceInfo.mDevice, btDeviceInfo.mVolume, a2dpCodec),
+                                        BtHelper.EVENT_DEVICE_CONFIG_CHANGE);
+                    }
+                    break;
                 case MSG_BROADCAST_AUDIO_BECOMING_NOISY:
                     onSendBecomingNoisyIntent();
                     break;
@@ -1559,6 +1575,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
     //
     // process set volume for Le Audio, obj is BleVolumeInfo
     private static final int MSG_II_SET_LE_AUDIO_OUT_VOLUME = 46;
+    private static final int MSG_L_A2DP_DEVICE_CONFIG_CHANGE_SHO = 47;
 
     private static boolean isMessageHandledUnderWakelock(int msgId) {
         switch(msgId) {
@@ -1566,6 +1583,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
             case MSG_L_SET_BT_ACTIVE_DEVICE:
             case MSG_IL_BTA2DP_TIMEOUT:
             case MSG_L_A2DP_DEVICE_CONFIG_CHANGE:
+            case MSG_L_A2DP_DEVICE_CONFIG_CHANGE_SHO:
             case MSG_TOGGLE_HDMI:
             case MSG_L_A2DP_DEVICE_CONNECTION_CHANGE_EXT:
             case MSG_L_HEARING_AID_DEVICE_CONNECTION_CHANGE_EXT:
@@ -1657,6 +1675,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
                 case MSG_L_SET_WIRED_DEVICE_CONNECTION_STATE:
                 case MSG_IL_BTA2DP_TIMEOUT:
                 case MSG_L_A2DP_DEVICE_CONFIG_CHANGE:
+                case MSG_L_A2DP_DEVICE_CONFIG_CHANGE_SHO:
                     if (sLastDeviceConnectMsgTime >= time) {
                         // add a little delay to make sure messages are ordered as expected
                         time = sLastDeviceConnectMsgTime + 30;
@@ -1677,6 +1696,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
         MESSAGES_MUTE_MUSIC = new HashSet<>();
         MESSAGES_MUTE_MUSIC.add(MSG_L_SET_BT_ACTIVE_DEVICE);
         MESSAGES_MUTE_MUSIC.add(MSG_L_A2DP_DEVICE_CONFIG_CHANGE);
+        MESSAGES_MUTE_MUSIC.add(MSG_L_A2DP_DEVICE_CONFIG_CHANGE_SHO);
         MESSAGES_MUTE_MUSIC.add(MSG_L_A2DP_DEVICE_CONNECTION_CHANGE_EXT);
         MESSAGES_MUTE_MUSIC.add(MSG_IIL_SET_FORCE_BT_A2DP_USE);
     }
@@ -1697,7 +1717,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
         // Do not mute on bluetooth event if music is playing on a wired headset.
         if ((message == MSG_L_SET_BT_ACTIVE_DEVICE
                 || message == MSG_L_A2DP_DEVICE_CONNECTION_CHANGE_EXT
-                || message == MSG_L_A2DP_DEVICE_CONFIG_CHANGE)
+                || message == MSG_L_A2DP_DEVICE_CONFIG_CHANGE
+                || message == MSG_L_A2DP_DEVICE_CONFIG_CHANGE_SHO)
                 && AudioSystem.isStreamActive(AudioSystem.STREAM_MUSIC, 0)
                 && hasIntersection(mDeviceInventory.DEVICE_OVERRIDE_A2DP_ROUTE_ON_PLUG_SET,
                         mAudioService.getDeviceSetForStream(AudioSystem.STREAM_MUSIC))) {

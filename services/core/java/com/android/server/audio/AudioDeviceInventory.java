@@ -417,11 +417,10 @@ public class AudioDeviceInventory {
         synchronized (mDevicesLock) {
             final String key = DeviceInfo.makeDeviceListKey(
                     AudioSystem.DEVICE_OUT_BLUETOOTH_A2DP, address);
-            final DeviceInfo di = mConnectedDevices.get(key);
+            DeviceInfo di = mConnectedDevices.get(key);
             if (di == null) {
                 Log.e(TAG, "invalid null DeviceInfo in onBluetoothA2dpDeviceConfigChange");
                 mmi.set(MediaMetrics.Property.EARLY_RETURN, "null DeviceInfo").record();
-                return;
             }
 
             if (mDeviceBroker.hasScheduledA2dpConnection(btDevice)) {
@@ -438,23 +437,42 @@ public class AudioDeviceInventory {
                 return;
             }
 
-            mmi.set(MediaMetrics.Property.ADDRESS, address)
+            if (di == null) {
+                // Device is connected
+                synchronized (mConnectedDevices) {
+                    for (Map.Entry<String, DeviceInfo> existingDevice : mConnectedDevices.entrySet()) {
+                        if (existingDevice.getValue().mDeviceType != AudioSystem.DEVICE_OUT_BLUETOOTH_A2DP) {
+                            continue;
+                        }
+                        // A2DP device exists, handle active device change
+                        mConnectedDevices.remove(existingDevice.getKey());
+                        mConnectedDevices.put(key, new DeviceInfo(
+                                 AudioSystem.DEVICE_OUT_BLUETOOTH_A2DP, BtHelper.getName(btDevice),
+                                 address, a2dpCodec));
+                        di = mConnectedDevices.get(key);
+                        mmi.set(MediaMetrics.Property.ADDRESS, address)
+                           .set(MediaMetrics.Property.ENCODING,
+                              AudioSystem.audioFormatToString(a2dpCodec))
+                           .set(MediaMetrics.Property.INDEX, a2dpVolume)
+                           .set(MediaMetrics.Property.NAME, di.mDeviceName);
+                        mApmConnectedDevices.replace(AudioSystem.DEVICE_OUT_BLUETOOTH_A2DP, key);
+                        if (a2dpVolume != -1) {
+                            mDeviceBroker.postSetVolumeIndexOnDevice(AudioSystem.STREAM_MUSIC,
+                            // convert index to internal representation in VolumeStreamState
+                            a2dpVolume * 10,
+                            AudioSystem.DEVICE_OUT_BLUETOOTH_A2DP,
+                            "onBluetoothA2dpDeviceConfigChange");
+                        }
+                        break;
+                     }
+                }
+            } else if (event == BtHelper.EVENT_DEVICE_CONFIG_CHANGE) {
+                mmi.set(MediaMetrics.Property.ADDRESS, address)
                     .set(MediaMetrics.Property.ENCODING,
                             AudioSystem.audioFormatToString(a2dpCodec))
                     .set(MediaMetrics.Property.INDEX, a2dpVolume)
                     .set(MediaMetrics.Property.NAME, di.mDeviceName);
 
-            if (event == BtHelper.EVENT_ACTIVE_DEVICE_CHANGE) {
-                // Device is connected
-                mApmConnectedDevices.replace(AudioSystem.DEVICE_OUT_BLUETOOTH_A2DP, key);
-                if (a2dpVolume != -1) {
-                    mDeviceBroker.postSetVolumeIndexOnDevice(AudioSystem.STREAM_MUSIC,
-                            // convert index to internal representation in VolumeStreamState
-                            a2dpVolume * 10,
-                            AudioSystem.DEVICE_OUT_BLUETOOTH_A2DP,
-                            "onBluetoothA2dpDeviceConfigChange");
-                }
-            } else if (event == BtHelper.EVENT_DEVICE_CONFIG_CHANGE) {
                 if (di.mDeviceCodecFormat != a2dpCodec) {
                     di.mDeviceCodecFormat = a2dpCodec;
                     mConnectedDevices.replace(key, di);
