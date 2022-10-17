@@ -26,4 +26,8 @@
             <solid android:color="@color/settingslib_switch_thumb_color" />
         </shape>
     </item>
+    <item android:drawable="@drawable/ic_done_material" 
+          android:height="18dp"
+          android:width="18dp"
+          android:gravity="center" />
 </layer-list>
