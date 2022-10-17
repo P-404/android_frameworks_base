@@ -1154,7 +1154,7 @@ static int32_t android_hardware_Camera_getAudioRestriction(
 //-------------------------------------------------
 
 static const JNINativeMethod camMethods[] = {
-  { "_getNumberOfCameras",
+  { "getNumberOfCameras",
     "()I",
     (void *)android_hardware_Camera_getNumberOfCameras },
   { "_getCameraInfo",
