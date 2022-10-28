@@ -96,6 +96,7 @@
     <item msgid="506175145534048710">"Opus"</item>
     <item msgid="8711430979086781450">"<xliff:g id="QUALCOMM">Qualcomm®</xliff:g> <xliff:g id="APTX_ADAPTIVE">aptX™ Adaptive</xliff:g> audio"</item>
     <item msgid="6486050771049225">"<xliff:g id="QUALCOMM">Qualcomm®</xliff:g> <xliff:g id="APTX_TWSP">aptX™ TWS+</xliff:g> audio"</item>
+    <item msgid="2175251528736816404">"LC3"</item>
   </string-array>
   <string-array name="bluetooth_a2dp_codec_summaries">
     <item msgid="8868109554557331312">"Korištenje odabira sistema (zadano)"</item>
