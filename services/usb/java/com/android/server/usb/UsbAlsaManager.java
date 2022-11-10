@@ -37,6 +37,7 @@ import libcore.io.IoUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import android.os.SystemProperties;
 
 /**
  * UsbAlsaManager manages USB audio and MIDI devices.
@@ -47,7 +48,7 @@ public final class UsbAlsaManager {
 
     // Flag to turn on/off multi-peripheral select mode
     // Set to true to have single-device-only mode
-    private static final boolean mIsSingleMode = true;
+    private static boolean mIsSingleMode = true;
 
     private static final String ALSA_DIRECTORY = "/dev/snd/";
 
@@ -128,6 +129,10 @@ public final class UsbAlsaManager {
     private synchronized void selectAlsaDevice(UsbAlsaDevice alsaDevice) {
         if (DEBUG) {
             Slog.d(TAG, "selectAlsaDevice() " + alsaDevice);
+        }
+
+        if ("true".equals(SystemProperties.get("vendor.audio.gaming.enabled", "false"))) {
+            mIsSingleMode = false;
         }
 
         // This must be where an existing USB audio device is deselected.... (I think)
