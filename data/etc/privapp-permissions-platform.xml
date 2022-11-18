@@ -58,6 +58,7 @@ applications that come with the platform
 
     <privapp-permissions package="com.android.launcher3">
         <permission name="android.permission.WRITE_SECURE_SETTINGS"/>
+        <permission name="android.permission.INTERACT_ACROSS_USERS"/>
     </privapp-permissions>
 
     <privapp-permissions package="com.android.location.fused">
