@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "20507d6f_86073063",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000001
+      },
+      "writtenOn": "2022-11-19T07:28:12Z",
+      "side": 1,
+      "message": "there is no jiggle in bb in upstream patches hence not needed currently if anyone faces it then will see to it.",
+      "revId": "33af68f6c6489aeb71c2ec1bbe0b6485a3a9429b",
+      "serverId": "c85314f7-38ff-4b73-93db-2637f3516207"
+    }
+  ]
+}
