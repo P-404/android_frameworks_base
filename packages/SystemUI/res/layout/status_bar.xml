@@ -63,7 +63,7 @@
             <FrameLayout
                 android:id="@+id/status_bar_start_side_content"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:clipChildren="false">
 
                 <include layout="@layout/heads_up_status_bar_layout" />
@@ -73,8 +73,8 @@
                      and DISABLE_NOTIFICATION_ICONS, respectively -->
                 <LinearLayout
                     android:id="@+id/status_bar_start_side_except_heads_up"
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_width="wrap_content"
                     android:clipChildren="false">
                     <ViewStub
                         android:id="@+id/operator_name"
@@ -91,6 +91,24 @@
                         android:paddingStart="@dimen/status_bar_left_clock_starting_padding"
                         android:paddingEnd="@dimen/status_bar_left_clock_end_padding"
                         android:gravity="center_vertical|start"
+                    />
+
+                    <com.android.systemui.statusbar.policy.NetworkTraffic
+                        android:id="@+id/network_traffic"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_vertical|start"
+                        android:textAppearance="@style/TextAppearance.StatusBar.Clock"
+                        android:autoSizeTextType="uniform"
+                        android:autoSizeMinTextSize="12sp"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeStepGranularity="1sp"
+                        android:maxLines="2"
+                        android:lineSpacingMultiplier="0.8"
+                        android:includeFontPadding="false"
+                        android:gravity="center"
+                        android:paddingStart="3dp"
+                        android:paddingEnd="@dimen/status_bar_left_clock_end_padding"
                     />
 
                     <include layout="@layout/ongoing_call_chip" />
