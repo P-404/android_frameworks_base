@@ -36,6 +36,7 @@ import android.text.format.DateFormat;
 import android.text.style.CharacterStyle;
 import android.text.style.RelativeSizeSpan;
 import android.util.AttributeSet;
+import android.util.ArraySet;
 import android.view.ContextThemeWrapper;
 import android.view.Display;
 import android.view.View;
@@ -85,6 +86,7 @@ public class Clock extends TextView implements
 
     private boolean mClockVisibleByPolicy = true;
     private boolean mClockVisibleByUser = true;
+    private boolean mNetworkTrafficEnabled;
 
     private boolean mAttached;
     private boolean mScreenReceiverRegistered;
@@ -317,6 +319,11 @@ public class Clock extends TextView implements
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
+        if (mNetworkTrafficEnabled) {
+            // Maintain consistent padding for network traffic
+            return;
+        }
+
         int chars = getText().length();
         if (chars != mCharsAtCurrentWidth) {
             mCharsAtCurrentWidth = chars;
@@ -338,8 +345,10 @@ public class Clock extends TextView implements
             mShowSeconds = TunerService.parseIntegerSwitch(newValue, false);
             updateShowSeconds();
         } else if (StatusBarIconController.ICON_HIDE_LIST.equals(key)) {
-            setClockVisibleByUser(!StatusBarIconController.getIconHideList(getContext(), newValue)
-                    .contains("clock"));
+            ArraySet<String> hideList =
+                    StatusBarIconController.getIconHideList(getContext(), newValue);
+            mNetworkTrafficEnabled = !hideList.contains(NetworkTraffic.SLOT);
+            setClockVisibleByUser(!hideList.contains("clock"));
             updateClockVisibility();
         }
     }

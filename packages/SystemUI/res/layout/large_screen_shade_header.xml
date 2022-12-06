@@ -83,6 +83,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 systemui:textAppearance="@style/TextAppearance.QS.Status" />
+
+            <com.android.systemui.statusbar.policy.NetworkTraffic
+                android:id="@+id/networkTraffic"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="end|center_vertical"
+                android:gravity="center"
+                android:textAppearance="@style/TextAppearance.QS.Status"
+                android:maxLines="2"
+                android:lineSpacingMultiplier="0.8"
+                android:includeFontPadding="false"
+                android:paddingStart="4dp" />
+
             <FrameLayout
                 android:id="@+id/privacy_container"
                 android:layout_width="0dp"

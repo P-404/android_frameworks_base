@@ -33,6 +33,7 @@ object CombinedShadeHeadersConstraintManagerImpl : CombinedShadeHeadersConstrain
             qqsConstraintsChanges = {
                 setAlpha(R.id.statusIcons, constraintAlpha)
                 setAlpha(R.id.batteryRemainingIcon, constraintAlpha)
+                setAlpha(R.id.networkTraffic, constraintAlpha)
             }
         )
     }

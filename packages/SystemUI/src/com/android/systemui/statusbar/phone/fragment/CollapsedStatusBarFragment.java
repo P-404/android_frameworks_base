@@ -108,6 +108,7 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     public static final String STATUS_BAR_ICON_MANAGER_TAG = "status_bar_icon_manager";
     public static final int FADE_IN_DURATION = 320;
     public static final int FADE_IN_DELAY = 50;
+    private static final int DISABLE_NETWORK_TRAFFIC = 0x80000000;
     private StatusBarFragmentComponent mStatusBarFragmentComponent;
     private PhoneStatusBarView mStatusBar;
     private final StatusBarStateController mStatusBarStateController;
@@ -118,6 +119,7 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     private boolean mSystemIconAreaPendingToShow;
     private LinearLayout mEndSideContent;
     private View mClockView;
+    private View mTrafficView;
     private View mOngoingCallChip;
     private View mNotificationIconAreaInner;
     private int mDisabled1;
@@ -284,6 +286,7 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         mStatusIcons.setPadding(mStatusIcons.getPaddingLeft(), mStatusIcons.getPaddingTop(), (batteryStyle == 5/*hidden*/ ? 0 : mSignalClusterEndPadding), mStatusIcons.getPaddingBottom());
         mBatteryMeterView = mStatusBar.findViewById(R.id.battery);
         mBatteryMeterView.addCallback(mBatteryMeterViewCallback);
+        mTrafficView = mStatusBar.findViewById(R.id.network_traffic);
         mOngoingCallChip = mStatusBar.findViewById(R.id.ongoing_call_chip);
         showEndSideContent(false);
         showClock(false);
@@ -454,6 +457,15 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
                 showClock(animate);
             }
         }
+
+        // Update network traffic visibility if changed
+        if ((diff1 & DISABLE_NETWORK_TRAFFIC) != 0) {
+            if ((state1 & DISABLE_NETWORK_TRAFFIC) != 0) {
+                animateHiddenState(mTrafficView, View.GONE, animate);
+            } else {
+                animateShow(mTrafficView, animate);
+            }
+        }
     }
 
     protected int adjustDisableFlags(int state) {
@@ -461,6 +473,7 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
                 mStatusBarFragmentComponent.getHeadsUpAppearanceController().shouldBeVisible();
         if (headsUpVisible) {
             state |= DISABLE_CLOCK;
+            state |= DISABLE_NETWORK_TRAFFIC;
         }
 
         if (!mKeyguardStateController.isLaunchTransitionFadingAway()
@@ -471,6 +484,7 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
             state |= DISABLE_NOTIFICATION_ICONS;
             state |= DISABLE_SYSTEM_INFO;
             state |= DISABLE_CLOCK;
+            state |= DISABLE_NETWORK_TRAFFIC;
         }
 
         if (mNetworkController != null && EncryptionHelper.IS_DATA_ENCRYPTED) {
@@ -484,6 +498,7 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
 
         if (mOngoingCallController.hasOngoingCall()) {
             state &= ~DISABLE_ONGOING_CALL_CHIP;
+            state |= DISABLE_NETWORK_TRAFFIC;
         } else {
             state |= DISABLE_ONGOING_CALL_CHIP;
         }

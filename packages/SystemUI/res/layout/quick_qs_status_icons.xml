@@ -105,6 +105,16 @@
             systemui:textAppearance="@style/TextAppearance.QS.Status"
             android:paddingEnd="2dp" />
 
+        <com.android.systemui.statusbar.policy.NetworkTraffic
+            android:id="@+id/networkTraffic"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.QS.Status"
+            android:maxLines="2"
+            android:lineSpacingMultiplier="0.8"
+            android:includeFontPadding="false"
+            android:paddingHorizontal="2dp" />
     </LinearLayout>
     </FrameLayout>
 
