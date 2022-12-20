@@ -109,6 +109,7 @@
         <item>Enabled</item>
         <item>Enabled Headers Filtered</item>
         <item>Enabled Media Pkts Filtered</item>
+        <item>Enabled Profiles Filtered</item>
     </string-array>
 
     <!-- Values for Bluetooth HCI Snoop Logging -->
@@ -118,12 +119,14 @@
         <item>full</item>
         <item>snoopheadersfiltered</item>
         <item>mediapktsfiltered</item>
+        <item>profilesfiltered</item>
     </string-array>
 
     <!-- Values for Bluetooth HCI Snoop Logging Enhanced-->
     <string-array name="bt_hci_snoop_log_values_enhanced" translatable="false">
         <item>snoopheadersfiltered</item>
         <item>mediapktsfiltered</item>
+        <item>profilesfiltered</item>
     </string-array>
 
 

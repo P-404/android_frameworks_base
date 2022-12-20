@@ -64,6 +64,7 @@
     <item msgid="2779123106632690576">"已启用"</item>
     <item>"已过滤已启用的标题"</item>
     <item>"已过滤已启用的媒体包"</item>
+    <item>"已启用（已过滤配置文件）"</item>
   </string-array>
   <string-array name="bluetooth_avrcp_versions">
     <item msgid="6603880723315236832">"AVRCP 1.5（默认）"</item>

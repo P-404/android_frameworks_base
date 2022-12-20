@@ -1296,7 +1296,7 @@ public class TelecomManager {
         if (service != null) {
             try {
                 return service.getPhoneAccountsSupportingScheme(uriScheme,
-                        mContext.getOpPackageName());
+                        mContext.getOpPackageName()).getList();
             } catch (RemoteException e) {
                 Log.e(TAG, "Error calling ITelecomService#getPhoneAccountsSupportingScheme", e);
             }
@@ -1339,7 +1339,7 @@ public class TelecomManager {
         if (service != null) {
             try {
                 return service.getSelfManagedPhoneAccounts(mContext.getOpPackageName(),
-                        mContext.getAttributionTag());
+                        mContext.getAttributionTag()).getList();
             } catch (RemoteException e) {
                 Log.e(TAG, "Error calling ITelecomService#getSelfManagedPhoneAccounts()", e);
             }
@@ -1367,7 +1367,7 @@ public class TelecomManager {
         if (service != null) {
             try {
                 return service.getOwnSelfManagedPhoneAccounts(mContext.getOpPackageName(),
-                        mContext.getAttributionTag());
+                        mContext.getAttributionTag()).getList();
             } catch (RemoteException e) {
                 throw e.rethrowFromSystemServer();
             }
@@ -1393,7 +1393,7 @@ public class TelecomManager {
         if (service != null) {
             try {
                 return service.getCallCapablePhoneAccounts(includeDisabledAccounts,
-                        mContext.getOpPackageName(), mContext.getAttributionTag());
+                        mContext.getOpPackageName(), mContext.getAttributionTag()).getList();
             } catch (RemoteException e) {
                 Log.e(TAG, "Error calling ITelecomService#getCallCapablePhoneAccounts("
                         + includeDisabledAccounts + ")", e);
@@ -1417,7 +1417,7 @@ public class TelecomManager {
         ITelecomService service = getTelecomService();
         if (service != null) {
             try {
-                return service.getPhoneAccountsForPackage(mContext.getPackageName());
+                return service.getPhoneAccountsForPackage(mContext.getPackageName()).getList();
             } catch (RemoteException e) {
                 Log.e(TAG, "Error calling ITelecomService#getPhoneAccountsForPackage", e);
             }
@@ -1477,7 +1477,7 @@ public class TelecomManager {
         ITelecomService service = getTelecomService();
         if (service != null) {
             try {
-                return service.getAllPhoneAccounts();
+                return service.getAllPhoneAccounts().getList();
             } catch (RemoteException e) {
                 Log.e(TAG, "Error calling ITelecomService#getAllPhoneAccounts", e);
             }
@@ -1496,7 +1496,7 @@ public class TelecomManager {
         ITelecomService service = getTelecomService();
         if (service != null) {
             try {
-                return service.getAllPhoneAccountHandles();
+                return service.getAllPhoneAccountHandles().getList();
             } catch (RemoteException e) {
                 Log.e(TAG, "Error calling ITelecomService#getAllPhoneAccountHandles", e);
             }
