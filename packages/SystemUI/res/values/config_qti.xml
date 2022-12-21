@@ -7,4 +7,7 @@
     <bool name="config_show_roaming_customization_carrier_name">false</bool>
     <dimen name="internet_dialog_text_size">16sp</dimen>
     <dimen name="internet_dialog_text_size_second">14sp</dimen>
+    <bool name="kg_hide_emgcy_btn_when_oos">false</bool>
+    <bool name="config_showEmergencyButton">false</bool>
+    <bool name="config_show_customize_carrier_name">false</bool>
 </resources>
