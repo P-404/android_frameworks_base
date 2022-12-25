@@ -3762,34 +3762,6 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
         mHandler.removeCallbacksAndMessages(null);
     }
 
-    public boolean isOOS() {
-        boolean ret = true;
-        int phoneCount = mTelephonyManager.getActiveModemCount();
-        for (int phoneId = 0; phoneId < phoneCount; phoneId++) {
-            int[] subId = mSubscriptionManager.getSubscriptionIds(phoneId);
-            if (subId != null && subId.length >= 1) {
-                if (DEBUG) Log.d(TAG, "slot id:" + phoneId + " subId:" + subId[0]);
-                ServiceState state = mServiceStates.get(subId[0]);
-                if (state != null) {
-                    if (state.isEmergencyOnly()) {
-                        ret = false;
-                    } else if ((state.getVoiceRegState() != ServiceState.STATE_OUT_OF_SERVICE)
-                            && (state.getVoiceRegState() != ServiceState.STATE_POWER_OFF)) {
-                        ret = false;
-                    }
-                    if (DEBUG) {
-                        Log.d(TAG, "is emergency: " + state.isEmergencyOnly()
-                                + "voice state: " + state.getVoiceRegState());
-                    }
-                } else {
-                    if (DEBUG) Log.d(TAG, "state is NULL");
-                }
-            }
-        }
-
-        return ret;
-    }
-
     @Override
     public void dump(PrintWriter pw, String[] args) {
         pw.println("KeyguardUpdateMonitor state:");
