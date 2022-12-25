@@ -24,10 +24,14 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.LinearLayout;
 
 import com.android.internal.logging.UiEventLogger;
+import com.android.systemui.Dependency;
 import com.android.systemui.R;
+import com.android.systemui.flags.FeatureFlags;
+import com.android.systemui.flags.Flags;
 import com.android.systemui.plugins.qs.QSTile;
 import com.android.systemui.plugins.qs.QSTile.SignalState;
 import com.android.systemui.plugins.qs.QSTile.State;
+import com.android.systemui.util.LargeScreenUtils;
 
 /**
  * Version of QSPanel that only shows N Quick Tiles in the QS Header.
@@ -40,10 +44,12 @@ public class QuickQSPanel extends QSPanel {
 
     private boolean mDisabledByPolicy;
     private int mMaxTiles;
+    private FeatureFlags mFeatureFlags;
 
     public QuickQSPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
         mMaxTiles = getResources().getInteger(R.integer.quick_qs_panel_max_tiles);
+        mFeatureFlags = Dependency.get(FeatureFlags.class);
     }
 
     @Override
@@ -73,7 +79,12 @@ public class QuickQSPanel extends QSPanel {
 
     @Override
     protected void updatePadding() {
-        int bottomPadding = getResources().getDimensionPixelSize(R.dimen.qqs_layout_padding_bottom);
+        boolean useLargeScreenShadeHeader =
+                LargeScreenUtils.shouldUseLargeScreenShadeHeader(getResources());
+        boolean useCombinedHeaders = mFeatureFlags.isEnabled(Flags.COMBINED_QS_HEADERS);
+        int bottomPadding = getResources().getDimensionPixelSize(useLargeScreenShadeHeader
+                || !useCombinedHeaders ? R.dimen.qqs_layout_padding_bottom
+                : R.dimen.qqs_layout_padding_bottom_combined_headers);
         setPaddingRelative(getPaddingStart(),
                 getPaddingTop(),
                 getPaddingEnd(),
