@@ -56,6 +56,7 @@ class AuthRippleView(context: Context?, attrs: AttributeSet?) : View(context, at
     private val fadeDuration = 83L
     private val retractDuration = 400L
     private var alphaInDuration: Long = 0
+    private var animationDuration: Long = 1533
     private var unlockedRippleInProgress: Boolean = false
     private val dwellShader = DwellRippleShader()
     private val dwellPaint = Paint()
@@ -112,6 +113,10 @@ class AuthRippleView(context: Context?, attrs: AttributeSet?) : View(context, at
 
     fun setAlphaInDuration(duration: Long) {
         alphaInDuration = duration
+    }
+
+    fun setAnimationDuration(duration: Long) {
+        animationDuration = duration
     }
 
     /**
@@ -269,7 +274,7 @@ class AuthRippleView(context: Context?, attrs: AttributeSet?) : View(context, at
 
         val rippleAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
             interpolator = Interpolators.LINEAR_OUT_SLOW_IN
-            duration = AuthRippleController.RIPPLE_ANIMATION_DURATION
+            duration = animationDuration
             addUpdateListener { animator ->
                 val now = animator.currentPlayTime
                 rippleShader.progress = animator.animatedValue as Float
