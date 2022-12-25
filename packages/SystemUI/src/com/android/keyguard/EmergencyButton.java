@@ -17,7 +17,6 @@
 package com.android.keyguard;
 
 import android.content.Context;
-import com.android.systemui.Dependency;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -27,9 +26,6 @@ import android.widget.Button;
 import com.android.internal.util.EmergencyAffordanceManager;
 import com.android.internal.widget.LockPatternUtils;
 import com.android.settingslib.Utils;
-import com.android.systemui.R;
-
-import java.util.List;
 
 /**
  * This class implements a smart emergency button that updates itself based
@@ -111,8 +107,7 @@ public class EmergencyButton extends Button {
         return super.performLongClick();
     }
 
-    public void updateEmergencyCallButton(boolean isInCall, boolean hasTelephonyRadio,
-                                          boolean simLocked, boolean isEmergencyCapable) {
+    void updateEmergencyCallButton(boolean isInCall, boolean hasTelephonyRadio, boolean simLocked) {
         boolean visible = false;
         if (hasTelephonyRadio) {
             // Emergency calling requires a telephony radio.
@@ -123,13 +118,8 @@ public class EmergencyButton extends Button {
                     // Some countries can't handle emergency calls while SIM is locked.
                     visible = mEnableEmergencyCallWhileSimLocked;
                 } else {
-                    // Show if there is a secure screen (pin/pattern/SIM pin/SIM puk) or config set
-                    visible = mLockPatternUtils.isSecure(KeyguardUpdateMonitor.getCurrentUser()) ||
-                            mContext.getResources().getBoolean(R.bool.config_showEmergencyButton);
-                }
-
-                if (mContext.getResources().getBoolean(R.bool.kg_hide_emgcy_btn_when_oos)) {
-                    visible = visible && isEmergencyCapable;
+                    // Only show if there is a secure screen (pin/pattern/SIM pin/SIM puk);
+                    visible = mLockPatternUtils.isSecure(KeyguardUpdateMonitor.getCurrentUser());
                 }
             }
         }
@@ -147,5 +137,4 @@ public class EmergencyButton extends Button {
             setVisibility(View.GONE);
         }
     }
-
 }
