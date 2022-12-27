@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c19c73d4_ece6d416",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000001
+      },
+      "writtenOn": "2022-12-27T18:32:58Z",
+      "side": 1,
+      "message": "can be done in vendor overlays but nvm merging this currently",
+      "revId": "eae5ce5a7a0b0f559309e03edbb4a34519c48e92",
+      "serverId": "c85314f7-38ff-4b73-93db-2637f3516207"
+    }
+  ]
+}
