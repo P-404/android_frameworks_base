@@ -141,6 +141,7 @@ public class QSCarrierGroupController {
         mCarrierTextManager = carrierTextManagerBuilder
                 .setShowAirplaneMode(false)
                 .setShowMissingSim(false)
+                .setShowCustomizeName(true)
                 .build();
         mCarrierConfigTracker = carrierConfigTracker;
         mSlotIndexResolver = slotIndexResolver;
