@@ -281,13 +281,15 @@ public class InternetDialogController implements AccessPointController.AccessPoi
         // Listen to non-DDS call state changes
         List<SubscriptionInfo> subInfos =
                 mSubscriptionManager.getActiveSubscriptionInfoList();
-        for (SubscriptionInfo subInfo : subInfos) {
-            if (subInfo.getSubscriptionId() != mDefaultDataSubId) {
-                NonDdsCallStateCallback nonDdsCallStateCallback = new NonDdsCallStateCallback();
-                mTelephonyManager.createForSubscriptionId(subInfo.getSubscriptionId())
-                        .registerTelephonyCallback(mExecutor, nonDdsCallStateCallback);
-                mNonDdsCallStateCallbacksMap.put(subInfo.getSubscriptionId(),
-                        nonDdsCallStateCallback);
+        if (subInfos != null) {
+            for (SubscriptionInfo subInfo : subInfos) {
+                if (subInfo.getSubscriptionId() != mDefaultDataSubId) {
+                    NonDdsCallStateCallback nonDdsCallStateCallback = new NonDdsCallStateCallback();
+                    mTelephonyManager.createForSubscriptionId(subInfo.getSubscriptionId())
+                            .registerTelephonyCallback(mExecutor, nonDdsCallStateCallback);
+                    mNonDdsCallStateCallbacksMap.put(subInfo.getSubscriptionId(),
+                            nonDdsCallStateCallback);
+                }
             }
         }
 

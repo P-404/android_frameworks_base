@@ -167,6 +167,9 @@ public class InternetDialog extends SystemUIDialog implements
         mInternetDialogSubTitle.setText(getSubtitleText());
     };
 
+    private boolean mIsCallIdle = true;
+    private boolean mIsImsRegisteredOverCiwlan = false;
+
     public InternetDialog(Context context, InternetDialogFactory internetDialogFactory,
             InternetDialogController internetDialogController, boolean canConfigMobileData,
             boolean canConfigWifi, boolean aboveStatusBar, UiEventLogger uiEventLogger,
@@ -622,6 +625,19 @@ public class InternetDialog extends SystemUIDialog implements
     }
 
     private boolean shouldShowMobileDialog() {
+        mIsCallIdle = mTelephonyManager.getCallState() == TelephonyManager.CALL_STATE_IDLE;
+        IImsRegistration imsRegistrationImpl = mTelephonyManager.getImsRegistration(
+                mSubscriptionManager.getSlotIndex(mDefaultDataSubId), FEATURE_MMTEL);
+        try {
+            mIsImsRegisteredOverCiwlan = imsRegistrationImpl.getRegistrationTechnology() ==
+                    REGISTRATION_TECH_CROSS_SIM;
+        } catch (RemoteException ex) {
+            Log.e(TAG, "getRegistrationTechnology failed", ex);
+        }
+        if (mInternetDialogController.isMobileDataEnabled() && !mIsCallIdle &&
+                mIsImsRegisteredOverCiwlan) {
+            return true;
+        }
         boolean flag = Prefs.getBoolean(mContext, QS_HAS_TURNED_OFF_MOBILE_DATA,
                 false);
         if (mInternetDialogController.isMobileDataEnabled() && !flag) {
@@ -636,23 +652,16 @@ public class InternetDialog extends SystemUIDialog implements
         if (TextUtils.isEmpty(carrierName) || !isInService) {
             carrierName = mContext.getString(R.string.mobile_data_disable_message_default_carrier);
         }
-        // Check if call is ongoing and IMS is registered on C_IWLAN type and adjust the dialog
-        // message
-        boolean isCallIdle = mTelephonyManager.getCallState() == TelephonyManager.CALL_STATE_IDLE;
-        IImsRegistration imsRegistrationImpl = mTelephonyManager.getImsRegistration(
-                mSubscriptionManager.getSlotIndex(mDefaultDataSubId), FEATURE_MMTEL);
-        boolean isImsRegisteredOverCiwlan = false;
-        try {
-            isImsRegisteredOverCiwlan = imsRegistrationImpl.getRegistrationTechnology() ==
-                    REGISTRATION_TECH_CROSS_SIM;
-        } catch (RemoteException ex) {
-            Log.e(TAG, "getRegistrationTechnology failed", ex);
+        String mobileDataDisableDialogMessage = mContext.getString(
+                R.string.mobile_data_disable_message, carrierName);
+        // If call is ongoing and IMS is registered on C_IWLAN, adjust the dialog message
+        Log.d(TAG, "isCallIdle = " + mIsCallIdle + ", isImsRegisteredOverCiwlan = " +
+                mIsImsRegisteredOverCiwlan);
+        if (!mIsCallIdle && mIsImsRegisteredOverCiwlan) {
+            mobileDataDisableDialogMessage = mContext.getString(
+                    R.string.mobile_data_disable_ciwlan_call_message) + "\n" +
+                    mobileDataDisableDialogMessage;
         }
-        Log.d(TAG, "isCallIdle=" + isCallIdle + ", isImsRegisteredOverCiwlan=" +
-                isImsRegisteredOverCiwlan);
-        String mobileDataDisableDialogMessage = (!isCallIdle && isImsRegisteredOverCiwlan) ?
-                mContext.getString(R.string.mobile_data_disable_ciwlan_call_message) :
-                mContext.getString(R.string.mobile_data_disable_message, carrierName);
         mAlertDialog = new Builder(mContext)
                 .setTitle(R.string.mobile_data_disable_title)
                 .setMessage(mobileDataDisableDialogMessage)
