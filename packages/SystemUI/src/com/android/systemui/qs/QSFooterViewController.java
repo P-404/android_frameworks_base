@@ -31,8 +31,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.systemui.R;
-import com.android.systemui.plugins.ActivityStarter;
-import com.android.systemui.plugins.FalsingManager;
 import com.android.systemui.qs.dagger.QSScope;
 import com.android.systemui.settings.UserTracker;
 import com.android.systemui.util.ViewController;
@@ -50,9 +48,6 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
     private final UserTracker mUserTracker;
     private final QSPanelController mQsPanelController;
     private final PageIndicator mPageIndicator;
-    private final View mEditButton;
-    private final FalsingManager mFalsingManager;
-    private final ActivityStarter mActivityStarter;
     private final WifiStatusTracker mWifiTracker;
     private final Context mContext;
 
@@ -67,18 +62,13 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
     @Inject
     QSFooterViewController(QSFooterView view,
             UserTracker userTracker,
-            FalsingManager falsingManager,
-            ActivityStarter activityStarter,
             QSPanelController qsPanelController,
             Context context) {
         super(view);
         mUserTracker = userTracker;
         mQsPanelController = qsPanelController;
-        mFalsingManager = falsingManager;
-        mActivityStarter = activityStarter;
         mContext = context;
         mPageIndicator = mView.findViewById(R.id.footer_page_indicator);
-        mEditButton = mView.findViewById(android.R.id.edit);
         mWifiTracker = new WifiStatusTracker(context, context.getSystemService(WifiManager.class),
                 context.getSystemService(NetworkScoreManager.class),
                 context.getSystemService(ConnectivityManager.class),
@@ -87,13 +77,6 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
 
     @Override
     protected void onViewAttached() {
-        mEditButton.setOnClickListener(view -> {
-            if (mFalsingManager.isFalseTap(FalsingManager.LOW_PENALTY)) {
-                return;
-            }
-            mActivityStarter
-                    .postQSRunnableDismissingKeyguard(() -> mQsPanelController.showEdit(view));
-        });
         mQsPanelController.setFooterPageIndicator(mPageIndicator);
         final IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
@@ -113,7 +96,6 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
     @Override
     public void setVisibility(int visibility) {
         mView.setVisibility(visibility);
-        mEditButton.setClickable(visibility == View.VISIBLE);
     }
 
     @Override
