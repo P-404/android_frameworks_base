@@ -84,6 +84,19 @@
 
         </com.android.systemui.statusbar.AlphaOptimizedFrameLayout>
 
+    <com.android.systemui.statusbar.AlphaOptimizedImageView
+        android:id="@android:id/edit"
+        android:layout_width="@dimen/qs_footer_action_button_size"
+        android:layout_height="@dimen/qs_footer_action_button_size"
+        android:background="@drawable/qs_footer_action_circle"
+        android:focusable="true"
+        android:clickable="true"
+        android:clipToPadding="false"
+        android:contentDescription="@string/accessibility_quick_settings_edit"
+        android:padding="@dimen/qs_footer_icon_padding"
+        android:src="@*android:drawable/ic_mode_edit"
+        android:tint="?android:attr/textColorPrimary" />
+
         <com.android.systemui.statusbar.AlphaOptimizedImageView
             android:id="@+id/pm_lite"
             android:layout_width="@dimen/qs_footer_action_button_size"

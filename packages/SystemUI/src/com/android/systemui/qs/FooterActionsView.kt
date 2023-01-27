@@ -43,6 +43,7 @@ class FooterActionsView(context: Context?, attrs: AttributeSet?) : LinearLayout(
     private lateinit var settingsContainer: View
     private lateinit var multiUserSwitch: MultiUserSwitch
     private lateinit var multiUserAvatar: ImageView
+    private lateinit var editTilesButton: View
 
     private var qsDisabled = false
     private var expansionAmount = 0f
@@ -63,6 +64,7 @@ class FooterActionsView(context: Context?, attrs: AttributeSet?) : LinearLayout(
     override fun onFinishInflate() {
         super.onFinishInflate()
         settingsContainer = findViewById(R.id.settings_button_container)
+        editTilesButton = requireViewById(android.R.id.edit)
         multiUserSwitch = findViewById(R.id.multi_user_switch)
         multiUserAvatar = multiUserSwitch.findViewById(R.id.multi_user_avatar)
 
@@ -97,6 +99,7 @@ class FooterActionsView(context: Context?, attrs: AttributeSet?) : LinearLayout(
     private fun updateClickabilities() {
         multiUserSwitch.isClickable = multiUserSwitch.visibility == VISIBLE
         settingsContainer.isClickable = settingsContainer.visibility == VISIBLE
+        editTilesButton.isClickable = editTilesButton.visibility == VISIBLE
     }
 
     private fun updateVisibilities(
