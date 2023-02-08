@@ -597,6 +597,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
     }
 
     private final DelayableExecutor mMainExecutor;
+    private Handler mMainHandler;
 
     private int mInteractingWindows;
     private @TransitionMode int mStatusBarMode;
@@ -755,6 +756,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             LockscreenShadeTransitionController lockscreenShadeTransitionController,
             FeatureFlags featureFlags,
             KeyguardUnlockAnimationController keyguardUnlockAnimationController,
+            @Main Handler mainHandler,
             @Main DelayableExecutor delayableExecutor,
             @Main MessageRouter messageRouter,
             WallpaperManager wallpaperManager,
@@ -839,6 +841,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         mFeatureFlags = featureFlags;
         mKeyguardUnlockAnimationController = keyguardUnlockAnimationController;
         mMainExecutor = delayableExecutor;
+        mMainHandler = mainHandler;
         mMessageRouter = messageRouter;
         mWallpaperManager = wallpaperManager;
         mJankMonitor = jankMonitor;
