@@ -114,8 +114,6 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     private final KeyguardStateController mKeyguardStateController;
     private final NotificationPanelViewController mNotificationPanelViewController;
     private final NetworkController mNetworkController;
-    private LinearLayout mSystemIconArea;
-    private boolean mSystemIconAreaPendingToShow;
     private LinearLayout mEndSideContent;
     private View mClockView;
     private View mOngoingCallChip;
@@ -526,11 +524,6 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         return mStatusBarHideIconsForBouncerManager.getShouldHideStatusBarIconsForBouncer();
     }
 
-    private void hideSystemIconArea(boolean animate) {
-        mSystemIconAreaPendingToShow = false;
-        animateHide(mSystemIconArea, animate);
-    }
-
     private void hideEndSideContent(boolean animate) {
         animateHide(mEndSideContent, animate);
     }
@@ -541,7 +534,6 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         if (state == IDLE || state == SHOWING_PERSISTENT_DOT) {
             animateShow(mEndSideContent, animate);
         } else {
-            mSystemIconAreaPendingToShow = true;
             // We are in the middle of a system status event animation, which will animate the
             // alpha (but not the visibility). Allow the view to become visible again
             mEndSideContent.setVisibility(View.VISIBLE);
@@ -705,10 +697,6 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     @Nullable
     @Override
     public Animator onSystemEventAnimationFinish(boolean hasPersistentDot) {
-        if (mSystemIconAreaPendingToShow) {
-            mSystemIconAreaPendingToShow = false;
-            animateShow(mSystemIconArea, false);
-        }
         return mSystemEventAnimator.onSystemEventAnimationFinish(hasPersistentDot);
     }
 
