@@ -36,4 +36,7 @@
       avatar will no longer show on the lockscreen -->
     <bool name="flag_user_switcher_chip">false</bool>
 
+    <!-- Whether the combined qs shows in status bar , when true, the combined qs qill not be available
+    if set it to false  -->
+    <bool name="flag_combined_qs_headers">false</bool>
 </resources>
