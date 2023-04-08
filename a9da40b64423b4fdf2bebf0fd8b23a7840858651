@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "af6b7d10_566625ce",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000001
+      },
+      "writtenOn": "2023-04-08T10:15:01Z",
+      "side": 1,
+      "message": "user should/must have info about it developer don\u0027t need sound lol",
+      "revId": "a9da40b64423b4fdf2bebf0fd8b23a7840858651",
+      "serverId": "c85314f7-38ff-4b73-93db-2637f3516207"
+    }
+  ]
+}
