@@ -268,7 +268,7 @@ public class ScreenshotController {
     private final WindowManager mWindowManager;
     private final WindowManager.LayoutParams mWindowLayoutParams;
     private final AccessibilityManager mAccessibilityManager;
-    private final ListenableFuture<MediaPlayer> mCameraSound;
+    private ListenableFuture<MediaPlayer> mCameraSound;
     private final ScrollCaptureClient mScrollCaptureClient;
     private final PhoneWindow mWindow;
     private final DisplayManager mDisplayManager;
@@ -470,9 +470,12 @@ public class ScreenshotController {
         // Note that this may block if the sound is still being loaded (very unlikely) but we can't
         // reliably release in the background because the service is being destroyed.
         try {
-            MediaPlayer player = mCameraSound.get();
-            if (player != null) {
-                player.release();
+            if (mCameraSound != null) {
+                MediaPlayer player = mCameraSound.get();
+                if (player != null) {
+                    player.release();
+                }
+                mCameraSound = null;
             }
         } catch (InterruptedException | ExecutionException e) {
         }
@@ -889,15 +892,19 @@ public class ScreenshotController {
     }
 
     private void playCameraSound() {
-        mCameraSound.addListener(() -> {
-            try {
-                MediaPlayer player = mCameraSound.get();
-                if (player != null) {
-                    player.start();
+        if (mCameraSound != null) {
+            mCameraSound.addListener(() -> {
+                try {
+                    if (mCameraSound != null) {
+                        MediaPlayer player = mCameraSound.get();
+                        if (player != null) {
+                            player.start();
+                        }
+                    }
+                } catch (InterruptedException | ExecutionException e) {
                 }
-            } catch (InterruptedException | ExecutionException e) {
-            }
-        }, mBgExecutor);
+            }, mBgExecutor);
+        }
     }
 
     /**
