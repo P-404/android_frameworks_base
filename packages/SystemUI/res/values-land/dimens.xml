@@ -63,6 +63,13 @@
     <dimen name="large_dialog_width">348dp</dimen>
 
     <dimen name="qs_panel_padding_top">@dimen/qqs_layout_margin_top</dimen>
+    <dimen name="qs_content_horizontal_padding">24dp</dimen>
+    <dimen name="qs_horizontal_margin">24dp</dimen>
+    <!-- in split shade qs_tiles_page_horizontal_margin should be equal of qs_horizontal_margin/2,
+         otherwise full space between two pages is qs_horizontal_margin*2, and that makes tiles page
+         not appear immediately after user swipes to the side -->
+    <dimen name="qs_tiles_page_horizontal_margin">12dp</dimen>
+    <dimen name="qs_header_system_icons_area_height">0dp</dimen>
 
     <dimen name="controls_header_horizontal_padding">12dp</dimen>
     <dimen name="controls_content_margin_horizontal">16dp</dimen>

@@ -30,6 +30,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
+        sysui:ignoreLeftInset="true"
         sysui:ignoreRightInset="true"
     >
         <ImageView android:id="@+id/backdrop_back"
@@ -48,6 +49,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:importantForAccessibility="no"
+        sysui:ignoreLeftInset="true"
         sysui:ignoreRightInset="true"
     />
 

@@ -92,6 +92,7 @@
     </declare-styleable>
 
     <declare-styleable name="StatusBarWindowView_Layout">
+        <attr name="ignoreLeftInset" format="boolean" />
         <attr name="ignoreRightInset" format="boolean" />
     </declare-styleable>
 
