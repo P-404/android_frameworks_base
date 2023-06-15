@@ -168,7 +168,7 @@ public class CommandQueue extends IStatusBar.Stub implements
     private static final int MSG_SHOW_REAR_DISPLAY_DIALOG = 69 << MSG_SHIFT;
     private static final int MSG_GO_TO_FULLSCREEN_FROM_SPLIT = 70 << MSG_SHIFT;
     private static final int MSG_ENTER_STAGE_SPLIT_FROM_RUNNING_APP = 71 << MSG_SHIFT;
-    private static final int MSG_TOGGLE_CAMERA_FLASH = 69 << MSG_SHIFT;
+    private static final int MSG_TOGGLE_CAMERA_FLASH = 72 << MSG_SHIFT;
 
     public static final int FLAG_EXCLUDE_NONE = 0;
     public static final int FLAG_EXCLUDE_SEARCH_PANEL = 1 << 0;
