@@ -40,6 +40,7 @@ public class PixelPropsUtils {
     private static final Map<String, Object> propsToChangePixel5;
     private static final Map<String, Object> propsToChangePixel7Pro;
     private static final Map<String, Object> propsToChangePixelXL;
+    private static final Map<String, Object> propsToChangePixelTablet;
     private static final Map<String, ArrayList<String>> propsToKeep;
 
     private static final String[] packagesToChangePixel7Pro = {
@@ -50,6 +51,11 @@ public class PixelPropsUtils {
     private static final String[] packagesToChangePixelXL = {
             "com.google.android.apps.photos",
             "com.google.android.inputmethod.latin"
+    };
+
+    private static final String[] packagesToChangePixelTablet = {
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.apps.googleassistant",
     };
 
     private static final String[] extraPackagesToChange = {
@@ -116,6 +122,13 @@ public class PixelPropsUtils {
         propsToChangePixelXL.put("PRODUCT", "marlin");
         propsToChangePixelXL.put("MODEL", "Pixel XL");
         propsToChangePixelXL.put("FINGERPRINT", "google/marlin/marlin:10/QP1A.191005.007.A3/5972272:user/release-keys");
+        propsToChangePixelTablet = new HashMap<>();
+        propsToChangePixelTablet.put("BRAND", "google");
+        propsToChangePixelTablet.put("MANUFACTURER", "Google");
+        propsToChangePixelTablet.put("DEVICE", "tangorpro");
+        propsToChangePixelTablet.put("PRODUCT", "tangorpro");
+        propsToChangePixelTablet.put("MODEL", "Pixel Tablet");
+        propsToChangePixelTablet.put("FINGERPRINT", "google/tangorpro/tangorpro:13/TQ3A.230605.009.A1/10100517:user/release-keys");
     }
 
     private static boolean isGoogleCameraPackage(String packageName){
@@ -145,6 +158,9 @@ public class PixelPropsUtils {
             } else if (packageName.equals("com.android.vending")) {
                 sIsFinsky = true;
                 return;
+            } else if (Arrays.asList(packagesToChangePixelTablet).contains(packageName)) {
+                if (isPixelDevice) return;
+                propsToChange.putAll(propsToChangePixelTablet);
             } else if (!isPixelDevice) {
                 if ((Arrays.asList(packagesToChangePixel7Pro).contains(packageName))) {
                     propsToChange.putAll(propsToChangePixel7Pro);
