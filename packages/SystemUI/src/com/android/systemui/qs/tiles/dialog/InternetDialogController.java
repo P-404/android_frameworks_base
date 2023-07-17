@@ -210,6 +210,8 @@ public class InternetDialogController implements AccessPointController.AccessPoi
     protected boolean mHasEthernet = false;
     @VisibleForTesting
     protected ConnectedWifiInternetMonitor mConnectedWifiInternetMonitor;
+    @VisibleForTesting
+    protected boolean mCarrierNetworkChangeMode;
 
     private CarrierNameCustomization mCarrierNameCustomization;
     private final KeyguardUpdateMonitorCallback mKeyguardUpdateCallback =
@@ -536,10 +538,13 @@ public class InternetDialogController implements AccessPointController.AccessPoi
     Drawable getSignalStrengthIcon(int subId, Context context, int level, int numLevels,
             int iconType, boolean cutOut) {
         boolean isForDds = subId == mDefaultDataSubId;
+        int levelDrawable =
+                mCarrierNetworkChangeMode ? SignalDrawable.getCarrierChangeState(numLevels)
+                        : SignalDrawable.getState(level, numLevels, cutOut);
         if (isForDds) {
-            mSignalDrawable.setLevel(SignalDrawable.getState(level, numLevels, cutOut));
+            mSignalDrawable.setLevel(levelDrawable);
         } else {
-            mSecondarySignalDrawable.setLevel(SignalDrawable.getState(level, numLevels, cutOut));
+            mSecondarySignalDrawable.setLevel(levelDrawable);
         }
 
         // Make the network type drawable
@@ -706,10 +711,13 @@ public class InternetDialogController implements AccessPointController.AccessPoi
         }
 
         int resId = Objects.requireNonNull(mapIconSets(config).get(iconKey)).dataContentDescription;
+        SignalIcon.MobileIconGroup iconGroup;
         if (isCarrierNetworkActive()) {
-            SignalIcon.MobileIconGroup carrierMergedWifiIconGroup =
-                    TelephonyIcons.CARRIER_MERGED_WIFI;
-            resId = carrierMergedWifiIconGroup.dataContentDescription;
+            iconGroup = TelephonyIcons.CARRIER_MERGED_WIFI;
+            resId = iconGroup.dataContentDescription;
+        } else if (mCarrierNetworkChangeMode) {
+            iconGroup = TelephonyIcons.CARRIER_NETWORK_CHANGE;
+            resId = iconGroup.dataContentDescription;
         }
 
         return resId != 0
@@ -1117,7 +1125,8 @@ public class InternetDialogController implements AccessPointController.AccessPoi
             TelephonyCallback.DisplayInfoListener,
             TelephonyCallback.ServiceStateListener,
             TelephonyCallback.SignalStrengthsListener,
-            TelephonyCallback.UserMobileDataStateListener {
+            TelephonyCallback.UserMobileDataStateListener,
+            TelephonyCallback.CarrierNetworkListener{
 
         private final int mSubId;
         private InternetTelephonyCallback(int subId) {
@@ -1148,6 +1157,12 @@ public class InternetDialogController implements AccessPointController.AccessPoi
         @Override
         public void onUserMobileDataStateChanged(boolean enabled) {
             mCallback.onUserMobileDataStateChanged(enabled);
+        }
+
+        @Override
+        public void onCarrierNetworkChange(boolean active) {
+            mCarrierNetworkChangeMode = active;
+            mCallback.onCarrierNetworkChange(active);
         }
     }
 
@@ -1329,6 +1344,8 @@ public class InternetDialogController implements AccessPointController.AccessPoi
         void onUserMobileDataStateChanged(boolean enabled);
 
         void onDisplayInfoChanged(TelephonyDisplayInfo telephonyDisplayInfo);
+
+        void onCarrierNetworkChange(boolean active);
 
         void dismissDialog();
 

@@ -16,9 +16,12 @@
 
 package com.android.systemui.statusbar.events
 
+import android.annotation.IntRange
 import android.provider.DeviceConfig
 import android.provider.DeviceConfig.NAMESPACE_PRIVACY
 import com.android.systemui.dagger.SysUISingleton
+import com.android.systemui.flags.FeatureFlags
+import com.android.systemui.flags.Flags
 import com.android.systemui.privacy.PrivacyItem
 import com.android.systemui.privacy.PrivacyItemController
 import com.android.systemui.statusbar.policy.BatteryController
@@ -33,21 +36,18 @@ import javax.inject.Inject
 class SystemEventCoordinator @Inject constructor(
     private val systemClock: SystemClock,
     private val batteryController: BatteryController,
-    private val privacyController: PrivacyItemController
+    private val privacyController: PrivacyItemController,
+    private val featureFlags: FeatureFlags
 ) {
     private lateinit var scheduler: SystemStatusAnimationScheduler
 
     fun startObserving() {
-        /* currently unused
         batteryController.addCallback(batteryStateListener)
-        */
         privacyController.addCallback(privacyStateListener)
     }
 
     fun stopObserving() {
-        /* currently unused
         batteryController.removeCallback(batteryStateListener)
-        */
         privacyController.removeCallback(privacyStateListener)
     }
 
@@ -55,12 +55,14 @@ class SystemEventCoordinator @Inject constructor(
         this.scheduler = s
     }
 
-    fun notifyPluggedIn() {
-        scheduler.onStatusEvent(BatteryEvent())
+    fun notifyPluggedIn(@IntRange(from = 0, to = 100) batteryLevel: Int) {
+        if (featureFlags.isEnabled(Flags.PLUG_IN_STATUS_BAR_CHIP)) {
+            scheduler.onStatusEvent(BatteryEvent(batteryLevel))
+        }
     }
 
     fun notifyPrivacyItemsEmpty() {
-        scheduler.setShouldShowPersistentPrivacyIndicator(false)
+        scheduler.removePersistentDot()
     }
 
     fun notifyPrivacyItemsChanged(showAnimation: Boolean = true) {
@@ -70,25 +72,25 @@ class SystemEventCoordinator @Inject constructor(
     }
 
     private val batteryStateListener = object : BatteryController.BatteryStateChangeCallback {
-        var plugged = false
-        var stateKnown = false
+        private var plugged = false
+        private var stateKnown = false
         override fun onBatteryLevelChanged(level: Int, pluggedIn: Boolean, charging: Boolean) {
             if (!stateKnown) {
                 stateKnown = true
                 plugged = pluggedIn
-                notifyListeners()
+                notifyListeners(level)
                 return
             }
 
             if (plugged != pluggedIn) {
                 plugged = pluggedIn
-                notifyListeners()
+                notifyListeners(level)
             }
         }
 
-        private fun notifyListeners() {
+        private fun notifyListeners(@IntRange(from = 0, to = 100) batteryLevel: Int) {
             // We only care about the plugged in status
-            if (plugged) notifyPluggedIn()
+            if (plugged) notifyPluggedIn(batteryLevel)
         }
     }
 
