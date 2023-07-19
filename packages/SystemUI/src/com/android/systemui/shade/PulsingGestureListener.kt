@@ -74,7 +74,7 @@ class PulsingGestureListener @Inject constructor(
                 Settings.Secure.DOUBLE_TAP_TO_WAKE ->
                     doubleTapEnabledNative = Settings.Secure.getIntForUser(
                             notificationShadeWindowView.getContext().getContentResolver(),
-                            Settings.Secure.DOUBLE_TAP_TO_WAKE, 0, UserHandle.USER_CURRENT) == 1
+                            Settings.Secure.DOUBLE_TAP_TO_WAKE, 0, userTracker.userId) == 1
             }
         }
         tunerService.addTunable(tunable,
