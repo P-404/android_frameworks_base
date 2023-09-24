@@ -2138,6 +2138,10 @@ public class Notification implements Parcelable
             }
         }
 
+        private void visitUris(@NonNull Consumer<Uri> visitor) {
+            visitIconUri(visitor, getIcon());
+        }
+
         @Override
         public Action clone() {
             return new Action(
@@ -2807,6 +2811,10 @@ public class Notification implements Parcelable
      * @hide
      */
     public void visitUris(@NonNull Consumer<Uri> visitor) {
+        if (publicVersion != null) {
+            publicVersion.visitUris(visitor);
+        }
+
         visitor.accept(sound);
 
         if (tickerView != null) tickerView.visitUris(visitor);
@@ -2819,7 +2827,7 @@ public class Notification implements Parcelable
 
         if (actions != null) {
             for (Action action : actions) {
-                visitIconUri(visitor, action.getIcon());
+                action.visitUris(visitor);
             }
         }
 
@@ -2853,6 +2861,18 @@ public class Notification implements Parcelable
             if (person != null) {
                 visitor.accept(person.getIconUri());
             }
+
+            final RemoteInputHistoryItem[] history = extras.getParcelableArray(
+                    Notification.EXTRA_REMOTE_INPUT_HISTORY_ITEMS,
+                    RemoteInputHistoryItem.class);
+            if (history != null) {
+                for (int i = 0; i < history.length; i++) {
+                    RemoteInputHistoryItem item = history[i];
+                    if (item.getUri() != null) {
+                        visitor.accept(item.getUri());
+                    }
+                }
+            }
         }
 
         if (isStyle(MessagingStyle.class) && extras != null) {
@@ -2881,10 +2901,25 @@ public class Notification implements Parcelable
                     }
                 }
             }
+
+            visitIconUri(visitor, extras.getParcelable(EXTRA_CONVERSATION_ICON));
+        }
+
+        if (isStyle(CallStyle.class) & extras != null) {
+            Person callPerson = extras.getParcelable(EXTRA_CALL_PERSON);
+            if (callPerson != null) {
+                visitor.accept(callPerson.getIconUri());
+            }
+            visitIconUri(visitor, extras.getParcelable(EXTRA_VERIFICATION_ICON));
         }
 
         if (mBubbleMetadata != null) {
             visitIconUri(visitor, mBubbleMetadata.getIcon());
+        }
+
+        if (extras != null && extras.containsKey(WearableExtender.EXTRA_WEARABLE_EXTENSIONS)) {
+            WearableExtender extender = new WearableExtender(this);
+            extender.visitUris(visitor);
         }
     }
 
@@ -11599,6 +11634,12 @@ public class Notification implements Parcelable
                 mFlags |= mask;
             } else {
                 mFlags &= ~mask;
+            }
+        }
+
+        private void visitUris(@NonNull Consumer<Uri> visitor) {
+            for (Action action : mActions) {
+                action.visitUris(visitor);
             }
         }
     }

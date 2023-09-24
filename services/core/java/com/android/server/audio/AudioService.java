@@ -6227,11 +6227,6 @@ public class AudioService extends IAudioService.Stub
     /** @see AudioManager#startBluetoothSco() */
     public void startBluetoothSco(IBinder cb, int targetSdkVersion) {
         Log.i(TAG, "In startBluetoothSco()");
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-        if ((adapter == null) || (adapter.getState() != BluetoothAdapter.STATE_ON)) {
-             Log.i(TAG, "startBluetoothSco(), BT is not turned ON or adapter is null");
-             return;
-        }
         if (!checkAudioSettingsPermission("startBluetoothSco()")) {
             return;
         }
@@ -6300,11 +6295,6 @@ public class AudioService extends IAudioService.Stub
     /** @see AudioManager#stopBluetoothSco() */
     public void stopBluetoothSco(IBinder cb){
         Log.i(TAG, "In stopBluetoothSco()");
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-        if ((adapter == null) || (adapter.getState() != BluetoothAdapter.STATE_ON)) {
-             Log.i(TAG, "stopBluetoothSco(), BT is not turned ON or adapter is null");
-             return;
-        }
         if (!checkAudioSettingsPermission("stopBluetoothSco()") ||
                 !mSystemReady) {
             return;
