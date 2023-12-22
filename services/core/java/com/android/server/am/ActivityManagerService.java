@@ -162,7 +162,6 @@ import android.app.AppOpsManagerInternal.CheckOpsDelegate;
 import android.app.ApplicationErrorReport;
 import android.app.ApplicationExitInfo;
 import android.app.ApplicationThreadConstants;
-import android.app.AppOpsManager;
 import android.app.BroadcastOptions;
 import android.app.ContentProviderHolder;
 import android.app.IActivityController;
@@ -5857,12 +5856,12 @@ public class ActivityManagerService extends IActivityManager.Stub
     }
 
     @Override
-    public int sendIntentSender(IIntentSender target, IBinder whitelistToken, int code,
+    public int sendIntentSender(IIntentSender target, IBinder allowlistToken, int code,
             Intent intent, String resolvedType,
             IIntentReceiver finishedReceiver, String requiredPermission, Bundle options) {
         if (target instanceof PendingIntentRecord) {
             return ((PendingIntentRecord)target).sendWithResult(code, intent, resolvedType,
-                    whitelistToken, finishedReceiver, requiredPermission, options);
+                    allowlistToken, finishedReceiver, requiredPermission, options);
         } else {
             if (intent == null) {
                 // Weird case: someone has given us their own custom IIntentSender, and now
@@ -5874,7 +5873,20 @@ public class ActivityManagerService extends IActivityManager.Stub
                 intent = new Intent(Intent.ACTION_MAIN);
             }
             try {
-                target.send(code, intent, resolvedType, whitelistToken, null,
+                if (allowlistToken != null) {
+                    final int callingUid = Binder.getCallingUid();
+                    final String packageName;
+                    final long token = Binder.clearCallingIdentity();
+                    try {
+                        packageName = AppGlobals.getPackageManager().getNameForUid(callingUid);
+                    } finally {
+                        Binder.restoreCallingIdentity(token);
+                    }
+                    Slog.wtf(TAG, "Send a non-null allowlistToken to a non-PI target."
+                            + " Calling package: " + packageName + "; intent: " + intent
+                            + "; options: " + options);
+                }
+                target.send(code, intent, resolvedType, null, null,
                         requiredPermission, options);
             } catch (RemoteException e) {
             }
@@ -10699,6 +10711,13 @@ public class ActivityManagerService extends IActivityManager.Stub
     public void onShellCommand(FileDescriptor in, FileDescriptor out,
             FileDescriptor err, String[] args, ShellCallback callback,
             ResultReceiver resultReceiver) {
+        final int callingUid = Binder.getCallingUid();
+        if (callingUid != ROOT_UID && callingUid != Process.SHELL_UID) {
+            if (resultReceiver != null) {
+                resultReceiver.send(-1, null);
+            }
+            throw new SecurityException("Shell commands are only callable by root or shell");
+        }
         (new ActivityManagerShellCommand(this, false)).exec(
                 this, in, out, err, args, callback, resultReceiver);
     }
