@@ -1402,14 +1402,14 @@ class ProcessRecord implements WindowProcessListener {
                 !mAllowBackgroundActivityStartsTokens.isEmpty());
     }
 
-    void addBoundClientUid(int clientUid) {
+    void addBoundClientUid(int clientUid, String clientPackageName, int bindFlags) {
         mBoundClientUids.add(clientUid);
-        mWindowProcessController.setBoundClientUids(mBoundClientUids);
+        mWindowProcessController.addBoundClientUid(clientUid, clientPackageName, bindFlags);
     }
 
     void updateBoundClientUids() {
+        clearBoundClientUids();
         if (mServices.isEmpty()) {
-            clearBoundClientUids();
             return;
         }
         // grab a set of clientUids of all connections of all services
@@ -1422,12 +1422,14 @@ class ProcessRecord implements WindowProcessListener {
             for (int conni = 0; conni < N; conni++) {
                 ArrayList<ConnectionRecord> c = conns.valueAt(conni);
                 for (int i = 0; i < c.size(); i++) {
-                    boundClientUids.add(c.get(i).clientUid);
+                    ConnectionRecord cr = c.get(i);
+                    boundClientUids.add(cr.clientUid);
+                    mWindowProcessController
+                            .addBoundClientUid(cr.clientUid, cr.clientPackageName, cr.flags);
                 }
             }
         }
         mBoundClientUids = boundClientUids;
-        mWindowProcessController.setBoundClientUids(mBoundClientUids);
     }
 
     void addBoundClientUidsOfNewService(ServiceRecord sr) {
@@ -1438,15 +1440,17 @@ class ProcessRecord implements WindowProcessListener {
         for (int conni = conns.size() - 1; conni >= 0; conni--) {
             ArrayList<ConnectionRecord> c = conns.valueAt(conni);
             for (int i = 0; i < c.size(); i++) {
-                mBoundClientUids.add(c.get(i).clientUid);
+                ConnectionRecord cr = c.get(i);
+                mBoundClientUids.add(cr.clientUid);
+                mWindowProcessController
+                        .addBoundClientUid(cr.clientUid, cr.clientPackageName, cr.flags);
             }
         }
-        mWindowProcessController.setBoundClientUids(mBoundClientUids);
     }
 
     void clearBoundClientUids() {
         mBoundClientUids.clear();
-        mWindowProcessController.setBoundClientUids(mBoundClientUids);
+        mWindowProcessController.clearBoundClientUids();
     }
 
     void setActiveInstrumentation(ActiveInstrumentation instr) {
