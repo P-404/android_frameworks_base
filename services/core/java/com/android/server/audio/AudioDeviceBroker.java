@@ -2294,6 +2294,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
                         requestedDevice.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
                     Log.w(TAG, "onUpdateCommunicationRoute, defaultDevice is null, set it to active BLE device");
                     defaultDevice = mDeviceInventory.getDeviceOfType(AudioSystem.DEVICE_OUT_BLE_HEADSET);
+                } else if (defaultDevice != null && requestedDevice == null &&
+                        defaultDevice.getType() == AudioDeviceInfo.TYPE_BLE_HEADSET) {
+                    Log.w(TAG, "onUpdateCommunicationRoute, requestedDevice is null, clear default BLE device");
+                    defaultDevice = null;
                 }
             }
 
@@ -2394,7 +2398,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
     }
 
     @GuardedBy("mDeviceStateLock")
-    private boolean communnicationDeviceCompatOn() {
+    // LE Audio: For system server (Telecom) and APKs targeting S and above, we let the audio
+    // policy routing rules select the default communication device.
+    // For older APKs, we force LE Audio headset when connected as those APKs cannot select a LE
+    // Audiodevice explicitly.
+    private boolean communnicationDeviceLeAudioCompatOn() {
         return mAudioModeOwner.mMode == AudioSystem.MODE_IN_COMMUNICATION
                 && !(CompatChanges.isChangeEnabled(
                         USE_SET_COMMUNICATION_DEVICE, mAudioModeOwner.mUid)
@@ -2402,19 +2410,25 @@ import java.util.concurrent.atomic.AtomicBoolean;
     }
 
     @GuardedBy("mDeviceStateLock")
+    // Hearing Aid: For system server (Telecom) and IN_CALL mode we let the audio
+    // policy routing rules select the default communication device.
+    // For 3p apps and IN_COMMUNICATION mode we force Hearing aid when connected to maintain
+    // backwards compatibility
+    private boolean communnicationDeviceHaCompatOn() {
+        return mAudioModeOwner.mMode == AudioSystem.MODE_IN_COMMUNICATION
+                && !(mAudioModeOwner.mUid == android.os.Process.SYSTEM_UID);
+    }
+
+    @GuardedBy("mDeviceStateLock")
     AudioDeviceAttributes getDefaultCommunicationDevice() {
-        // For system server (Telecom) and APKs targeting S and above, we let the audio
-        // policy routing rules select the default communication device.
-        // For older APKs, we force Hearing Aid or LE Audio headset when connected as
-        // those APKs cannot select a LE Audio or Hearing Aid device explicitly.
         AudioDeviceAttributes device = null;
-        if (communnicationDeviceCompatOn()) {
-            // If both LE and Hearing Aid are active (thie should not happen),
-            // priority to Hearing Aid.
+        // If both LE and Hearing Aid are active (thie should not happen),
+        // priority to Hearing Aid.
+        if (communnicationDeviceHaCompatOn()) {
             device = mDeviceInventory.getDeviceOfType(AudioSystem.DEVICE_OUT_HEARING_AID);
-            if (device == null) {
-                device = mDeviceInventory.getDeviceOfType(AudioSystem.DEVICE_OUT_BLE_HEADSET);
-            }
+        }
+        if (device == null && communnicationDeviceLeAudioCompatOn()) {
+            device = mDeviceInventory.getDeviceOfType(AudioSystem.DEVICE_OUT_BLE_HEADSET);
         }
         return device;
     }

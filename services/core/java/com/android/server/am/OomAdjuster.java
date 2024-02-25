@@ -395,6 +395,8 @@ public class OomAdjuster {
     //Per Task Boost of top-app renderThread
     public static BoostFramework mPerfBoost = new BoostFramework();
     public static int mPerfHandle = -1;
+    public static int mCurAppPid = -1;
+    public static int mCurRenderTid = -1;
     public static int mCurRenderThreadTid = -1;
     public static boolean mIsTopAppRenderThreadBoostEnabled = false;
 
@@ -1927,6 +1929,21 @@ public class OomAdjuster {
                         Slog.d(TAG, "VENDOR_HINT_BOOST_RENDERTHREAD perfHint was called. mPerfHandle: "
                                + mPerfHandle);
                     }
+                }
+            }
+
+            if (mCurAppPid != app.getPid() && app.getPid() > 0) {
+                mCurAppPid = app.getPid();
+                if (mPerfBoost != null) {
+                    mPerfBoost.perfHint(BoostFramework.VENDOR_HINT_PASS_PID, app.processName,
+                                        mCurAppPid, BoostFramework.PassPid.APP_PID);
+                }
+            }
+            if (mCurRenderTid != app.getRenderThreadTid() && app.getRenderThreadTid() > 0) {
+                mCurRenderTid = app.getRenderThreadTid();
+                if (mPerfBoost != null) {
+                    mPerfBoost.perfHint(BoostFramework.VENDOR_HINT_PASS_PID, app.processName,
+                                        mCurRenderTid, BoostFramework.PassPid.RENDER_TID);
                 }
             }
 

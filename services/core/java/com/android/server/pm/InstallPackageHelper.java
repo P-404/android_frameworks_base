@@ -194,6 +194,7 @@ import com.android.server.pm.pkg.component.ParsedPermissionGroup;
 import com.android.server.pm.pkg.parsing.ParsingPackageUtils;
 import com.android.server.rollback.RollbackManagerInternal;
 import com.android.server.security.FileIntegrityService;
+import com.android.server.utils.TimingsTraceAndSlog;
 import com.android.server.utils.WatchedArrayMap;
 import com.android.server.utils.WatchedLongSparseArray;
 
@@ -201,6 +202,8 @@ import dalvik.system.VMRuntime;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.security.DigestException;
 import java.security.DigestInputStream;
@@ -211,11 +214,16 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 final class InstallPackageHelper {
     private final PackageManagerService mPm;
@@ -233,6 +241,12 @@ final class InstallPackageHelper {
     private final SharedLibrariesImpl mSharedLibraries;
     private final PackageManagerServiceInjector mInjector;
     private final UpdateOwnershipHelper mUpdateOwnershipHelper;
+    private static final String PROPERTY_NO_RIL = "ro.radio.noril";
+    /**
+     * Tracks packages that need to be disabled.
+     * Map of package name to its path on the file system.
+     */
+    final private HashMap<String, String> mPackagesToBeDisabled = new HashMap<>();
 
     // TODO(b/198166813): remove PMS dependency
     InstallPackageHelper(PackageManagerService pm, AppDataHelper appDataHelper) {
@@ -3749,6 +3763,15 @@ final class InstallPackageHelper {
                 Log.w(TAG, "Dropping cache of " + file.getAbsolutePath());
                 cacher.cleanCachedResult(file);
             }
+
+            if (mPackagesToBeDisabled.values() != null &&
+                    (mPackagesToBeDisabled.values().contains(file.toString()) ||
+                    mPackagesToBeDisabled.values().stream().anyMatch(file.toString()::contains))) {
+                // Ignore entries contained in {@link #mPackagesToBeDisabled}
+                Slog.d(TAG, "ignoring package: " + file);
+                continue;
+            }
+
             parallelPackageParser.submit(file, parseFlags);
             fileCount++;
         }
@@ -3789,6 +3812,75 @@ final class InstallPackageHelper {
                 logCriticalInfo(Log.WARN,
                         "Deleting invalid package at " + parseResult.scanFile);
                 mRemovePackageHelper.removeCodePath(parseResult.scanFile);
+            }
+        }
+    }
+
+    /**
+     * Read the list of packages that need to be disabled.
+     *
+     * For wifi-only devices (modem-less), telephony related applications do not need to run.
+     * This method will read the list of packages from a predefined file in the file system,
+     * and store it in {@link #mPackagesToBeDisabled}. These applications will be skipped when
+     * directories are scanned later.
+     */
+    protected void readListOfPackagesToBeDisabled() {
+        boolean wifiOnly = SystemProperties.getBoolean(PROPERTY_NO_RIL, false);
+        if (!wifiOnly) {
+            // Apps need to be disabled only for modem-less devices
+            return;
+        }
+
+        final String TELEPHONY_PACKAGES_PATH = "etc/telephony_packages.xml";
+        File telephonyPackagesFile =
+                new File(Environment.getVendorDirectory(), TELEPHONY_PACKAGES_PATH);
+        FileReader packagesReader = null;
+        Slog.d(TAG, "Disabling packages for wifi-only device, source: " + telephonyPackagesFile);
+
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            XmlPullParser packagesParser = factory.newPullParser();
+            packagesReader = new FileReader(telephonyPackagesFile);
+
+            if (packagesParser != null) {
+                packagesParser.setInput(packagesReader);
+                int eventType = packagesParser.getEventType();
+                while (eventType != XmlPullParser.END_DOCUMENT) {
+                    String tagName = packagesParser.getName();
+                    switch (eventType) {
+                        case XmlPullParser.START_TAG:
+                            if (TextUtils.equals(tagName, "packageinfo")) {
+                                String name = packagesParser.getAttributeValue(null, "name");
+                                String path = packagesParser.getAttributeValue(null, "path");
+                                mPackagesToBeDisabled.put(name, path);
+                            }
+                            break;
+                    }
+                    eventType = packagesParser.next();
+                }
+            }
+        } catch (XmlPullParserException e) {
+            Log.e(TAG, "XmlPullParserException parsing '"+ telephonyPackagesFile + "'", e);
+        } catch (IOException e) {
+            Log.e(TAG, "IOException parsing '" + telephonyPackagesFile + "'", e);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception parsing '" + telephonyPackagesFile + "'", e);
+        }
+
+        if (packagesReader != null) {
+            try {
+                packagesReader.close();
+            } catch (IOException e) {
+                // do nothing
+            }
+        }
+
+        if (DEBUG_PACKAGE_SCANNING) {
+            for (String packageName : mPackagesToBeDisabled.keySet()) {
+                Slog.d(TAG, "readListOfPackagesToBeDisabled"
+                        + ", package: " + packageName
+                        + ", path: " + mPackagesToBeDisabled.get(packageName));
             }
         }
     }

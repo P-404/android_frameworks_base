@@ -1022,7 +1022,7 @@
          requires swapping ROTATION_90 and ROTATION_270.
          TODO(b/265991392): This should eventually be configured and parsed in
           display_settings.xml -->
-    <bool name="config_matchSecondaryInternalDisplaysOrientationToReverseDefaultDisplay">true</bool>
+    <bool name="config_matchSecondaryInternalDisplaysOrientationToReverseDefaultDisplay">false</bool>
 
     <!-- Indicate available ColorDisplayManager.COLOR_MODE_xxx. -->
     <integer-array name="config_availableColorModes">
@@ -6483,4 +6483,7 @@
     <!-- Whether the AOSP support for app cloning building blocks is to be enabled for the
          device. -->
     <bool name="config_enableAppCloningBuildingBlocks">true</bool>
+
+    <!-- Whether unlocking and waking a device are sequenced -->
+    <bool name="config_orderUnlockAndWake">false</bool>
 </resources>
