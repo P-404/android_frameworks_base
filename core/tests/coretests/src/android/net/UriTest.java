@@ -25,8 +25,6 @@ import junit.framework.TestCase;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -48,6 +46,7 @@ public class UriTest extends TestCase {
     public void testParcelling() {
         parcelAndUnparcel(Uri.parse("foo:bob%20lee"));
         parcelAndUnparcel(Uri.fromParts("foo", "bob lee", "fragment"));
+        parcelAndUnparcel(Uri.fromParts("https", "www.google.com", null));
         parcelAndUnparcel(new Uri.Builder()
             .scheme("http")
             .authority("crazybob.org")
@@ -851,28 +850,87 @@ public class UriTest extends TestCase {
         return (Uri) hierarchicalUriConstructor.newInstance("https", authority, path, null, null);
     }
 
-    /** Attempting to unparcel a legacy parcel format of Uri.{,Path}Part should fail. */
-    public void testUnparcelLegacyPart_fails() throws Exception {
-        assertUnparcelLegacyPart_fails(Class.forName("android.net.Uri$Part"));
-        assertUnparcelLegacyPart_fails(Class.forName("android.net.Uri$PathPart"));
+    private Uri buildUriFromParts(boolean argumentsEncoded,
+                                      String scheme,
+                                      String authority,
+                                      String path,
+                                      String query,
+                                      String fragment) {
+        final Uri.Builder builder = new Uri.Builder();
+        builder.scheme(scheme);
+        if (argumentsEncoded) {
+            builder.encodedAuthority(authority);
+            builder.encodedPath(path);
+            builder.encodedQuery(query);
+            builder.encodedFragment(fragment);
+        } else {
+            builder.authority(authority);
+            builder.path(path);
+            builder.query(query);
+            builder.fragment(fragment);
+        }
+        return builder.build();
     }
 
-    private static void assertUnparcelLegacyPart_fails(Class partClass) throws Exception {
-        Parcel parcel = Parcel.obtain();
-        parcel.writeInt(0 /* BOTH */);
-        parcel.writeString("encoded");
-        parcel.writeString("decoded");
-        parcel.setDataPosition(0);
+    public void testUnparcelMalformedPath() {
+        // Regression tests for b/171966843.
 
-        Method readFromMethod = partClass.getDeclaredMethod("readFrom", Parcel.class);
-        readFromMethod.setAccessible(true);
+        // Test cases with arguments encoded (covering testing `scheme` * `authority` options).
+        Uri uri0 = buildUriFromParts(true, "https", "google.com", "@evil.com", null, null);
+        assertEquals("https://google.com/@evil.com", uri0.toString());
+        Uri uri1 = buildUriFromParts(true, null, "google.com", "@evil.com", "name=spark", "x");
+        assertEquals("//google.com/@evil.com?name=spark#x", uri1.toString());
+        Uri uri2 = buildUriFromParts(true, "http:", null, "@evil.com", null, null);
+        assertEquals("http::/@evil.com", uri2.toString());
+        Uri uri3 = buildUriFromParts(true, null, null, "@evil.com", null, null);
+        assertEquals("@evil.com", uri3.toString());
+
+        // Test cases with arguments not encoded (covering testing `scheme` * `authority` options).
+        Uri uriA = buildUriFromParts(false, "https", "google.com", "@evil.com", null, null);
+        assertEquals("https://google.com/%40evil.com", uriA.toString());
+        Uri uriB = buildUriFromParts(false, null, "google.com", "@evil.com", null, null);
+        assertEquals("//google.com/%40evil.com", uriB.toString());
+        Uri uriC = buildUriFromParts(false, "http:", null, "@evil.com", null, null);
+        assertEquals("http::/%40evil.com", uriC.toString());
+        Uri uriD = buildUriFromParts(false, null, null, "@evil.com", "name=spark", "y");
+        assertEquals("%40evil.com?name%3Dspark#y", uriD.toString());
+    }
+
+    public void testParsedUriFromStringEquality() {
+        Uri uri = buildUriFromParts(
+                true, "https", "google.com", "@evil.com", null, null);
+        assertEquals(uri, Uri.parse(uri.toString()));
+        Uri uri2 = buildUriFromParts(
+                true, "content://evil.authority?foo=", "safe.authority", "@evil.com", null, null);
+        assertEquals(uri2, Uri.parse(uri2.toString()));
+        Uri uri3 = buildUriFromParts(
+                false, "content://evil.authority?foo=", "safe.authority", "@evil.com", null, null);
+        assertEquals(uri3, Uri.parse(uri3.toString()));
+    }
+
+    public void testParceledUrisAreEqual() {
+        Uri opaqueUri = Uri.fromParts("fake://uri#", "ssp", "fragment");
+        Parcel parcel = Parcel.obtain();
         try {
-            readFromMethod.invoke(null, parcel);
-            fail();
-        } catch (InvocationTargetException expected) {
-            Throwable targetException = expected.getTargetException();
-            // Check that the exception was thrown for the correct reason.
-            assertEquals("Unknown representation: 0", targetException.getMessage());
+            opaqueUri.writeToParcel(parcel, 0);
+            parcel.setDataPosition(0);
+            Uri postParcelUri = Uri.CREATOR.createFromParcel(parcel);
+            Uri parsedUri = Uri.parse(postParcelUri.toString());
+            assertEquals(parsedUri.getScheme(), postParcelUri.getScheme());
+        } finally {
+            parcel.recycle();
+        }
+
+        Uri hierarchicalUri = new Uri.Builder().scheme("fake://uri#").authority("auth").build();
+        parcel = Parcel.obtain();
+        try {
+            hierarchicalUri.writeToParcel(parcel, 0);
+            parcel.setDataPosition(0);
+            Uri postParcelUri = Uri.CREATOR.createFromParcel(parcel);
+            Uri parsedUri = Uri.parse(postParcelUri.toString());
+            assertEquals(parsedUri.getScheme(), postParcelUri.getScheme());
+        } finally {
+            parcel.recycle();
         }
     }
 

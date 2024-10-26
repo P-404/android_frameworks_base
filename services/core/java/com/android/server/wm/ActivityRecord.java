@@ -689,6 +689,13 @@ public final class ActivityRecord extends WindowToken implements WindowManagerSe
 
     private AppSaturationInfo mLastAppSaturationInfo;
 
+    private final ActivityRecordInputSink mActivityRecordInputSink;
+
+    // Activities with this uid are allowed to not create an input sink while being in the same
+    // task and directly above this ActivityRecord. This field is updated whenever a new activity
+    // is launched from this ActivityRecord. Touches are always allowed within the same uid.
+    int mAllowedTouchUid;
+
     private final ColorDisplayService.ColorTransformController mColorTransformController =
             (matrix, translation) -> mWmService.mH.post(() -> {
                 synchronized (mWmService.mGlobalLock) {
@@ -1209,6 +1216,12 @@ public final class ActivityRecord extends WindowToken implements WindowManagerSe
             }
             ensureActivityConfiguration(0 /* globalChanges */, PRESERVE_WINDOWS,
                     true /* ignoreVisibility */);
+            if (inPictureInPictureMode && findMainWindow() == null) {
+                // Prevent malicious app entering PiP without valid WindowState, which can in turn
+                // result a non-touchable PiP window since the InputConsumer for PiP requires it.
+                EventLog.writeEvent(0x534e4554, "265293293", -1, "");
+                removeImmediately();
+            }
         }
     }
 
@@ -1672,6 +1685,8 @@ public final class ActivityRecord extends WindowToken implements WindowManagerSe
 
         if (mPerf == null)
             mPerf = new BoostFramework();
+
+        mActivityRecordInputSink = new ActivityRecordInputSink(this, sourceRecord);
     }
 
     /**
@@ -3204,6 +3219,7 @@ public final class ActivityRecord extends WindowToken implements WindowManagerSe
     @Override
     void removeImmediately() {
         onRemovedFromDisplay();
+        mActivityRecordInputSink.releaseSurfaceControl();
         super.removeImmediately();
     }
 
@@ -6170,6 +6186,9 @@ public final class ActivityRecord extends WindowToken implements WindowManagerSe
                 getSyncTransaction().show(mSurfaceControl);
             } else if (!show && mLastSurfaceShowing) {
                 getSyncTransaction().hide(mSurfaceControl);
+            }
+            if (show) {
+                mActivityRecordInputSink.applyChangesToSurfaceIfChanged(getSyncTransaction());
             }
         }
         if (mThumbnail != null) {

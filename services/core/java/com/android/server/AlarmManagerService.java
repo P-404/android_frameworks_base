@@ -28,6 +28,7 @@ import static android.os.UserHandle.USER_SYSTEM;
 import android.annotation.UserIdInt;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.ActivityOptions;
 import android.app.AlarmManager;
 import android.app.AppOpsManager;
 import android.app.BroadcastOptions;
@@ -75,6 +76,7 @@ import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
+import android.util.EventLog;
 import android.util.KeyValueListParser;
 import android.util.Log;
 import android.util.LongArrayQueue;
@@ -270,6 +272,8 @@ class AlarmManagerService extends SystemService {
      * Broadcast options to use for FLAG_ALLOW_WHILE_IDLE.
      */
     Bundle mIdleOptions;
+    ActivityOptions mActivityOptsRestrictBal = ActivityOptions.makeBasic();
+    BroadcastOptions mBroadcastOptsRestrictBal = BroadcastOptions.makeBasic();
 
     private final SparseArray<AlarmManager.AlarmClockInfo> mNextAlarmClockForUser =
             new SparseArray<>();
@@ -486,6 +490,7 @@ class AlarmManagerService extends SystemService {
                 mLastAllowWhileIdleWhitelistDuration = ALLOW_WHILE_IDLE_WHITELIST_DURATION;
                 BroadcastOptions opts = BroadcastOptions.makeBasic();
                 opts.setTemporaryAppWhitelistDuration(ALLOW_WHILE_IDLE_WHITELIST_DURATION);
+                opts.setPendingIntentBackgroundActivityLaunchAllowed(false);
                 mIdleOptions = opts.toBundle();
             }
         }
@@ -1480,6 +1485,8 @@ class AlarmManagerService extends SystemService {
     @Override
     public void onStart() {
         mInjector.init();
+        mActivityOptsRestrictBal.setPendingIntentBackgroundActivityLaunchAllowed(false);
+        mBroadcastOptsRestrictBal.setPendingIntentBackgroundActivityLaunchAllowed(false);
 
         mListenerDeathRecipient = new IBinder.DeathRecipient() {
             @Override
@@ -1776,7 +1783,11 @@ class AlarmManagerService extends SystemService {
                 if (DEBUG_PER_UID_LIMIT && UserHandle.isCore(callingUid)) {
                     logAllAlarmsForUidLocked(callingUid);
                 }
-                throw new IllegalStateException(errorMsg);
+                if (callingUid != Process.SYSTEM_UID) {
+                    throw new IllegalStateException(errorMsg);
+                } else {
+                    EventLog.writeEvent(0x534e4554, "234441463", -1, errorMsg);
+                }
             }
             setImplLocked(type, triggerAtTime, triggerElapsed, windowLength, maxElapsed,
                     interval, operation, directReceiver, listenerTag, flags, true, workSource,
@@ -4160,6 +4171,13 @@ class AlarmManagerService extends SystemService {
         return alarm.creatorUid;
     }
 
+    private Bundle getAlarmOperationBundle(Alarm alarm) {
+        if (alarm.operation.isActivity()) {
+            return mActivityOptsRestrictBal.toBundle();
+        }
+        return mBroadcastOptsRestrictBal.toBundle();
+    }
+
     @VisibleForTesting
     class AlarmHandler extends Handler {
         public static final int ALARM_EVENT = 1;
@@ -4199,7 +4217,11 @@ class AlarmManagerService extends SystemService {
                     for (int i=0; i<triggerList.size(); i++) {
                         Alarm alarm = triggerList.get(i);
                         try {
-                            alarm.operation.send();
+                            // Disallow AlarmManager to start random background activity.
+                            final Bundle bundle = getAlarmOperationBundle(alarm);
+                            alarm.operation.send(/* context */ null, /* code */0, /* intent */
+                                    null, /* onFinished */null, /* handler */
+                                    null, /* requiredPermission */ null, bundle);
                         } catch (PendingIntent.CanceledException e) {
                             if (alarm.repeatInterval > 0) {
                                 // This IntentSender is no longer valid, but this
@@ -4763,7 +4785,7 @@ class AlarmManagerService extends SystemService {
                                 mBackgroundIntent.putExtra(
                                         Intent.EXTRA_ALARM_COUNT, alarm.count),
                                 mDeliveryTracker, mHandler, null,
-                                allowWhileIdle ? mIdleOptions : null);
+                                allowWhileIdle ? mIdleOptions : getAlarmOperationBundle(alarm));
                         mHandler.sendMessageDelayed(
                                 mHandler.obtainMessage(AlarmHandler.PENDINGINTENT_TIMEOUT,
                                          alarm.operation), mConstants.LISTENER_TIMEOUT * 2);

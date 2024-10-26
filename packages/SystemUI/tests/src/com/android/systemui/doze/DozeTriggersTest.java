@@ -74,6 +74,8 @@ public class DozeTriggersTest extends SysuiTestCase {
     private BroadcastDispatcher mBroadcastDispatcher;
     @Mock
     private DockManager mDockManager;
+    @Mock
+    private ProximitySensor.ProximityCheck mProximityCheck;
 
     private DozeTriggers mTriggers;
     private FakeSensorManager mSensors;

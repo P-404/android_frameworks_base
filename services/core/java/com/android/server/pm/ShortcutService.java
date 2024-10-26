@@ -30,6 +30,7 @@ import android.app.usage.UsageStatsManagerInternal;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -172,6 +173,9 @@ public class ShortcutService extends IShortcutService.Stub {
     static final int DEFAULT_MAX_SHORTCUTS_PER_ACTIVITY = 15;
 
     @VisibleForTesting
+    static final int DEFAULT_MAX_SHORTCUTS_PER_APP = 100;
+
+    @VisibleForTesting
     static final int DEFAULT_MAX_ICON_DIMENSION_DP = 96;
 
     @VisibleForTesting
@@ -246,6 +250,11 @@ public class ShortcutService extends IShortcutService.Stub {
         String KEY_MAX_SHORTCUTS = "max_shortcuts";
 
         /**
+         * Key name for the max shortcuts can be retained in system ram per app. (int)
+         */
+        String KEY_MAX_SHORTCUTS_PER_APP = "max_shortcuts_per_app";
+
+        /**
          * Key name for icon compression quality, 0-100.
          */
         String KEY_ICON_QUALITY = "icon_quality";
@@ -302,9 +311,14 @@ public class ShortcutService extends IShortcutService.Stub {
             new SparseArray<>();
 
     /**
-     * Max number of dynamic + manifest shortcuts that each application can have at a time.
+     * Max number of dynamic + manifest shortcuts that each activity can have at a time.
      */
     private int mMaxShortcuts;
+
+    /**
+     * Max number of shortcuts that can exists in system ram for each application.
+     */
+    private int mMaxShortcutsPerApp;
 
     /**
      * Max number of updating API calls that each application can make during the interval.
@@ -731,6 +745,9 @@ public class ShortcutService extends IShortcutService.Stub {
 
         mMaxShortcuts = Math.max(0, (int) parser.getLong(
                 ConfigConstants.KEY_MAX_SHORTCUTS, DEFAULT_MAX_SHORTCUTS_PER_ACTIVITY));
+
+        mMaxShortcutsPerApp = Math.max(0, (int) parser.getLong(
+                ConfigConstants.KEY_MAX_SHORTCUTS_PER_APP, DEFAULT_MAX_SHORTCUTS_PER_APP));
 
         final int iconDimensionDp = Math.max(1, injectIsLowRamDevice()
                 ? (int) parser.getLong(
@@ -1625,6 +1642,10 @@ public class ShortcutService extends IShortcutService.Stub {
             android.util.EventLog.writeEvent(0x534e4554, "109824443", -1, "");
             throw new SecurityException("Shortcut package name mismatch");
         }
+        final int callingUid = injectBinderCallingUid();
+        if (UserHandle.getUserId(callingUid) != si.getUserId()) {
+            throw new SecurityException("User-ID in shortcut doesn't match the caller");
+        }
     }
 
     private void verifyShortcutInfoPackages(
@@ -1659,6 +1680,13 @@ public class ShortcutService extends IShortcutService.Stub {
      */
     int getMaxActivityShortcuts() {
         return mMaxShortcuts;
+    }
+
+    /**
+     * Return the max number of shortcuts can be retaiend in system ram for each application.
+     */
+    int getMaxAppShortcuts() {
+        return mMaxShortcutsPerApp;
     }
 
     /**
@@ -1781,9 +1809,30 @@ public class ShortcutService extends IShortcutService.Stub {
         }
         if (shortcut.getIcon() != null) {
             ShortcutInfo.validateIcon(shortcut.getIcon());
+            validateIconURI(shortcut);
         }
 
         shortcut.replaceFlags(shortcut.getFlags() & ShortcutInfo.FLAG_LONG_LIVED);
+    }
+
+    // Validates the calling process has permission to access shortcut icon's image uri
+    private void validateIconURI(@NonNull final ShortcutInfo si) {
+        final int callingUid = injectBinderCallingUid();
+        final Icon icon = si.getIcon();
+        if (icon == null) {
+            // There's no icon in this shortcut, nothing to validate here.
+            return;
+        }
+        int iconType = icon.getType();
+        if (iconType != Icon.TYPE_URI && iconType != Icon.TYPE_URI_ADAPTIVE_BITMAP) {
+            // The icon is not URI-based, nothing to validate.
+            return;
+        }
+        final Uri uri = icon.getUri();
+        mUriGrantsManagerInternal.checkGrantUriPermission(callingUid, si.getPackage(),
+                ContentProvider.getUriWithoutUserId(uri),
+                Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                ContentProvider.getUserIdFromUri(uri, UserHandle.getUserId(callingUid)));
     }
 
     private void fixUpIncomingShortcutInfo(@NonNull ShortcutInfo shortcut, boolean forUpdate) {

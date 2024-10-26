@@ -361,8 +361,7 @@ final class SaveUi {
             return false;
         }
         writeLog(MetricsEvent.AUTOFILL_SAVE_CUSTOM_DESCRIPTION);
-
-        final RemoteViews template = customDescription.getPresentation();
+        final RemoteViews template = Helper.sanitizeRemoteView(customDescription.getPresentation());
         if (template == null) {
             Slog.w(TAG, "No remote view on custom description");
             return false;
@@ -419,7 +418,8 @@ final class SaveUi {
                     }
                     final BatchUpdates batchUpdates = pair.second;
                     // First apply the updates...
-                    final RemoteViews templateUpdates = batchUpdates.getUpdates();
+                    final RemoteViews templateUpdates =
+                            Helper.sanitizeRemoteView(batchUpdates.getUpdates());
                     if (templateUpdates != null) {
                         if (sDebug) Slog.d(TAG, "Applying template updates for batch update #" + i);
                         templateUpdates.reapply(context, customSubtitleView);

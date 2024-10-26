@@ -610,8 +610,8 @@ public class PermissionManagerService extends IPermissionManager.Stub {
             BasePermission bp = mSettings.getPermissionLocked(info.name);
             added = bp == null;
             int fixedLevel = PermissionInfo.fixProtectionLevel(info.protectionLevel);
+            enforcePermissionCapLocked(info, tree);
             if (added) {
-                enforcePermissionCapLocked(info, tree);
                 bp = new BasePermission(info.name, tree.getSourcePackageName(),
                         BasePermission.TYPE_DYNAMIC);
             } else if (!bp.isDynamic()) {
@@ -2322,6 +2322,46 @@ public class PermissionManagerService extends IPermissionManager.Stub {
     }
 
     /**
+     * If the package was below api 23, got the SYSTEM_ALERT_WINDOW permission automatically, and
+     * then updated past api 23, and the app does not satisfy any of the other SAW permission flags,
+     * the permission should be revoked.
+     *
+     * @param newPackage The new package that was installed
+     * @param oldPackage The old package that was updated
+     */
+    private void revokeSystemAlertWindowIfUpgradedPast23(
+            @NonNull AndroidPackage newPackage,
+            @NonNull AndroidPackage oldPackage,
+            @NonNull PermissionCallback permissionCallback) {
+        if (oldPackage.getTargetSdkVersion() >= Build.VERSION_CODES.M
+                || newPackage.getTargetSdkVersion() < Build.VERSION_CODES.M
+                || !newPackage.getRequestedPermissions()
+                .contains(Manifest.permission.SYSTEM_ALERT_WINDOW)) {
+            return;
+        }
+
+        BasePermission saw;
+        synchronized (mLock) {
+            saw = mSettings.getPermissionLocked(Manifest.permission.SYSTEM_ALERT_WINDOW);
+        }
+        final PackageSetting ps = (PackageSetting)
+                mPackageManagerInt.getPackageSetting(newPackage.getPackageName());
+        if (grantSignaturePermission(Manifest.permission.SYSTEM_ALERT_WINDOW, newPackage, ps, saw,
+                ps.getPermissionsState())) {
+            return;
+        }
+        for (int userId : mUserManagerInt.getUserIds()) {
+            try {
+                revokePermissionFromPackageForUser(newPackage.getPackageName(),
+                        Manifest.permission.SYSTEM_ALERT_WINDOW, false, userId, permissionCallback);
+            } catch (IllegalStateException | SecurityException e) {
+                Log.e(TAG, "unable to revoke SYSTEM_ALERT_WINDOW for "
+                        + newPackage.getPackageName() + " user " + userId, e);
+            }
+        }
+    }
+
+    /**
      * We might auto-grant permissions if any permission of the group is already granted. Hence if
      * the group of a granted permission changes we need to revoke it to avoid having permissions of
      * the new group auto-granted.
@@ -2755,7 +2795,7 @@ public class PermissionManagerService extends IPermissionManager.Stub {
                 // uids the original and new state are the same object
                 if (!origPermissions.hasRequestedPermission(permName)
                         && (pkg.getImplicitPermissions().contains(permName)
-                                || (permName.equals(Manifest.permission.ACTIVITY_RECOGNITION)))) {
+                        || (permName.equals(Manifest.permission.ACTIVITY_RECOGNITION)))) {
                     if (pkg.getImplicitPermissions().contains(permName)) {
                         // If permName is an implicit permission, try to auto-grant
                         newImplicitPermissions.add(permName);
@@ -2771,21 +2811,28 @@ public class PermissionManagerService extends IPermissionManager.Stub {
                         // or has updated its target SDK and AR is no longer implicit to it.
                         // This is a compatibility workaround for apps when AR permission was
                         // split in Q.
-                        final List<SplitPermissionInfoParcelable> permissionList =
-                                getSplitPermissions();
-                        int numSplitPerms = permissionList.size();
-                        for (int splitPermNum = 0; splitPermNum < numSplitPerms; splitPermNum++) {
-                            SplitPermissionInfoParcelable sp = permissionList.get(splitPermNum);
-                            String splitPermName = sp.getSplitPermission();
-                            if (sp.getNewPermissions().contains(permName)
-                                    && origPermissions.hasInstallPermission(splitPermName)) {
-                                upgradedActivityRecognitionPermission = splitPermName;
-                                newImplicitPermissions.add(permName);
+                        // b/210065877: Check that the installed version is pre Q to auto-grant in
+                        // case of OS update
+                        if (mPackageManagerInt.getInstalledSdkVersion(pkg)
+                                < Build.VERSION_CODES.Q) {
+                            final List<SplitPermissionInfoParcelable> permissionList =
+                                    getSplitPermissions();
+                            int numSplitPerms = permissionList.size();
+                            for (int splitPermNum = 0; splitPermNum < numSplitPerms;
+                                    splitPermNum++) {
+                                SplitPermissionInfoParcelable sp = permissionList.get(splitPermNum);
+                                String splitPermName = sp.getSplitPermission();
+                                if (sp.getNewPermissions().contains(permName)
+                                        && origPermissions.hasInstallPermission(splitPermName)) {
+                                    upgradedActivityRecognitionPermission = splitPermName;
+                                    newImplicitPermissions.add(permName);
 
-                                if (DEBUG_PERMISSIONS) {
-                                    Slog.i(TAG, permName + " is newly added for " + friendlyName);
+                                    if (DEBUG_PERMISSIONS) {
+                                        Slog.i(TAG, permName + " is newly added for "
+                                                + friendlyName);
+                                    }
+                                    break;
                                 }
-                                break;
                             }
                         }
                     }
@@ -4791,24 +4838,20 @@ public class PermissionManagerService extends IPermissionManager.Stub {
             return PermissionManagerService.this.isPermissionsReviewRequired(pkg, userId);
         }
         /**
-         * If the app is updated, and has scoped storage permissions, then it is possible that the
-         * app updated in an attempt to get unscoped storage. If so, revoke all storage permissions.
+         * If the app is updated, then some checks need to be performed to ensure the
+         * package is not attempting to expoit permission changes across API boundaries.
          * @param newPackage The new package that was installed
          * @param oldPackage The old package that was updated
+         * @param allPackageNames The current packages in the system
          */
-        public void revokeStoragePermissionsIfScopeExpanded(
-                @NonNull AndroidPackage newPackage,
-                @NonNull AndroidPackage oldPackage
-        ) {
-            PermissionManagerService.this.revokeStoragePermissionsIfScopeExpanded(newPackage,
-                    oldPackage, mDefaultPermissionCallback);
-        }
-
-        @Override
-        public void revokeRuntimePermissionsIfGroupChanged(
+        public void onPackageUpdated(
                 @NonNull AndroidPackage newPackage,
                 @NonNull AndroidPackage oldPackage,
                 @NonNull ArrayList<String> allPackageNames) {
+            PermissionManagerService.this.revokeStoragePermissionsIfScopeExpanded(newPackage,
+                    oldPackage, mDefaultPermissionCallback);
+            PermissionManagerService.this.revokeSystemAlertWindowIfUpgradedPast23(newPackage,
+                    oldPackage, mDefaultPermissionCallback);
             PermissionManagerService.this.revokeRuntimePermissionsIfGroupChanged(newPackage,
                     oldPackage, allPackageNames, mDefaultPermissionCallback);
         }

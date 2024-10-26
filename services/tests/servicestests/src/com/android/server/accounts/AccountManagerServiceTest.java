@@ -18,6 +18,7 @@ package com.android.server.accounts;
 
 import static android.database.sqlite.SQLiteDatabase.deleteDatabase;
 
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
@@ -36,6 +37,7 @@ import android.accounts.CantAddAccountActivity;
 import android.accounts.IAccountManagerResponse;
 import android.app.AppOpsManager;
 import android.app.INotificationManager;
+import android.app.PropertyInvalidatedCache;
 import android.app.admin.DevicePolicyManager;
 import android.app.admin.DevicePolicyManagerInternal;
 import android.content.BroadcastReceiver;
@@ -131,6 +133,8 @@ public class AccountManagerServiceTest extends AndroidTestCase {
     @Override
     protected void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
+
+        PropertyInvalidatedCache.disableForTestMode();
 
         when(mMockPackageManager.checkSignatures(anyInt(), anyInt()))
                     .thenReturn(PackageManager.SIGNATURE_MATCH);
@@ -240,6 +244,25 @@ public class AccountManagerServiceTest extends AndroidTestCase {
         assertEquals(a11, accounts[0]);
         assertEquals(a31, accounts[1]);
     }
+
+    @SmallTest
+    public void testCheckAddAccountLongName() throws Exception {
+        unlockSystemUser();
+        String longString = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                + "aaaaa";
+        Account a11 = new Account(longString, AccountManagerServiceTestFixtures.ACCOUNT_TYPE_1);
+
+        mAms.addAccountExplicitly(a11, /* password= */ "p11", null);
+
+        String[] list = new String[]{AccountManagerServiceTestFixtures.CALLER_PACKAGE};
+        when(mMockPackageManager.getPackagesForUid(anyInt())).thenReturn(list);
+        Account[] accounts = mAms.getAccountsAsUser(null,
+                UserHandle.getCallingUserId(), mContext.getOpPackageName());
+        assertEquals(0, accounts.length);
+    }
+
 
     @SmallTest
     public void testPasswords() throws Exception {
@@ -667,6 +690,41 @@ public class AccountManagerServiceTest extends AndroidTestCase {
         assertNotNull(intent);
         assertNotNull(intent.getParcelableExtra(AccountManagerServiceTestFixtures.KEY_RESULT));
         assertNotNull(intent.getParcelableExtra(AccountManagerServiceTestFixtures.KEY_CALLBACK));
+    }
+
+    @SmallTest
+    public void testStartAddAccountSessionWhereAuthenticatorReturnsIntentWithProhibitedFlags()
+            throws Exception {
+        unlockSystemUser();
+        ResolveInfo resolveInfo = new ResolveInfo();
+        resolveInfo.activityInfo = new ActivityInfo();
+        resolveInfo.activityInfo.applicationInfo = new ApplicationInfo();
+        when(mMockPackageManager.resolveActivityAsUser(
+                any(Intent.class), anyInt(), anyInt())).thenReturn(resolveInfo);
+        when(mMockPackageManager.checkSignatures(
+                anyInt(), anyInt())).thenReturn(PackageManager.SIGNATURE_MATCH);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        Response response = new Response(latch, mMockAccountManagerResponse);
+        Bundle options = createOptionsWithAccountName(
+                AccountManagerServiceTestFixtures.ACCOUNT_NAME_INTERVENE);
+        int prohibitedFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION;
+        options.putInt(AccountManagerServiceTestFixtures.KEY_INTENT_FLAGS, prohibitedFlags);
+
+        mAms.startAddAccountSession(
+                response, // response
+                AccountManagerServiceTestFixtures.ACCOUNT_TYPE_1, // accountType
+                "authTokenType",
+                null, // requiredFeatures
+                true, // expectActivityLaunch
+                options); // optionsIn
+        waitForLatch(latch);
+
+        verify(mMockAccountManagerResponse).onError(
+                eq(AccountManager.ERROR_CODE_INVALID_RESPONSE), contains("invalid intent"));
     }
 
     @SmallTest

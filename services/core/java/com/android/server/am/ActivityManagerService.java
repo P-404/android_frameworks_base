@@ -367,6 +367,7 @@ import com.android.server.contentcapture.ContentCaptureManagerInternal;
 import com.android.server.firewall.IntentFirewall;
 import com.android.server.job.JobSchedulerInternal;
 import com.android.server.pm.Installer;
+import com.android.server.pm.parsing.pkg.AndroidPackage;
 import com.android.server.pm.permission.PermissionManagerServiceInternal;
 import com.android.server.uri.GrantUri;
 import com.android.server.uri.NeededUriGrants;
@@ -3299,6 +3300,22 @@ public class ActivityManagerService extends IActivityManager.Stub
         }
     }
 
+    /**
+     * Enforces that the uid of the caller matches the uid of the package.
+     *
+     * @param packageName the name of the package to match uid against.
+     * @param callingUid the uid of the caller.
+     * @throws SecurityException if the calling uid doesn't match uid of the package.
+     */
+    private void enforceCallingPackage(String packageName, int callingUid) {
+        final int userId = UserHandle.getUserId(callingUid);
+        final int packageUid = getPackageManagerInternalLocked().getPackageUid(packageName,
+                /*flags=*/ 0, userId);
+        if (packageUid != callingUid) {
+            throw new SecurityException(packageName + " does not belong to uid " + callingUid);
+        }
+    }
+
     @Override
     public void setPackageScreenCompatMode(String packageName, int mode) {
         mActivityTaskManager.setPackageScreenCompatMode(packageName, mode);
@@ -4371,20 +4388,24 @@ public class ActivityManagerService extends IActivityManager.Stub
                             finishForceStopPackageLocked(packageName, appInfo.uid);
                         }
                     }
-                    final Intent intent = new Intent(Intent.ACTION_PACKAGE_DATA_CLEARED,
-                            Uri.fromParts("package", packageName, null));
-                    intent.addFlags(Intent.FLAG_RECEIVER_INCLUDE_BACKGROUND);
-                    intent.putExtra(Intent.EXTRA_UID, (appInfo != null) ? appInfo.uid : -1);
-                    intent.putExtra(Intent.EXTRA_USER_HANDLE, resolvedUserId);
-                    if (isInstantApp) {
-                        intent.putExtra(Intent.EXTRA_PACKAGE_NAME, packageName);
-                        broadcastIntentInPackage("android", null, SYSTEM_UID, uid, pid, intent,
-                                null, null, 0, null, null, permission.ACCESS_INSTANT_APPS, null,
-                                false, false, resolvedUserId, false);
-                    } else {
-                        broadcastIntentInPackage("android", null, SYSTEM_UID, uid, pid, intent,
-                                null, null, 0, null, null, null, null, false, false, resolvedUserId,
-                                false);
+
+                    if (succeeded) {
+                        final Intent intent = new Intent(Intent.ACTION_PACKAGE_DATA_CLEARED,
+                                Uri.fromParts("package", packageName, null /* fragment */));
+                        intent.addFlags(Intent.FLAG_RECEIVER_INCLUDE_BACKGROUND);
+                        intent.putExtra(Intent.EXTRA_UID,
+                                (appInfo != null) ? appInfo.uid : Process.INVALID_UID);
+                        intent.putExtra(Intent.EXTRA_USER_HANDLE, resolvedUserId);
+                        if (isInstantApp) {
+                            intent.putExtra(Intent.EXTRA_PACKAGE_NAME, packageName);
+                        }
+
+                        broadcastIntentInPackage("android", null /* featureId */, SYSTEM_UID,
+                                uid, pid, intent, null /* resolvedType */, null /* resultTo */,
+                                0 /* resultCode */, null /* resultData */, null /* resultExtras */,
+                                isInstantApp ? permission.ACCESS_INSTANT_APPS : null,
+                                null /* bOptions */, false /* serialized */, false /* sticky */,
+                                resolvedUserId, false /* allowBackgroundActivityStarts */);
                     }
 
                     if (observer != null) {
@@ -4440,8 +4461,20 @@ public class ActivityManagerService extends IActivityManager.Stub
             Slog.w(TAG, msg);
             throw new SecurityException(msg);
         }
+        final int callingUid = Binder.getCallingUid();
+        final int callingPid = Binder.getCallingPid();
+        final int callingAppId = UserHandle.getAppId(callingUid);
 
-        userId = mUserController.handleIncomingUser(Binder.getCallingPid(), Binder.getCallingUid(),
+        ProcessRecord proc;
+        synchronized (mPidsSelfLocked) {
+            proc = mPidsSelfLocked.get(callingPid);
+        }
+        final boolean hasKillAllPermission = PERMISSION_GRANTED == checkPermission(
+                android.Manifest.permission.FORCE_STOP_PACKAGES, callingPid, callingUid)
+                || UserHandle.isCore(callingUid)
+                || (proc != null && proc.info.isSystemApp());
+
+        userId = mUserController.handleIncomingUser(callingPid, callingUid,
                 userId, true, ALLOW_FULL_ONLY, "killBackgroundProcesses", null);
         final int[] userIds = mUserController.expandUserId(userId);
 
@@ -4456,7 +4489,7 @@ public class ActivityManagerService extends IActivityManager.Stub
                                     targetUserId));
                 } catch (RemoteException e) {
                 }
-                if (appId == -1) {
+                if (appId == -1 || (!hasKillAllPermission && appId != callingAppId)) {
                     Slog.w(TAG, "Invalid packageName: " + packageName);
                     return;
                 }
@@ -4480,6 +4513,22 @@ public class ActivityManagerService extends IActivityManager.Stub
                     + " requires " + android.Manifest.permission.KILL_BACKGROUND_PROCESSES;
             Slog.w(TAG, msg);
             throw new SecurityException(msg);
+        }
+
+        final int callingUid = Binder.getCallingUid();
+        final int callingPid = Binder.getCallingPid();
+
+        ProcessRecord proc;
+        synchronized (mPidsSelfLocked) {
+            proc = mPidsSelfLocked.get(callingPid);
+        }
+        if (callingUid >= FIRST_APPLICATION_UID
+                && (proc == null || !proc.info.isSystemApp())) {
+            final String msg = "Permission Denial: killAllBackgroundProcesses() from pid="
+                    + callingPid + ", uid=" + callingUid + " is not allowed";
+            Slog.w(TAG, msg);
+            // Silently return to avoid existing apps from crashing.
+            return;
         }
 
         final long callingId = Binder.clearCallingIdentity();
@@ -5808,12 +5857,12 @@ public class ActivityManagerService extends IActivityManager.Stub
     }
 
     @Override
-    public int sendIntentSender(IIntentSender target, IBinder whitelistToken, int code,
+    public int sendIntentSender(IIntentSender target, IBinder allowlistToken, int code,
             Intent intent, String resolvedType,
             IIntentReceiver finishedReceiver, String requiredPermission, Bundle options) {
         if (target instanceof PendingIntentRecord) {
             return ((PendingIntentRecord)target).sendWithResult(code, intent, resolvedType,
-                    whitelistToken, finishedReceiver, requiredPermission, options);
+                    allowlistToken, finishedReceiver, requiredPermission, options);
         } else {
             if (intent == null) {
                 // Weird case: someone has given us their own custom IIntentSender, and now
@@ -5825,7 +5874,20 @@ public class ActivityManagerService extends IActivityManager.Stub
                 intent = new Intent(Intent.ACTION_MAIN);
             }
             try {
-                target.send(code, intent, resolvedType, whitelistToken, null,
+                if (allowlistToken != null) {
+                    final int callingUid = Binder.getCallingUid();
+                    final String packageName;
+                    final long token = Binder.clearCallingIdentity();
+                    try {
+                        packageName = AppGlobals.getPackageManager().getNameForUid(callingUid);
+                    } finally {
+                        Binder.restoreCallingIdentity(token);
+                    }
+                    Slog.wtf(TAG, "Send a non-null allowlistToken to a non-PI target."
+                            + " Calling package: " + packageName + "; intent: " + intent
+                            + "; options: " + options);
+                }
+                target.send(code, intent, resolvedType, null, null,
                         requiredPermission, options);
             } catch (RemoteException e) {
             }
@@ -8380,7 +8442,54 @@ public class ActivityManagerService extends IActivityManager.Stub
             Binder token = new Binder();
             sCallerIdentity.set(new Identity(
                     token, Binder.getCallingPid(), Binder.getCallingUid()));
+            boolean handlingSecurityViolation = false;
             try {
+                // This method is exposed to the VNDK and to avoid changing its
+                // signature we just use the first package in the UID. For shared
+                // UIDs we may blame the wrong app but that is Okay as they are
+                // in the same security/privacy sandbox.
+                final int uid = Binder.getCallingUid();
+                // Here we handle some of the special UIDs (mediaserver, systemserver, etc)
+                // Note: This is moved to AppOpsManager.resolvePackageName in future versions.
+                final String packageName;
+                if (uid == Process.ROOT_UID) {
+                    packageName = "root";
+                } else if (uid == Process.SHELL_UID) {
+                    packageName = "com.android.shell";
+                } else if (uid == Process.MEDIA_UID) {
+                    packageName = "media";
+                } else if (uid == Process.AUDIOSERVER_UID) {
+                    packageName = "audioserver";
+                } else if (uid == Process.CAMERASERVER_UID) {
+                    packageName = "cameraserver";
+                } else if (uid == Process.SYSTEM_UID) {
+                    packageName = "android";
+                } else {
+                    packageName = null;
+                }
+
+                final AndroidPackage androidPackage;
+                if (packageName != null) {
+                    androidPackage = mPackageManagerInt.getPackage(packageName);
+                } else {
+                    androidPackage = mPackageManagerInt.getPackage(uid);
+                }
+                if (androidPackage == null) {
+                    Log.e(TAG, "Cannot find package for uid: " + uid);
+                    handlingSecurityViolation = true;
+                    return null;
+                }
+
+                final ApplicationInfo appInfo = mPackageManagerInt.getApplicationInfo(
+                        androidPackage.getPackageName(), /*flags*/0, Process.SYSTEM_UID,
+                        UserHandle.USER_SYSTEM);
+                if (!appInfo.isVendor() && !appInfo.isSystemApp() && !appInfo.isSystemExt()
+                        && !appInfo.isProduct()) {
+                    Log.e(TAG, "openContentUri may only be used by vendor/system/product.");
+                    handlingSecurityViolation = true;
+                    return null;
+                }
+
                 pfd = cph.provider.openFile(null, null, uri, "r", null, token);
             } catch (FileNotFoundException e) {
                 // do nothing; pfd will be returned null
@@ -8388,7 +8497,16 @@ public class ActivityManagerService extends IActivityManager.Stub
                 // Ensure that whatever happens, we clean up the identity state
                 sCallerIdentity.remove();
                 // Ensure we're done with the provider.
-                removeContentProviderExternalUnchecked(name, null, userId);
+                try {
+                    removeContentProviderExternalUnchecked(name, null, userId);
+                } catch (SecurityException e) {
+                    // A SecurityException may be thrown from computeOomAdjLocked if the calling
+                    // UID is that of a malicious app accessing this hidden API. In that case
+                    // we're already handling that by returning null, so tolerate this.
+                    if (!handlingSecurityViolation) {
+                        throw e;
+                    }
+                }
             }
         } else {
             Slog.d(TAG, "Failed to get provider for authority '" + name + "'");
@@ -10595,6 +10713,13 @@ public class ActivityManagerService extends IActivityManager.Stub
     public void onShellCommand(FileDescriptor in, FileDescriptor out,
             FileDescriptor err, String[] args, ShellCallback callback,
             ResultReceiver resultReceiver) {
+        final int callingUid = Binder.getCallingUid();
+        if (callingUid != ROOT_UID && callingUid != Process.SHELL_UID) {
+            if (resultReceiver != null) {
+                resultReceiver.send(-1, null);
+            }
+            throw new SecurityException("Shell commands are only callable by root or shell");
+        }
         (new ActivityManagerShellCommand(this, false)).exec(
                 this, in, out, err, args, callback, resultReceiver);
     }
@@ -15466,13 +15591,16 @@ public class ActivityManagerService extends IActivityManager.Stub
     // A backup agent has just come up
     @Override
     public void backupAgentCreated(String agentPackageName, IBinder agent, int userId) {
+        final int callingUid = Binder.getCallingUid();
+        enforceCallingPackage(agentPackageName, callingUid);
+
         // Resolve the target user id and enforce permissions.
-        userId = mUserController.handleIncomingUser(Binder.getCallingPid(), Binder.getCallingUid(),
+        userId = mUserController.handleIncomingUser(Binder.getCallingPid(), callingUid,
                 userId, /* allowAll */ false, ALLOW_FULL_ONLY, "backupAgentCreated", null);
         if (DEBUG_BACKUP) {
             Slog.v(TAG_BACKUP, "backupAgentCreated: " + agentPackageName + " = " + agent
                     + " callingUserId = " + UserHandle.getCallingUserId() + " userId = " + userId
-                    + " callingUid = " + Binder.getCallingUid() + " uid = " + Process.myUid());
+                    + " callingUid = " + callingUid + " uid = " + Process.myUid());
         }
 
         synchronized(this) {
@@ -17024,6 +17152,17 @@ public class ActivityManagerService extends IActivityManager.Stub
                 reportStartInstrumentationFailureLocked(watcher, className, msg);
                 throw new SecurityException(msg);
             }
+            if (!Build.IS_DEBUGGABLE && callingUid != ROOT_UID && callingUid != SHELL_UID
+                    && callingUid != SYSTEM_UID && !hasActiveInstrumentationLocked(callingPid)) {
+                // If it's not debug build and not called from root/shell/system uid, reject it.
+                final String msg = "Permission Denial: instrumentation test "
+                        + className + " from pid=" + callingPid + ", uid=" + callingUid
+                        + ", pkgName=" + getPackageNameByPid(callingPid)
+                        + " not allowed because it's not started from SHELL";
+                Slog.wtfQuiet(TAG, msg);
+                reportStartInstrumentationFailureLocked(watcher, className, msg);
+                throw new SecurityException(msg);
+            }
 
             ActiveInstrumentation activeInstr = new ActiveInstrumentation(this);
             activeInstr.mClass = className;
@@ -17090,6 +17229,29 @@ public class ActivityManagerService extends IActivityManager.Stub
         }
 
         return true;
+    }
+
+    @GuardedBy("this")
+    private boolean hasActiveInstrumentationLocked(int pid) {
+        if (pid == 0) {
+            return false;
+        }
+        synchronized (mPidsSelfLocked) {
+            ProcessRecord process = mPidsSelfLocked.get(pid);
+            return process != null && process.getActiveInstrumentation() != null;
+        }
+    }
+
+    private String getPackageNameByPid(int pid) {
+        synchronized (mPidsSelfLocked) {
+            final ProcessRecord app = mPidsSelfLocked.get(pid);
+
+            if (app != null && app.info != null) {
+                return app.info.packageName;
+            }
+
+            return null;
+        }
     }
 
     private boolean isCallerShell() {
