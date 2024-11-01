@@ -319,7 +319,7 @@ public class DozeSensors {
             pw.println("  Sensor: " + s.toString());
         }
         if (mProximitySupported) // Useless
-            idpw.println("  ProxSensor: " + mProximitySensor.toString());
+            pw.println("  ProxSensor: " + mProximitySensor.toString());
     }
 
     /**
