@@ -951,24 +951,25 @@ class Task extends WindowContainer<WindowContainer> {
      * @param info The activity info which could be different from {@code r.info} if set.
      */
     void setIntent(ActivityRecord r, @Nullable Intent intent, @Nullable ActivityInfo info) {
-        mCallingUid = r.launchedFromUid;
-        mCallingPackage = r.launchedFromPackage;
-        mCallingFeatureId = r.launchedFromFeatureId;
-        if(info != null){
-            mPackageName = info.packageName;
+        boolean updateIdentity = false;
+        if (this.intent == null) {
+            updateIdentity = true;
+        } else if (!mNeverRelinquishIdentity) {
+            final ActivityInfo activityInfo = info != null ? info : r.info;
+            updateIdentity = (effectiveUid == Process.SYSTEM_UID || mIsEffectivelySystemApp
+                    || effectiveUid == activityInfo.applicationInfo.uid);
         }
-        setIntent(intent != null ? intent : r.intent, info != null ? info : r.info);
-        setLockTaskAuth(r);
-
         if (updateIdentity) {
             mCallingUid = r.launchedFromUid;
             mCallingPackage = r.launchedFromPackage;
             mCallingFeatureId = r.launchedFromFeatureId;
+            if(info != null){
+                mPackageName = info.packageName;
+            }
             setIntent(intent != null ? intent : r.intent, info != null ? info : r.info);
         }
         setLockTaskAuth(r);
     }
-
     /** Sets the original intent, _without_ updating the calling uid or package. */
     private void setIntent(Intent _intent, ActivityInfo info) {
         if(info != null){
