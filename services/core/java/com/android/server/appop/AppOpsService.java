@@ -2188,16 +2188,26 @@ public class AppOpsService extends IAppOpsService.Stub {
     private ArrayList<AppOpsManager.OpEntry> collectOps(Ops pkgOps, int[] ops) {
         ArrayList<AppOpsManager.OpEntry> resOps = null;
         final long elapsedNow = SystemClock.elapsedRealtime();
+        boolean shouldReturnRestrictedAppOps = mContext.checkPermission(
+                Manifest.permission.GET_APP_OPS_STATS,
+                Binder.getCallingPid(), Binder.getCallingUid())
+                == PackageManager.PERMISSION_GRANTED;
         if (ops == null) {
             resOps = new ArrayList<>();
-            for (int j=0; j<pkgOps.size(); j++) {
+            for (int j = 0; j < pkgOps.size(); j++) {
                 Op curOp = pkgOps.valueAt(j);
+                if (opRestrictsRead(curOp.op) && !shouldReturnRestrictedAppOps) {
+                    continue;
+                }
                 resOps.add(getOpEntryForResult(curOp, elapsedNow));
             }
         } else {
-            for (int j=0; j<ops.length; j++) {
+            for (int j = 0; j < ops.length; j++) {
                 Op curOp = pkgOps.get(ops[j]);
                 if (curOp != null) {
+                    if (opRestrictsRead(curOp.op) && !shouldReturnRestrictedAppOps) {
+                        continue;
+                    }
                     if (resOps == null) {
                         resOps = new ArrayList<>();
                     }
@@ -3462,6 +3472,10 @@ public class AppOpsService extends IAppOpsService.Stub {
             return new SyncNotedAppOp(AppOpsManager.MODE_ERRORED, code, attributionTag,
                     packageName);
         }
+        if (proxyAttributionTag != null
+                && !isAttributionTagDefined(packageName, proxyPackageName, proxyAttributionTag)) {
+            proxyAttributionTag = null;
+        }
 
         synchronized (this) {
             final Ops ops = getOpsLocked(uid, packageName, attributionTag,
@@ -3976,6 +3990,10 @@ public class AppOpsService extends IAppOpsService.Stub {
             return new SyncNotedAppOp(AppOpsManager.MODE_ERRORED, code, attributionTag,
                     packageName);
         }
+        if (proxyAttributionTag != null
+                && !isAttributionTagDefined(packageName, proxyPackageName, proxyAttributionTag)) {
+            proxyAttributionTag = null;
+        }
 
         boolean isRestricted = false;
         int startType = START_TYPE_FAILED;
@@ -4394,10 +4412,21 @@ public class AppOpsService extends IAppOpsService.Stub {
 
     private void verifyIncomingOp(int op) {
         if (op >= 0 && op < AppOpsManager._NUM_OP) {
-            // Enforce manage appops permission if it's a restricted read op.
+            // Enforce privileged appops permission if it's a restricted read op.
             if (opRestrictsRead(op)) {
-                mContext.enforcePermission(Manifest.permission.MANAGE_APPOPS,
-                        Binder.getCallingPid(), Binder.getCallingUid(), "verifyIncomingOp");
+                if (!(mContext.checkPermission(Manifest.permission.MANAGE_APPOPS,
+                        Binder.getCallingPid(), Binder.getCallingUid())
+                        == PackageManager.PERMISSION_GRANTED || mContext.checkPermission(
+                        Manifest.permission.GET_APP_OPS_STATS,
+                        Binder.getCallingPid(), Binder.getCallingUid())
+                        == PackageManager.PERMISSION_GRANTED || mContext.checkPermission(
+                        Manifest.permission.MANAGE_APP_OPS_MODES,
+                        Binder.getCallingPid(), Binder.getCallingUid())
+                        == PackageManager.PERMISSION_GRANTED)) {
+                    throw new SecurityException("verifyIncomingOp: uid " + Binder.getCallingUid()
+                            + " does not have any of {MANAGE_APPOPS, GET_APP_OPS_STATS, "
+                            + "MANAGE_APP_OPS_MODES}");
+                }
             }
             return;
         }
@@ -4713,6 +4742,36 @@ public class AppOpsService extends IAppOpsService.Stub {
         }
 
         return false;
+    }
+
+    /**
+     * Checks to see if the attribution tag is defined in either package or proxyPackage.
+     * This method is intended for ProxyAttributionTag validation and returns false
+     * if it does not exist in either one of them.
+     *
+     * @param packageName Name of the package
+     * @param proxyPackageName Name of the proxy package
+     * @param attributionTag attribution tag to be checked
+     *
+     * @return boolean specifying if attribution tag is valid or not
+     */
+    private boolean isAttributionTagDefined(@Nullable String packageName,
+                                            @Nullable String proxyPackageName,
+                                            @Nullable String attributionTag) {
+        if (packageName == null) {
+            return false;
+        } else if (attributionTag == null) {
+            return true;
+        }
+        PackageManagerInternal pmInt = LocalServices.getService(PackageManagerInternal.class);
+        if (proxyPackageName != null) {
+            AndroidPackage proxyPkg = pmInt.getPackage(proxyPackageName);
+            if (proxyPkg != null && isAttributionInPackage(proxyPkg, attributionTag)) {
+                return true;
+            }
+        }
+        AndroidPackage pkg = pmInt.getPackage(packageName);
+        return isAttributionInPackage(pkg, attributionTag);
     }
 
     /**
