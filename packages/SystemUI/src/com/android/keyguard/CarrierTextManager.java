@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/*
+ * Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
+ * Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ * SPDX-License-Identifier: BSD-3-Clause-Clear
+ */
+
 package com.android.keyguard;
 
 import android.content.Context;
@@ -46,6 +52,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
+import com.qti.extphone.NrIconType;
 
 import javax.inject.Inject;
 
@@ -837,10 +844,6 @@ public class CarrierTextManager {
 
 
     private String get5GNetworkClass(SubscriptionInfo sub, int networkType) {
-        if ( networkType == TelephonyManager.NETWORK_TYPE_NR ) {
-            return mContext.getResources().getString(R.string.data_connection_5g);
-        }
-
         int slotIndex = sub.getSimSlotIndex();
         int subId = sub.getSubscriptionId();
 
@@ -850,8 +853,16 @@ public class CarrierTextManager {
         }
         FiveGServiceState fiveGServiceState =
                 mFiveGServiceClient.getCurrentServiceState(slotIndex);
-        if ( fiveGServiceState.isNrIconTypeValid() && isDataRegisteredOnLte(subId)) {
-            return mContext.getResources().getString(R.string.data_connection_5g);
+        if ((networkType == TelephonyManager.NETWORK_TYPE_NR)
+                || (fiveGServiceState.isNrIconTypeValid() && isDataRegisteredOnLte(subId))) {
+            if (fiveGServiceState.getNrIconType() == NrIconType.TYPE_5G_UWB
+                    && mContext.getResources().getBoolean(
+                    com.android.settingslib.R.bool.config_display_5g_a)) {
+                return mContext.getResources().getString(
+                        com.android.settingslib.R.string.data_connection_5g_a);
+            }
+            return mContext.getResources().getString(
+                    com.android.settingslib.R.string.data_connection_5g);
         }
 
         return null;

@@ -27,6 +27,12 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
+<!--
+ * Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
+ * Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ * SPDX-License-Identifier: BSD-3-Clause-Clear
+ -->
+
 <resources>
     <bool name="kg_hide_emgcy_btn_when_oos">false</bool>
     <bool name="config_showEmergencyButton">false</bool>
@@ -36,4 +42,5 @@
     <bool name="config_hideNoInternetState">false</bool>
     <bool name="config_display_volte">false</bool>
     <bool name="config_display_vowifi">false</bool>
+    <bool name="config_display_5g_a">false</bool>
 </resources>

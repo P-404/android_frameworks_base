@@ -26,6 +26,13 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
+
+<!--
+ * Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
+ * Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ * SPDX-License-Identifier: BSD-3-Clause-Clear
+ -->
+
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
     <string-array name="origin_carrier_names"></string-array>
@@ -46,6 +53,9 @@
 
     <!-- Content description of the data connection type 5G stand alone. [CHAR LIMIT=NONE] -->
     <string name="data_connection_5g_sa" translate="false">5GSA</string>
+
+    <!-- Content description of the data connection type 5GA. [CHAR LIMIT=NONE] -->
+    <string name="data_connection_5g_a" translate="false">5GA</string>
 
     <!--
     The customization for last puk prompt

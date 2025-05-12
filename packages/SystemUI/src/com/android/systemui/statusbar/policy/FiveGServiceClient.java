@@ -27,6 +27,12 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
+ * Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ * SPDX-License-Identifier: BSD-3-Clause-Clear
+ */
+
 package com.android.systemui.statusbar.policy;
 
 import android.content.ComponentName;
@@ -107,7 +113,7 @@ public class FiveGServiceClient {
         }
 
         @VisibleForTesting
-        int getNrIconType() {
+        public int getNrIconType() {
             return mNrIconType;
         }
 
@@ -290,12 +296,17 @@ public class FiveGServiceClient {
 
     private MobileIconGroup getNrIconGroup(int nrIconType , int phoneId) {
         MobileIconGroup iconGroup = TelephonyIcons.UNKNOWN;
+        boolean show5Ga = mContext.getResources().getBoolean(R.bool.config_display_5g_a);
         switch (nrIconType){
             case NrIconType.TYPE_5G_BASIC:
                 iconGroup = TelephonyIcons.FIVE_G_BASIC;
                 break;
             case NrIconType.TYPE_5G_UWB:
-                iconGroup = TelephonyIcons.FIVE_G_UWB;
+                if (show5Ga) {
+                    iconGroup = TelephonyIcons.FIVE_G_A;
+                } else {
+                    iconGroup = TelephonyIcons.FIVE_G_UWB;
+                }
                 break;
         }
         return iconGroup;
